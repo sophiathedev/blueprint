@@ -12,5 +12,11 @@ Rails.application.routes.draw do
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
   # Defines the root path route ("/")
+  get 'login', to: 'users#login', as: :login
+  post 'login', to: 'users#perform_sign_in'
+  delete 'logout', to: 'users#logout', as: :logout
+  get 'change-password', to: 'users#change_password', as: :change_password
+  patch 'change-password', to: 'users#perform_password_change'
+
   root 'home#index'
 end

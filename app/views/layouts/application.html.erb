@@ -35,6 +35,8 @@
   </head>
 
   <body class="antialiased">
+    <%= render FlashComponent.new(flash: flash) %>
+
     <main>
       <%= yield %>
     </main>

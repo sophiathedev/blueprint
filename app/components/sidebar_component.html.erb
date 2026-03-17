@@ -1,5 +1,5 @@
 <aside
-  class="sidebar-shell flex w-full shrink-0 flex-col border-b border-black/10 bg-white md:fixed md:inset-y-0 md:left-0 md:z-20 md:h-screen md:w-[296px] md:overflow-y-auto md:border-r md:border-b-0 md:overscroll-contain"
+  class="sidebar-shell flex w-full shrink-0 flex-col border-b border-black/10 bg-white md:fixed md:inset-y-0 md:left-0 md:z-20 md:h-screen md:w-[296px] md:overflow-visible md:border-r md:border-b-0 md:overscroll-contain"
   data-sidebar-layout-target="sidebar"
 >
   <div class="border-b border-black/10 px-3 py-3">
@@ -66,16 +66,45 @@
   </div>
 
   <div class="border-t border-black/10 px-2 py-2">
-    <div class="sidebar-auth-buttons grid gap-2">
-      <%= render ButtonComponent.new(
-        label: 'Đăng nhập',
-        type: :navigate,
-        variant: :primary,
-        href: '#',
-        icon: 'log-in',
-        full_width: true,
-        class: 'sidebar-auth-button'
-      ) %>
-    </div>
+    <% if helpers.user_signed_in? %>
+      <%= render DropdownComponent.new(
+        items: [
+          { label: 'Đăng xuất', href: logout_path, method: :delete, icon: 'log-out', tone: :danger }
+        ],
+        direction: :right_end
+      ) do |dropdown| %>
+        <% dropdown.with_trigger do %>
+          <button
+            type="button"
+            class="flex w-full items-center gap-2 rounded-2xl border border-transparent bg-stone-50 px-1.5 py-1.5 text-left text-black"
+          >
+            <span class="flex h-7.5 w-7.5 shrink-0 items-center justify-center rounded-[14px] bg-white text-black/70">
+              <%= helpers.lucide_icon('user-round', class: 'h-4 w-4', "aria-hidden": true) %>
+            </span>
+
+            <div class="min-w-0 flex-1 leading-tight">
+              <p class="truncate text-sm font-semibold text-black"><%= helpers.current_user.name.presence || helpers.current_user.email %></p>
+              <p class="truncate text-[10px] font-medium text-black/45"><%= helpers.current_user.role %></p>
+            </div>
+
+            <span class="flex shrink-0 items-center justify-center text-black/40">
+              <%= helpers.lucide_icon('chevrons-up-down', class: 'h-4 w-4', "aria-hidden": true) %>
+            </span>
+          </button>
+        <% end %>
+      <% end %>
+    <% else %>
+      <div class="sidebar-auth-buttons grid gap-2">
+        <%= render ButtonComponent.new(
+          label: 'Đăng nhập',
+          type: :navigate,
+          variant: :primary,
+          href: login_path,
+          icon: 'log-in',
+          full_width: true,
+          class: 'sidebar-auth-button'
+        ) %>
+      </div>
+    <% end %>
   </div>
 </aside>

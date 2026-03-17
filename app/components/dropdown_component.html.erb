@@ -1,0 +1,29 @@
+<div
+  class="relative"
+  data-controller="dropdown"
+  data-dropdown-direction-value="<%= direction %>"
+  data-action="keydown.esc@window->dropdown#close click@window->dropdown#closeOnOutside"
+>
+  <div data-action="click->dropdown#toggle">
+    <%= trigger %>
+  </div>
+
+  <div
+    class="<%= [
+      'pointer-events-none absolute z-30 w-56 opacity-0 transition duration-150 ease-out',
+      menu_position_classes
+    ].join(' ') %>"
+    data-dropdown-target="menu"
+  >
+    <div class="rounded-2xl border border-black/10 bg-white p-1 shadow-[0_18px_48px_rgba(15,23,42,0.14)] ring-0.5 ring-black/5">
+      <% items.each do |item| %>
+        <%= link_to item[:href], class: item_classes(item), data: item_data(item) do %>
+          <% if item[:icon].present? %>
+            <%= helpers.lucide_icon(item[:icon], class: 'h-4 w-4 shrink-0', "aria-hidden": true) %>
+          <% end %>
+          <span><%= item[:label] %></span>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</div>

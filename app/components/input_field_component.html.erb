@@ -1,0 +1,4 @@
+<div class="space-y-2">
+  <%= form.label field, label, class: 'text-sm font-semibold text-black/80' %>
+  <%= form.public_send(field_method, field, **input_options) %>
+</div>

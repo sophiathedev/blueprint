@@ -26,132 +26,143 @@
   <div>
     <%= render SidebarComponent.new(
       brand: 'Blueprint',
-      items: [
-        { label: 'Dashboard', href: '#', active: true, icon: 'layout-dashboard' }
-      ]
+      items: if user_signed_in? && current_user.admin?
+               [
+                 { label: 'Dashboard', href: '#', active: true, icon: 'layout-dashboard' },
+                 { label: 'Đối tác', href: '#', active: false, icon: 'handshake' }
+               ]
+             else
+               [
+                 { label: 'Dashboard', href: '#', active: true, icon: 'layout-dashboard' }
+               ]
+             end
     ) %>
   </div>
 
   <section class="px-3 py-4 md:px-4 md:py-4">
-    <div
-      class="grid min-h-[calc(100vh-5rem)] gap-4 xl:grid-cols-[1.45fr,0.95fr]"
-      data-sidebar-layout-target="content"
-    >
-      <section class="rounded-[28px] border border-black/10 bg-stone-50 p-5">
-          <div class="max-w-3xl">
-            <p class="text-sm font-semibold uppercase tracking-[0.22em] text-primary-600">Manage work with clarity</p>
-            <h1 class="mt-3 text-4xl font-semibold tracking-tight text-black md:text-5xl">
-              Quản lý công việc, chia task rõ ràng, và giữ nhịp làm việc luôn dễ chịu.
-            </h1>
-            <p class="mt-4 max-w-2xl text-base leading-7 text-black/65">
-              Blueprint là không gian để team gom đầu việc, chia task hợp lý và theo dõi tiến độ hằng ngày
-              mà không biến công việc thành cảm giác ngợp. Mọi thứ được sắp gọn để bạn tập trung vào hiệu quả,
-              nhưng vẫn giữ trải nghiệm làm việc nhẹ và mượt.
-            </p>
-          </div>
-
-          <div class="mt-6 flex flex-col gap-3 sm:flex-row">
-            <%= render ButtonComponent.new(
-              label: 'Bắt đầu ngay',
-              type: :navigate,
-              variant: :primary,
-              href: '#',
-              icon: 'rocket',
-              class: 'sm:w-auto'
-            ) %>
-
-            <%= render ButtonComponent.new(
-              label: 'Xem cách hoạt động',
-              type: :navigate,
-              variant: :secondary,
-              href: '#',
-              icon: 'play',
-              class: 'sm:w-auto'
-            ) %>
-          </div>
-
-          <div class="mt-8 grid gap-3 md:grid-cols-3">
-            <article class="rounded-[20px] border border-black/10 bg-white p-4">
-              <p class="text-2xl font-semibold text-black">01</p>
-              <p class="mt-3 text-sm font-semibold text-black">Chia việc mạch lạc</p>
-              <p class="mt-2 text-sm leading-6 text-black/60">
-                Từ task lớn đến checklist nhỏ, mọi đầu việc đều có chỗ đứng và người chịu trách nhiệm rõ ràng.
-              </p>
-            </article>
-
-            <article class="rounded-[20px] border border-black/10 bg-white p-4">
-              <p class="text-2xl font-semibold text-black">02</p>
-              <p class="mt-3 text-sm font-semibold text-black">Theo dõi tiến độ dễ nhìn</p>
-              <p class="mt-2 text-sm leading-6 text-black/60">
-                Cập nhật tiến độ theo luồng làm việc quen thuộc để cả team luôn biết việc gì đang chạy và việc gì bị nghẽn.
-              </p>
-            </article>
-
-            <article class="rounded-[20px] border border-black/10 bg-white p-4">
-              <p class="text-2xl font-semibold text-black">03</p>
-              <p class="mt-3 text-sm font-semibold text-black">Làm việc nhẹ đầu hơn</p>
-              <p class="mt-2 text-sm leading-6 text-black/60">
-                Giao diện gọn, thao tác rõ và nhịp trình bày êm giúp quá trình quản lý công việc đỡ nặng nề hơn mỗi ngày.
-              </p>
-            </article>
-          </div>
-      </section>
-
-      <div class="space-y-4">
-        <section class="rounded-[28px] border border-black/10 bg-white p-5">
-            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-primary-600">Why teams choose Blueprint</p>
-            <div class="mt-4 space-y-3">
-              <div class="rounded-[20px] bg-stone-50 p-4">
-                <p class="text-sm font-semibold text-black">Task board rõ ràng</p>
-                <p class="mt-1 text-sm leading-6 text-black/60">Sắp xếp đầu việc theo trạng thái để ra quyết định nhanh hơn.</p>
-              </div>
-              <div class="rounded-[20px] bg-stone-50 p-4">
-                <p class="text-sm font-semibold text-black">Phân chia trách nhiệm hợp lý</p>
-                <p class="mt-1 text-sm leading-6 text-black/60">Mỗi task đều có owner, deadline và mức ưu tiên cụ thể.</p>
-              </div>
-              <div class="rounded-[20px] bg-stone-50 p-4">
-                <p class="text-sm font-semibold text-black">Trải nghiệm làm việc thoải mái</p>
-                <p class="mt-1 text-sm leading-6 text-black/60">Tập trung vào flow làm việc thay vì thêm noise vào ngày của bạn.</p>
-              </div>
-            </div>
-        </section>
-
+    <% if user_signed_in? %>
+      <div class="min-h-[calc(100vh-5rem)]" data-sidebar-layout-target="content"></div>
+    <% else %>
+      <div
+        class="grid min-h-[calc(100vh-5rem)] gap-4 xl:grid-cols-[1.45fr,0.95fr]"
+        data-sidebar-layout-target="content"
+      >
         <section class="rounded-[28px] border border-black/10 bg-stone-50 p-5">
-            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-black/45">Overview</p>
-            <div class="mt-4 grid gap-3 md:grid-cols-3">
-              <div class="rounded-[20px] border border-black/10 bg-white p-4">
-                <div class="flex items-center justify-between gap-3">
-                  <%= lucide_icon('timer-reset', class: 'h-4 w-4 text-primary-600', "aria-hidden": true) %>
-                  <span class="rounded-full bg-primary-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary-700">
-                    Onboarding
-                  </span>
-                </div>
-                <p class="text-2xl font-semibold text-black">1h</p>
-                <p class="mt-1 text-sm text-black/60">để team mới bắt nhịp với workflow</p>
-              </div>
-              <div class="rounded-[20px] border border-black/10 bg-white p-4">
-                <div class="flex items-center justify-between gap-3">
-                  <%= lucide_icon('layers-3', class: 'h-4 w-4 text-primary-600', "aria-hidden": true) %>
-                  <span class="rounded-full bg-primary-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary-700">
-                    Projects
-                  </span>
-                </div>
-                <p class="text-2xl font-semibold text-black">100+</p>
-                <p class="mt-1 text-sm text-black/60">project có thể theo dõi song song</p>
-              </div>
-              <div class="rounded-[20px] border border-black/10 bg-white p-4">
-                <div class="flex items-center justify-between gap-3">
-                  <%= lucide_icon('workflow', class: 'h-4 w-4 text-primary-600', "aria-hidden": true) %>
-                  <span class="rounded-full bg-primary-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary-700">
-                    Workflow
-                  </span>
-                </div>
-                <p class="text-2xl font-semibold text-black">1 flow</p>
-                <p class="mt-1 text-sm text-black/60">gọn gàng cho task, người phụ trách và deadline</p>
-              </div>
+            <div class="max-w-3xl">
+              <p class="text-sm font-semibold uppercase tracking-[0.22em] text-primary-600">Manage work with clarity</p>
+              <h1 class="mt-3 text-4xl font-semibold tracking-tight text-black md:text-5xl">
+                Quản lý công việc, chia task rõ ràng, và giữ nhịp làm việc luôn dễ chịu.
+              </h1>
+              <p class="mt-4 max-w-2xl text-base leading-7 text-black/65">
+                Blueprint là không gian để team gom đầu việc, chia task hợp lý và theo dõi tiến độ hằng ngày
+                mà không biến công việc thành cảm giác ngợp. Mọi thứ được sắp gọn để bạn tập trung vào hiệu quả,
+                nhưng vẫn giữ trải nghiệm làm việc nhẹ và mượt.
+              </p>
+            </div>
+
+            <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+              <%= render ButtonComponent.new(
+                label: 'Bắt đầu ngay',
+                type: :navigate,
+                variant: :primary,
+                href: '#',
+                icon: 'rocket',
+                class: 'sm:w-auto'
+              ) %>
+
+              <%= render ButtonComponent.new(
+                label: 'Xem cách hoạt động',
+                type: :navigate,
+                variant: :secondary,
+                href: '#',
+                icon: 'play',
+                class: 'sm:w-auto'
+              ) %>
+            </div>
+
+            <div class="mt-8 grid gap-3 md:grid-cols-3">
+              <article class="rounded-[20px] border border-black/10 bg-white p-4">
+                <p class="text-2xl font-semibold text-black">01</p>
+                <p class="mt-3 text-sm font-semibold text-black">Chia việc mạch lạc</p>
+                <p class="mt-2 text-sm leading-6 text-black/60">
+                  Từ task lớn đến checklist nhỏ, mọi đầu việc đều có chỗ đứng và người chịu trách nhiệm rõ ràng.
+                </p>
+              </article>
+
+              <article class="rounded-[20px] border border-black/10 bg-white p-4">
+                <p class="text-2xl font-semibold text-black">02</p>
+                <p class="mt-3 text-sm font-semibold text-black">Theo dõi tiến độ dễ nhìn</p>
+                <p class="mt-2 text-sm leading-6 text-black/60">
+                  Cập nhật tiến độ theo luồng làm việc quen thuộc để cả team luôn biết việc gì đang chạy và việc gì bị nghẽn.
+                </p>
+              </article>
+
+              <article class="rounded-[20px] border border-black/10 bg-white p-4">
+                <p class="text-2xl font-semibold text-black">03</p>
+                <p class="mt-3 text-sm font-semibold text-black">Làm việc nhẹ đầu hơn</p>
+                <p class="mt-2 text-sm leading-6 text-black/60">
+                  Giao diện gọn, thao tác rõ và nhịp trình bày êm giúp quá trình quản lý công việc đỡ nặng nề hơn mỗi ngày.
+                </p>
+              </article>
             </div>
         </section>
+
+        <div class="space-y-4">
+          <section class="rounded-[28px] border border-black/10 bg-white p-5">
+              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-primary-600">Why teams choose Blueprint</p>
+              <div class="mt-4 space-y-3">
+                <div class="rounded-[20px] bg-stone-50 p-4">
+                  <p class="text-sm font-semibold text-black">Task board rõ ràng</p>
+                  <p class="mt-1 text-sm leading-6 text-black/60">Sắp xếp đầu việc theo trạng thái để ra quyết định nhanh hơn.</p>
+                </div>
+                <div class="rounded-[20px] bg-stone-50 p-4">
+                  <p class="text-sm font-semibold text-black">Phân chia trách nhiệm hợp lý</p>
+                  <p class="mt-1 text-sm leading-6 text-black/60">Mỗi task đều có owner, deadline và mức ưu tiên cụ thể.</p>
+                </div>
+                <div class="rounded-[20px] bg-stone-50 p-4">
+                  <p class="text-sm font-semibold text-black">Trải nghiệm làm việc thoải mái</p>
+                  <p class="mt-1 text-sm leading-6 text-black/60">Tập trung vào flow làm việc thay vì thêm noise vào ngày của bạn.</p>
+                </div>
+              </div>
+          </section>
+
+          <section class="rounded-[28px] border border-black/10 bg-stone-50 p-5">
+              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-black/45">Overview</p>
+              <div class="mt-4 grid gap-3 md:grid-cols-3">
+                <div class="rounded-[20px] border border-black/10 bg-white p-4">
+                  <div class="flex items-center justify-between gap-3">
+                    <%= lucide_icon('timer-reset', class: 'h-4 w-4 text-primary-600', "aria-hidden": true) %>
+                    <span class="rounded-full bg-primary-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary-700">
+                      Onboarding
+                    </span>
+                  </div>
+                  <p class="text-2xl font-semibold text-black">1h</p>
+                  <p class="mt-1 text-sm text-black/60">để team mới bắt nhịp với workflow</p>
+                </div>
+                <div class="rounded-[20px] border border-black/10 bg-white p-4">
+                  <div class="flex items-center justify-between gap-3">
+                    <%= lucide_icon('layers-3', class: 'h-4 w-4 text-primary-600', "aria-hidden": true) %>
+                    <span class="rounded-full bg-primary-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary-700">
+                      Projects
+                    </span>
+                  </div>
+                  <p class="text-2xl font-semibold text-black">100+</p>
+                  <p class="mt-1 text-sm text-black/60">project có thể theo dõi song song</p>
+                </div>
+                <div class="rounded-[20px] border border-black/10 bg-white p-4">
+                  <div class="flex items-center justify-between gap-3">
+                    <%= lucide_icon('workflow', class: 'h-4 w-4 text-primary-600', "aria-hidden": true) %>
+                    <span class="rounded-full bg-primary-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary-700">
+                      Workflow
+                    </span>
+                  </div>
+                  <p class="text-2xl font-semibold text-black">1 flow</p>
+                  <p class="mt-1 text-sm text-black/60">gọn gàng cho task, người phụ trách và deadline</p>
+                </div>
+              </div>
+          </section>
+        </div>
       </div>
-    </div>
+    <% end %>
   </section>
 </main>
