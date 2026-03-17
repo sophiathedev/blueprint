@@ -1,0 +1,72 @@
+name: blueprint
+x-configs:
+  database_env: &database-env
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: dummy
+  rails_env: &rails-env
+    POSTGRES_HOST: postgres
+    POSTGRES_PORT: 5432
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: dummy
+    RAILS_ENV: development
+    RAILS_MAX_THREADS: 6
+    REDIS_URL: redis://redis:6379/1
+
+services:
+  postgres:
+    image: postgres:latest
+    environment:
+      <<: *database-env
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    restart: unless-stopped
+
+  rails:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: blueprint
+    command: bin/dev
+    environment:
+      <<: *rails-env
+    volumes:
+      - rails_tmp:/rails/tmp
+      - .:/rails
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+  redis:
+    image: redis:latest
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+    command: ["redis-server"]
+
+  sidekiq:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/rails
+    depends_on:
+      - postgres
+      - redis
+    tty: true
+    stdin_open: true
+    environment:
+      <<: *rails-env
+    command: ["bundle", "exec", "sidekiq"]
+
+volumes:
+  postgres_data:
+  rails_tmp:

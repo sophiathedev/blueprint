@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+
+set -e
+
+bin/rails "tailwindcss:watch[always]" &
+
+
+# Let the debug gem allow remote connections,
+# but avoid loading until `debugger` is called
+export RUBY_DEBUG_OPEN="true"
+export RUBY_DEBUG_LAZY="true"
+
+unset PORT
+
+RUBY_DEBUG_OPEN=true RUBY_DEBUG_LAZY=true exec bin/rails server -b 0.0.0.0 "$@"
