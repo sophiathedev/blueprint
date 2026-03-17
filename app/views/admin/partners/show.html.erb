@@ -1,0 +1,56 @@
+<% content_for :title, 'Blueprint | Chi tiết đối tác' %>
+
+<section class="space-y-5">
+  <div class="rounded-[28px] border border-black/10 bg-white p-5 md:p-6">
+    <div class="flex flex-col gap-4 border-b border-black/10 pb-5 md:flex-row md:items-start md:justify-between">
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-primary-600">Admin / Đối tác</p>
+        <h1 class="mt-2 text-3xl font-semibold tracking-tight text-black"><%= @partner.name %></h1>
+        <p class="mt-2 text-sm leading-6 text-black/60">
+          Xem nhanh thông tin chi tiết của đối tác và chuyển sang các thao tác chỉnh sửa khi cần.
+        </p>
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        <%= render ButtonComponent.new(
+          label: 'Sửa đối tác',
+          type: :navigate,
+          variant: :primary,
+          href: edit_admin_partner_path(@partner),
+          icon: 'pencil'
+        ) %>
+
+        <%= render ButtonComponent.new(
+          label: 'Danh sách đối tác',
+          type: :navigate,
+          href: admin_partners_path,
+          icon: 'arrow-left'
+        ) %>
+      </div>
+    </div>
+
+    <div class="mt-5 grid gap-4 md:grid-cols-2">
+      <div class="rounded-[24px] border border-black/10 bg-stone-50 p-5">
+        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-black/45">Tên</p>
+        <p class="mt-2 text-xl font-semibold text-black"><%= @partner.name %></p>
+      </div>
+
+      <div class="rounded-[24px] border border-black/10 bg-stone-50 p-5">
+        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-black/45">Ngày tạo</p>
+        <p class="mt-2 text-xl font-semibold text-black"><%= l(@partner.created_at, format: :long) %></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="rounded-[28px] border border-red-200 bg-red-50 p-5 md:p-6">
+    <p class="text-sm font-semibold uppercase tracking-[0.2em] text-red-700">Vùng thao tác</p>
+    <h2 class="mt-2 text-2xl font-semibold tracking-tight text-black">Xóa đối tác</h2>
+    <p class="mt-2 max-w-2xl text-sm leading-6 text-black/60">
+      Thao tác này sẽ ẩn đối tác khỏi hệ thống thông qua `paranoia`, và bạn có thể cân nhắc khôi phục ở bước sau nếu cần.
+    </p>
+
+    <div class="mt-5">
+      <%= button_to 'Xóa đối tác', admin_partner_path(@partner), method: :delete, form: { data: { turbo_confirm: 'Bạn có chắc muốn xóa đối tác này không?' } }, class: 'inline-flex items-center justify-center rounded-2xl border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-700 transition-colors hover:border-red-300 hover:bg-red-100' %>
+    </div>
+  </div>
+</section>

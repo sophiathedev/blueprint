@@ -1,0 +1,47 @@
+<div
+  class="<%= [
+    'fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 py-6 backdrop-blur-sm transition-all duration-300 ease-out',
+    open? ? 'opacity-100' : 'pointer-events-none opacity-0'
+  ].join(' ') %>"
+  data-modal-target="overlay"
+  data-action="click->modal#closeOnBackdrop"
+>
+  <div
+    class="<%= [
+      'w-full max-w-2xl rounded-[30px] border border-black/10 bg-stone-100 shadow-[0_24px_80px_rgba(15,23,42,0.24)] transition-all duration-300 ease-out',
+      open? ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-4 scale-[0.97] opacity-0'
+    ].join(' ') %>"
+    data-modal-target="panel"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modal-title"
+  >
+    <div class="flex items-center justify-between gap-4 border-b border-black/10 px-5 py-5 md:px-6">
+      <div class="min-w-0">
+        <h2 id="modal-title" class="text-xl font-semibold tracking-tight text-black"><%= title %></h2>
+        <% if description.present? %>
+          <p class="mt-2 text-sm leading-6 text-black/60"><%= description %></p>
+        <% end %>
+      </div>
+
+      <button
+        type="button"
+        class="inline-flex h-8.5 w-8.5 items-center justify-center rounded-full bg-white text-black/60 ring-1 ring-black/10 transition hover:text-black"
+        data-action="modal#close"
+        aria-label="Đóng modal"
+      >
+        <%= helpers.lucide_icon('x', class: 'h-3.5 w-3.5', "aria-hidden": true) %>
+      </button>
+    </div>
+
+    <div class="px-5 py-5 md:px-6">
+      <%= body %>
+    </div>
+
+    <% if footer? %>
+      <div class="border-t border-black/10 px-5 py-4 md:px-6">
+        <%= footer %>
+      </div>
+    <% end %>
+  </div>
+</div>

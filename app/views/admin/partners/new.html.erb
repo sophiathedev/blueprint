@@ -1,0 +1,13 @@
+<% content_for :title, 'Blueprint | Tạo đối tác' %>
+
+<section class="space-y-5">
+  <div class="rounded-[28px] border border-black/10 bg-stone-50 p-5 md:p-6">
+    <p class="text-sm font-semibold uppercase tracking-[0.2em] text-primary-600">Admin / Đối tác</p>
+    <h1 class="mt-2 text-3xl font-semibold tracking-tight text-black">Tạo đối tác mới</h1>
+    <p class="mt-2 max-w-2xl text-sm leading-6 text-black/60">
+      Thêm một đối tác mới vào hệ thống để quản lý tập trung trong khu vực admin.
+    </p>
+  </div>
+
+  <%= render 'form', partner: @partner %>
+</section>

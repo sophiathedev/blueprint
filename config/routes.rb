@@ -18,5 +18,9 @@ Rails.application.routes.draw do
   get 'change-password', to: 'users#change_password', as: :change_password
   patch 'change-password', to: 'users#perform_password_change'
 
+  namespace :admin do
+    resources :partners
+  end
+
   root 'home#index'
 end

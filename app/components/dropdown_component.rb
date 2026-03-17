@@ -27,14 +27,16 @@ class DropdownComponent < ViewComponent::Base
         href: item.fetch(:href),
         icon: item[:icon],
         method: item[:method],
-        tone: item.fetch(:tone, :default).to_sym
+        tone: item.fetch(:tone, :default).to_sym,
+        confirm_label: item[:confirm_label],
+        confirm_icon: item[:confirm_icon]
       }
     end
   end
 
   def item_classes(item)
     [
-      'flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-colors',
+      'flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 ease-out',
       item[:tone] == :danger ? 'text-rose-600 hover:bg-rose-50' : 'text-black hover:bg-stone-100'
     ].join(' ')
   end

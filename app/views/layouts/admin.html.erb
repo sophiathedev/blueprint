@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "Blueprint | Quản trị" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Blueprint">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+    <link rel="preconnect" href="https://rsms.me/">
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+    <script>
+      try {
+        document.documentElement.dataset.sidebarLayoutCollapsed = (
+          window.localStorage.getItem("sidebar-layout-collapsed") === "true"
+        ).toString()
+      } catch (error) {
+        document.documentElement.dataset.sidebarLayoutCollapsed = "false"
+      }
+    </script>
+
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="min-h-screen bg-stone-100 antialiased">
+    <%= render FlashComponent.new(flash: flash) %>
+
+    <main
+      class="min-h-screen bg-stone-100 md:pl-[296px]"
+      data-controller="sidebar-layout"
+      data-sidebar-layout-collapsed-class="is-sidebar-collapsed"
+    >
+      <div
+        class="fixed inset-y-0 left-0 z-30 hidden w-20 md:block"
+        data-action="mouseenter->sidebar-layout#revealReopen mouseleave->sidebar-layout#hideReopen"
+        aria-hidden="true"
+      ></div>
+
+      <div
+        class="pointer-events-none fixed left-4 top-4 z-40 hidden opacity-0 transition-opacity duration-200 md:block"
+        data-sidebar-layout-target="reopenButton"
+        data-action="mouseenter->sidebar-layout#revealReopen mouseleave->sidebar-layout#hideReopen"
+      >
+        <%= render ButtonComponent.new(
+          label: 'Open sidebar',
+          type: :icon,
+          icon: 'panel-left-open',
+          class: 'bg-white text-black/70 shadow-sm ring-1 ring-black/10 hover:bg-white hover:text-black',
+          data: { action: 'click->sidebar-layout#open' }
+        ) %>
+      </div>
+
+      <div>
+        <%= render SidebarComponent.new(brand: 'Blueprint', items: sidebar_items) %>
+      </div>
+
+      <section class="px-3 py-4 md:px-4 md:py-4">
+        <div class="min-h-[calc(100vh-5rem)]" data-sidebar-layout-target="content">
+          <%= yield %>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
