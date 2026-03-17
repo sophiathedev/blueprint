@@ -1,1 +1,19 @@
-<div>Add Button template here</div>
+<% if navigate? %>
+  <%= link_to href, html_options do %>
+    <% if icon.present? %>
+      <%= helpers.lucide_icon(icon, class: "h-4 w-4 shrink-0", "aria-hidden": true) %>
+    <% end %>
+    <span><%= label %></span>
+  <% end %>
+<% elsif icon_button? %>
+  <%= button_tag type: html_button_type, **html_options do %>
+    <%= helpers.lucide_icon(icon, class: "h-4 w-4 shrink-0", "aria-hidden": true) %>
+  <% end %>
+<% else %>
+  <%= button_tag type: html_button_type, **html_options do %>
+    <% if icon.present? %>
+      <%= helpers.lucide_icon(icon, class: "h-4 w-4 shrink-0", "aria-hidden": true) %>
+    <% end %>
+    <span><%= label %></span>
+  <% end %>
+<% end %>

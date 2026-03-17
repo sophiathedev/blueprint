@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary-50: #fdf2f2;
-  --color-primary-100: #fbe6e6;
-  --color-primary-200: #f5c7c7;
-  --color-primary-300: #ee9e9f;
-  --color-primary-400: #e25a5b;
-  --color-primary-500: #d30102;
-  --color-primary-600: #ba0102;
-  --color-primary-700: #a00102;
-  --color-primary-800: #830101;
-  --color-primary-900: #650001;
-  --color-primary-950: #3f0001;
+  --color-primary-50: #edfaff;
+  --color-primary-100: #d6f3ff;
+  --color-primary-200: #ade8ff;
+  --color-primary-300: #72d8ff;
+  --color-primary-400: #32c6ff;
+  --color-primary-500: #0ab9fe;
+  --color-primary-600: #0098db;
+  --color-primary-700: #0279af;
+  --color-primary-800: #09668f;
+  --color-primary-900: #0d5676;
+  --color-primary-950: #09374d;
 
   --color-primary: var(--color-primary-500);
   --color-white: #ffffff;
@@ -22,4 +22,69 @@
   --color-background: var(--color-white);
   --color-foreground: var(--color-black);
   --color-accent: var(--color-primary);
+  font-family: Inter, sans-serif;
+  font-feature-settings: 'liga' 1, 'calt' 1;
+}
+
+@supports (font-variation-settings: normal) {
+  :root {
+    font-family: InterVariable, sans-serif;
+  }
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  [data-controller~="sidebar-layout"] {
+    transition: padding-left 220ms ease;
+  }
+
+  [data-controller~="sidebar-layout"] [data-sidebar-layout-target="sidebar"] {
+    transition: opacity 180ms ease, transform 220ms ease;
+  }
+
+  [data-controller~="sidebar-layout"] [data-sidebar-layout-target="content"] {
+    transition: margin 220ms ease;
+  }
+
+  [data-controller~="sidebar-layout"] [data-sidebar-layout-target="reopenButton"] {
+    transition: opacity 180ms ease;
+  }
+
+  [data-controller~="sidebar-layout"].is-sidebar-collapsed {
+    padding-left: 0;
+  }
+
+  html[data-sidebar-layout-collapsed="true"] [data-controller~="sidebar-layout"] {
+    padding-left: 0;
+  }
+
+  [data-controller~="sidebar-layout"].is-sidebar-collapsed [data-sidebar-layout-target="sidebar"] {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-16px);
+  }
+
+  html[data-sidebar-layout-collapsed="true"] [data-controller~="sidebar-layout"] [data-sidebar-layout-target="sidebar"] {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-16px);
+  }
+
+  [data-controller~="sidebar-layout"].is-sidebar-collapsed [data-sidebar-layout-target="content"] {
+    max-width: 1400px;
+    margin-inline: auto;
+  }
+
+  html[data-sidebar-layout-collapsed="true"] [data-controller~="sidebar-layout"] [data-sidebar-layout-target="content"] {
+    max-width: 1400px;
+    margin-inline: auto;
+  }
 }
