@@ -31,7 +31,9 @@
   </head>
 
   <body class="min-h-screen bg-stone-100 antialiased">
-    <%= render FlashComponent.new(flash: flash) %>
+    <div id="flash_container">
+      <%= render 'shared/flash', flash: flash %>
+    </div>
 
     <main
       class="min-h-screen bg-stone-100 md:pl-[296px]"

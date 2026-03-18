@@ -19,6 +19,10 @@ Rails.application.routes.draw do
   patch 'change-password', to: 'users#perform_password_change'
 
   namespace :admin do
+    resources :members, except: %i[show new edit] do
+      patch :reset_password, on: :member
+    end
+
     resources :partners
   end
 

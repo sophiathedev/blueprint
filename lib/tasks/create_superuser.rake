@@ -17,7 +17,7 @@ task create_superuser: :environment do
   print 'Nhập email: '
   email = to_utf8.call($stdin.gets)
 
-  password = SecureRandom.base58(16)
+  password = User.generate_strong_password(length: 16)
 
   user = User.new(
     name: nil,

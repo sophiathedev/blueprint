@@ -1,0 +1,49 @@
+<div class="space-y-2">
+  <%= form.label field, label, class: 'text-sm font-semibold text-black/80' %>
+
+  <div
+    class="relative"
+    data-controller="select-field"
+    data-action="keydown.esc@window->select-field#close click@window->select-field#closeOnOutside"
+  >
+    <%= form.hidden_field field, value: selected_value, data: { select_field_target: 'input' } %>
+
+    <button
+      type="button"
+      class="<%= trigger_classes %>"
+      data-action="click->select-field#toggle"
+      data-select-field-target="trigger"
+      aria-haspopup="listbox"
+      aria-expanded="false"
+    >
+      <span class="truncate" data-select-field-target="label"><%= selected_label %></span>
+      <span class="shrink-0 text-black/45">
+        <%= helpers.lucide_icon('chevrons-up-down', class: 'h-4 w-4', "aria-hidden": true) %>
+      </span>
+    </button>
+
+    <div
+      class="pointer-events-none absolute left-0 right-0 top-full z-40 mt-2 translate-y-1 opacity-0 transition duration-150 ease-out"
+      data-select-field-target="menu"
+    >
+      <div class="rounded-2xl border border-black/10 bg-white p-1 shadow-[0_18px_48px_rgba(15,23,42,0.14)] ring-0.5 ring-black/5">
+        <% normalized_choices.each do |choice| %>
+          <button
+            type="button"
+            class="<%= option_classes(choice) %>"
+            data-action="click->select-field#choose"
+            data-value="<%= choice[:value] %>"
+            data-label="<%= choice[:label] %>"
+            role="option"
+            aria-selected="<%= choice[:selected] %>"
+          >
+            <span class="truncate"><%= choice[:label] %></span>
+            <span class="<%= choice[:selected] ? 'text-primary-700' : 'invisible' %>" data-select-field-check>
+              <%= helpers.lucide_icon('check', class: 'h-4 w-4', "aria-hidden": true) %>
+            </span>
+          </button>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

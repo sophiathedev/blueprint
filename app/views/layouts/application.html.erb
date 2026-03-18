@@ -35,7 +35,9 @@
   </head>
 
   <body class="antialiased">
-    <%= render FlashComponent.new(flash: flash) %>
+    <div id="flash_container">
+      <%= render 'shared/flash', flash: flash %>
+    </div>
 
     <main>
       <%= yield %>

@@ -45,9 +45,11 @@ class FlashComponent < ViewComponent::Base
   def messages
     flash.to_hash.filter_map do |type, message|
       next if message.blank?
+      next if type.to_sym == :member_credentials
 
       Array(message).filter_map do |entry|
         next if entry.blank?
+        next unless entry.is_a?(String)
 
         {
           type: type.to_sym,

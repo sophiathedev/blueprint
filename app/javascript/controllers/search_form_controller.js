@@ -2,6 +2,9 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = ["input", "row", "table", "noResults"]
+  static values = {
+    delay: { type: Number, default: 500 }
+  }
 
   connect() {
     this.submitTimeout = null
@@ -16,7 +19,7 @@ export default class extends Controller {
     this.clearSubmitTimeout()
     this.submitTimeout = window.setTimeout(() => {
       this.filterRows()
-    }, 300)
+    }, this.delayValue)
   }
 
   clearSubmitTimeout() {
@@ -33,8 +36,8 @@ export default class extends Controller {
     let visibleCount = 0
 
     this.rowTargets.forEach((row) => {
-      const name = (row.dataset.searchName || "").toLowerCase()
-      const matches = query === "" || name.includes(query)
+      const searchText = (row.dataset.searchText || row.dataset.searchName || "").toLowerCase()
+      const matches = query === "" || searchText.includes(query)
 
       row.classList.toggle("hidden", !matches)
       if (matches) visibleCount += 1

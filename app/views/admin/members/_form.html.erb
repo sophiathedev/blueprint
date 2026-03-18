@@ -1,0 +1,59 @@
+<% submit_label = local_assigns.fetch(:submit_label, member.persisted? ? 'Lưu thay đổi' : 'Tạo người dùng') %>
+<% password_note = local_assigns[:password_note] %>
+
+<%= form_with url: member.persisted? ? admin_member_path(member) : admin_members_path, method: member.persisted? ? :patch : :post, model: member, class: 'space-y-4' do |form| %>
+  <% if member.errors.any? %>
+    <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm leading-6 text-rose-700">
+      <%= member.errors.full_messages.to_sentence %>
+    </div>
+  <% end %>
+
+  <%= render InputFieldComponent.new(
+    form: form,
+    field: :name,
+    label: 'Tên',
+    placeholder: 'Nhập tên người dùng',
+    autofocus: true,
+    data: { autofocus_modal: true }
+  ) %>
+
+  <%= render InputFieldComponent.new(
+    form: form,
+    field: :email,
+    label: 'Email',
+    type: :email,
+    placeholder: 'Nhập email đăng nhập'
+  ) %>
+
+  <% if member.persisted? %>
+    <%= render SelectFieldComponent.new(
+      form: form,
+      field: :role,
+      label: 'Roles',
+      choices: User.roles.keys.map { |role| [role.capitalize, role] }
+    ) %>
+  <% end %>
+
+  <% if password_note.present? %>
+    <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800">
+      <%= password_note %>
+    </div>
+  <% end %>
+
+  <div class="flex items-center justify-end gap-2">
+    <button
+      type="button"
+      class="inline-flex items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-stone-100 px-3 py-2 text-sm font-semibold text-black transition-colors hover:border-stone-300 hover:bg-stone-200"
+      data-action="modal#close"
+    >
+      Hủy
+    </button>
+
+    <%= render ButtonComponent.new(
+      label: submit_label,
+      type: :submit,
+      variant: :primary,
+      icon: member.persisted? ? 'save' : 'plus'
+    ) %>
+  </div>
+<% end %>

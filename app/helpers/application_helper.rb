@@ -19,6 +19,12 @@ module ApplicationHelper
         href: admin_partners_path,
         active: controller_path == 'admin/partners',
         icon: 'handshake'
+      },
+      {
+        label: 'Thành viên',
+        href: admin_members_path,
+        active: controller_path == 'admin/members',
+        icon: 'users-round'
       }
     ]
   end
