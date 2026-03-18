@@ -1,11 +1,14 @@
 # frozen_string_literal: true
 
 class ApplicationController < ActionController::Base
+  SESSION_TIMEOUT = 10.hours
+
   # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
   allow_browser versions: :modern
 
   # Changes to the importmap will invalidate the etag for HTML responses
   stale_when_importmap_changes
+  before_action :expire_session_if_needed
   before_action :enforce_password_change_if_needed
 
   helper_method :current_user, :user_signed_in?
@@ -26,10 +29,24 @@ class ApplicationController < ActionController::Base
     redirect_to login_path, alert: 'Vui lòng đăng nhập để tiếp tục.'
   end
 
+  def mark_session_authenticated!
+    session[:authenticated_at] = Time.current.to_i
+  end
+
   def enforce_password_change_if_needed
     return unless user_signed_in? && current_user.first_login?
     return if controller_name == 'users' && action_name.in?(%w[change_password perform_password_change])
 
     redirect_to change_password_path, alert: 'Vui lòng đổi mật khẩu trước khi tiếp tục.'
+  end
+
+  def expire_session_if_needed
+    authenticated_at = session[:authenticated_at]
+    return if authenticated_at.blank?
+
+    return if Time.zone.at(authenticated_at.to_i) > SESSION_TIMEOUT.ago
+
+    reset_session
+    redirect_to login_path, alert: 'Phiên đăng nhập đã hết hạn sau 10 tiếng. Vui lòng đăng nhập lại.'
   end
 end

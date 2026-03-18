@@ -14,6 +14,7 @@ class UsersController < ApplicationController
 
     if user&.authenticate(login_params[:password].to_s)
       session[:user_id] = user.id
+      mark_session_authenticated!
 
       if user.first_login?
         redirect_to change_password_path, notice: 'Vui lòng đổi mật khẩu ở lần đăng nhập đầu tiên.'
@@ -43,6 +44,7 @@ class UsersController < ApplicationController
       password_confirmation: @password_confirmation,
       last_login_at: Time.current
     )
+      mark_session_authenticated!
       redirect_to root_path, notice: 'Đổi mật khẩu thành công.'
     else
       flash.now[:alert] = current_user.errors.full_messages.to_sentence
