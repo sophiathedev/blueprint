@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_17_202000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_19_113000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -21,6 +21,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_17_202000) do
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_partners_on_deleted_at"
     t.index ["name"], name: "index_partners_on_name"
+  end
+
+  create_table "services", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.string "name", null: false
+    t.bigint "partner_id", null: false
+    t.datetime "updated_at", null: false
+    t.index "lower((name)::text)", name: "index_services_on_lower_name_active", unique: true, where: "(deleted_at IS NULL)"
+    t.index ["deleted_at"], name: "index_services_on_deleted_at"
+    t.index ["partner_id"], name: "index_services_on_partner_id"
+  end
+
+  create_table "tasks", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.bigint "member_id"
+    t.string "name", null: false
+    t.bigint "service_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_tasks_on_deleted_at"
+    t.index ["member_id"], name: "index_tasks_on_member_id"
+    t.index ["service_id"], name: "index_tasks_on_service_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -34,4 +57,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_17_202000) do
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_users_on_deleted_at"
   end
+
+  add_foreign_key "services", "partners"
+  add_foreign_key "tasks", "services"
+  add_foreign_key "tasks", "users", column: "member_id"
 end

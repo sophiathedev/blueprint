@@ -26,12 +26,14 @@ class InputFieldComponent < ViewComponent::Base
   end
 
   def input_options
+    existing_data = options.fetch(:data, {})
     merged_options = options.merge(
       class: [
-        'w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-black outline-none transition',
+        'w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-2 pr-10 text-sm text-black outline-none transition',
         'focus:border-primary-400 focus:bg-white focus:ring-4 focus:ring-primary-100',
         options[:class]
-      ].compact.join(' ')
+      ].compact.join(' '),
+      data: existing_data
     )
 
     return merged_options if value.nil?

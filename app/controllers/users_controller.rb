@@ -47,7 +47,7 @@ class UsersController < ApplicationController
       mark_session_authenticated!
       redirect_to root_path, notice: 'Đổi mật khẩu thành công.'
     else
-      flash.now[:alert] = current_user.errors.full_messages.to_sentence
+      flash.now[:alert] = current_user.errors.full_messages
       render :change_password, status: :unprocessable_entity
     end
   end

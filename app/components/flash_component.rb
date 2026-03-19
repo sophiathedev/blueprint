@@ -3,23 +3,23 @@
 class FlashComponent < ViewComponent::Base
   TYPE_STYLES = {
     notice: {
-      container: 'border-emerald-500 bg-emerald-600 text-white shadow-emerald-900/15',
-      icon_wrapper: 'bg-white/16 text-white',
+      container: 'border-emerald-500 bg-emerald-600 text-white shadow-emerald-900/25',
+      icon_wrapper: 'bg-white/20 text-white',
       icon: 'circle-check'
     },
     success: {
-      container: 'border-emerald-500 bg-emerald-600 text-white shadow-emerald-900/15',
-      icon_wrapper: 'bg-white/16 text-white',
+      container: 'border-emerald-500 bg-emerald-600 text-white shadow-emerald-900/25',
+      icon_wrapper: 'bg-white/20 text-white',
       icon: 'circle-check'
     },
     alert: {
-      container: 'border-rose-500 bg-rose-600 text-white shadow-rose-900/15',
-      icon_wrapper: 'bg-white/16 text-white',
+      container: 'border-rose-500 bg-rose-600 text-white shadow-rose-900/25',
+      icon_wrapper: 'bg-white/20 text-white',
       icon: 'circle-alert'
     },
     error: {
-      container: 'border-rose-500 bg-rose-600 text-white shadow-rose-900/15',
-      icon_wrapper: 'bg-white/16 text-white',
+      container: 'border-rose-500 bg-rose-600 text-white shadow-rose-900/25',
+      icon_wrapper: 'bg-white/20 text-white',
       icon: 'circle-alert'
     },
     warning: {

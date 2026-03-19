@@ -1,0 +1,45 @@
+<%= form_with model: [:admin, partner, service, task], class: 'space-y-4', data: local_assigns[:form_data] do |form| %>
+  <% if task.errors.any? %>
+    <div class="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+      <%= lucide_icon('circle-alert', class: 'mt-0.5 h-4 w-4 shrink-0', "aria-hidden": true) %>
+      <div><%= task.errors.full_messages.join(', ') %></div>
+    </div>
+  <% end %>
+
+  <%= render InputFieldComponent.new(
+    form: form,
+    field: :name,
+    label: 'Tên task',
+    placeholder: 'Nhập tên task',
+    autofocus: true,
+    data: { autofocus_modal: true }
+  ) %>
+
+  <%= render SelectFieldComponent.new(
+    form: form,
+    field: :member_id,
+    label: 'PIC',
+    choices: local_assigns.fetch(:member_options, @member_options),
+    selected_label: task.member&.display_name,
+    prompt: 'Chọn member phụ trách',
+    searchable: true,
+    search_placeholder: 'Tìm member...'
+  ) %>
+
+  <div class="flex items-center justify-end gap-2">
+    <button
+      type="button"
+      class="inline-flex items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-stone-100 px-3 py-2 text-sm font-semibold text-black transition-colors hover:border-stone-300 hover:bg-stone-200"
+      data-action="modal#close"
+    >
+      Hủy
+    </button>
+
+    <%= render ButtonComponent.new(
+      label: local_assigns.fetch(:submit_label, 'Tạo task'),
+      type: :submit,
+      variant: :primary,
+      icon: local_assigns.fetch(:submit_icon, 'plus')
+    ) %>
+  </div>
+<% end %>

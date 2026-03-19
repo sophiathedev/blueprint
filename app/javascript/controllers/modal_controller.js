@@ -6,6 +6,7 @@ export default class extends Controller {
 
   connect() {
     this.boundHandleKeydown = this.handleKeydown.bind(this)
+    this.disableInitialAnimationIfNeeded()
     this.sync()
   }
 
@@ -37,6 +38,7 @@ export default class extends Controller {
   sync() {
     if (!this.hasOverlayTarget) return
 
+    this.overlayTarget.classList.toggle("hidden", !this.openValue)
     this.overlayTarget.classList.toggle("pointer-events-none", !this.openValue)
     this.overlayTarget.classList.toggle("opacity-0", !this.openValue)
     this.overlayTarget.classList.toggle("opacity-100", this.openValue)
@@ -77,5 +79,17 @@ export default class extends Controller {
     window.setTimeout(() => {
       this.element.querySelector("[data-autofocus-modal]")?.focus()
     }, 180)
+  }
+
+  disableInitialAnimationIfNeeded() {
+    if (!this.openValue) return
+
+    this.overlayTarget?.classList.add("transition-none")
+    this.panelTarget?.classList.add("transition-none")
+
+    requestAnimationFrame(() => {
+      this.overlayTarget?.classList.remove("transition-none")
+      this.panelTarget?.classList.remove("transition-none")
+    })
   }
 }

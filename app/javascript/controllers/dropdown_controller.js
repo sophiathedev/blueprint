@@ -6,6 +6,12 @@ export default class extends Controller {
 
   connect() {
     this.isOpen = false
+    this.handleFloatingOpen = this.closeWhenAnotherOpens.bind(this)
+    window.addEventListener("floating-ui:open", this.handleFloatingOpen)
+  }
+
+  disconnect() {
+    window.removeEventListener("floating-ui:open", this.handleFloatingOpen)
   }
 
   toggle(event) {
@@ -16,6 +22,7 @@ export default class extends Controller {
   open() {
     if (!this.hasMenuTarget) return
 
+    window.dispatchEvent(new CustomEvent("floating-ui:open", { detail: { source: this.element } }))
     this.isOpen = true
     this.menuTarget.classList.remove("pointer-events-none", "translate-y-1", "translate-x-1", "opacity-0")
   }
@@ -29,6 +36,12 @@ export default class extends Controller {
   }
 
   closeOnOutside(event) {
+    if (this.element.contains(event.target)) return
+
+    this.close()
+  }
+
+  closeOnFocusOutside(event) {
     if (this.element.contains(event.target)) return
 
     this.close()
@@ -75,5 +88,11 @@ export default class extends Controller {
       button.dataset.confirmed = "false"
       button.classList.remove("bg-rose-50")
     })
+  }
+
+  closeWhenAnotherOpens(event) {
+    if (event.detail?.source === this.element) return
+
+    this.close()
   }
 }

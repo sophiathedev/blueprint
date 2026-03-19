@@ -17,7 +17,7 @@ export default class extends Controller {
     url.searchParams.delete("edit_member_id")
     url.searchParams.delete("reset_password_member_id")
 
-    const nextUrl = this.baseUrlValue || `${url.pathname}${url.search}`
+    const nextUrl = `${url.pathname}${url.search}${url.hash}`
     window.history.replaceState({}, "", nextUrl)
   }
 }

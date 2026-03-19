@@ -1,0 +1,91 @@
+<div
+  class="<%= [local_assigns.fetch(:row_offset, 0).zero? && service_iteration.index.zero? ? nil : 'border-t border-black/10'].compact.join(' ') %>"
+  data-search-name="<%= service.name %>"
+  data-controller="service-row-collapse"
+  data-service-row-collapse-last-value="<%= service_iteration.last? %>"
+  data-service-row-collapse-src-value="<%= tasks_panel_admin_partner_service_path(partner, service) %>"
+  data-service-row-item
+>
+  <div
+    class="<%= ['grid cursor-pointer grid-cols-[56px_minmax(0,1fr)_92px] items-center gap-2 px-3 py-2.5 transition hover:bg-stone-50 focus:outline-none focus-visible:bg-stone-50', service_iteration.last? ? 'rounded-b-[24px]' : nil].compact.join(' ') %>"
+    data-action="click->service-row-collapse#toggle keydown->service-row-collapse#toggleWithKeyboard"
+    data-service-row-collapse-target="trigger"
+    tabindex="0"
+    role="button"
+    aria-expanded="false"
+  >
+    <div class="text-sm text-center font-medium text-black/55"><%= local_assigns.fetch(:row_offset, 0) + service_iteration.index + 1 %></div>
+
+    <div class="flex min-w-0 items-center gap-2">
+      <div id="service-display-<%= service.id %>" class="flex min-w-0 items-center gap-2">
+        <span class="truncate text-sm font-semibold text-black"><%= service.name %></span>
+        <button
+          type="button"
+          class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-stone-100 text-black/55 transition hover:bg-stone-200 hover:text-black"
+          onclick="document.getElementById('service-display-<%= service.id %>')?.classList.add('hidden'); document.getElementById('service-edit-<%= service.id %>')?.classList.remove('hidden'); const input = document.getElementById('service-input-<%= service.id %>'); input?.focus(); input?.select();"
+          aria-label="Sửa tên gói dịch vụ"
+        >
+          <%= lucide_icon('pencil', class: 'h-3.5 w-3.5', "aria-hidden": true) %>
+        </button>
+      </div>
+
+      <div id="service-edit-<%= service.id %>" class="hidden w-full">
+        <%= form_with model: [:admin, partner, service], class: 'w-full' do |form| %>
+          <%= hidden_field_tag :q, local_assigns[:query] %>
+          <div class="relative" data-controller="clearable-input">
+            <%= form.text_field :name,
+              id: "service-input-#{service.id}",
+              value: service.name,
+              class: 'w-full rounded-2xl border border-stone-200 bg-white px-3 py-2 pr-10 text-sm font-medium text-black outline-none transition focus:border-primary-400 focus:ring-4 focus:ring-primary-100',
+              onblur: 'this.form.requestSubmit()',
+              onkeydown: "if (event.key === 'Enter') { event.preventDefault(); this.form.requestSubmit(); } if (event.key === 'Escape') { event.preventDefault(); this.value = this.defaultValue; this.form.closest(\"#service-edit-#{service.id}\")?.classList.add(\"hidden\"); document.getElementById(\"service-display-#{service.id}\")?.classList.remove(\"hidden\"); }",
+              data: { clearable_input_target: 'input', action: 'input->clearable-input#sync' } %>
+            <button
+              type="button"
+              class="absolute inset-y-0 right-0 hidden items-center pr-3 text-black/35 transition hover:text-black"
+              data-clearable-input-target="clear"
+              data-action="click->clearable-input#clear"
+              aria-label="Xóa nội dung"
+            >
+              <%= lucide_icon('x', class: 'h-4 w-4', "aria-hidden": true) %>
+            </button>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-end gap-2 overflow-visible">
+      <%= render DropdownComponent.new(
+        items: [
+          { label: 'Task', href: admin_partner_service_tasks_path(partner, service), icon: 'list-todo', data: { turbo_frame: '_top' } },
+          { label: 'Xóa gói dịch vụ', href: admin_partner_service_path(partner, service), method: :delete, icon: 'trash-2', tone: :danger, confirm_label: 'Xác nhận xóa?', confirm_icon: 'check' }
+        ],
+        direction: :bottom_right
+      ) do |dropdown| %>
+        <% dropdown.with_trigger do %>
+          <button
+            type="button"
+            class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-black/55 ring-1 ring-black/10 transition hover:bg-stone-100 hover:text-black"
+            aria-label="Mở thao tác gói dịch vụ"
+          >
+            <%= lucide_icon('ellipsis', class: 'h-4 w-4', "aria-hidden": true) %>
+          </button>
+        <% end %>
+      <% end %>
+
+      <span class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-stone-100 text-black/55" aria-hidden="true">
+        <%= lucide_icon('chevron-right', class: 'h-4 w-4 transition-transform duration-200', data: { service_row_collapse_target: 'icon' }) %>
+      </span>
+    </div>
+  </div>
+
+  <div class="hidden border-t border-black/10 bg-stone-100/90 pl-[74px] pr-3" data-service-row-collapse-target="content">
+    <div class="py-1">
+      <%= turbo_frame_tag "service_#{service.id}_tasks_panel", data: { service_row_collapse_target: 'frame' } do %>
+        <div class="border-l-2 border-stone-300 pl-6 pr-4 py-3 text-sm text-black/45">
+          Đang tải task...
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

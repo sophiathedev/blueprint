@@ -28,7 +28,7 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     container_name: blueprint
-    command: bin/dev
+    command: ["/bin/bash", "-c", "rm -f tmp/pids/server.pid && bin/dev"]
     environment:
       <<: *rails-env
     volumes:

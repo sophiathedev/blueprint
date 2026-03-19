@@ -1,10 +1,13 @@
 <div class="space-y-2">
-  <%= form.label field, label, class: 'text-sm font-semibold text-black/80' %>
+  <% if show_label? %>
+    <%= form.label field, label, class: 'text-sm font-semibold text-black/80' %>
+  <% end %>
 
   <div
     class="relative"
     data-controller="select-field"
     data-action="keydown.esc@window->select-field#close click@window->select-field#closeOnOutside"
+    data-select-field-submit-on-choose-value="<%= submit_on_choose? %>"
   >
     <%= form.hidden_field field, value: selected_value, data: { select_field_target: 'input' } %>
 
@@ -16,33 +19,80 @@
       aria-haspopup="listbox"
       aria-expanded="false"
     >
-      <span class="truncate" data-select-field-target="label"><%= selected_label %></span>
-      <span class="shrink-0 text-black/45">
+      <span class="flex min-w-0 items-center gap-2">
+        <% if show_trigger_icon? %>
+          <%= helpers.lucide_icon(trigger_icon, class: 'h-4 w-4 shrink-0', "aria-hidden": true) %>
+        <% end %>
+        <span class="truncate" data-select-field-target="label"><%= selected_label %></span>
+      </span>
+      <span class="<%= chevron_classes %>">
         <%= helpers.lucide_icon('chevrons-up-down', class: 'h-4 w-4', "aria-hidden": true) %>
       </span>
     </button>
 
     <div
-      class="pointer-events-none absolute left-0 right-0 top-full z-40 mt-2 translate-y-1 opacity-0 transition duration-150 ease-out"
+      class="pointer-events-none absolute left-0 right-0 top-full z-40 mt-2 opacity-0 transition duration-150 ease-out"
       data-select-field-target="menu"
     >
-      <div class="rounded-2xl border border-black/10 bg-white p-1 shadow-[0_18px_48px_rgba(15,23,42,0.14)] ring-0.5 ring-black/5">
-        <% normalized_choices.each do |choice| %>
-          <button
-            type="button"
-            class="<%= option_classes(choice) %>"
-            data-action="click->select-field#choose"
-            data-value="<%= choice[:value] %>"
-            data-label="<%= choice[:label] %>"
-            role="option"
-            aria-selected="<%= choice[:selected] %>"
-          >
-            <span class="truncate"><%= choice[:label] %></span>
-            <span class="<%= choice[:selected] ? 'text-primary-700' : 'invisible' %>" data-select-field-check>
-              <%= helpers.lucide_icon('check', class: 'h-4 w-4', "aria-hidden": true) %>
-            </span>
-          </button>
+      <div
+        class="flex flex-col rounded-2xl border border-black/10 bg-white p-2 shadow-[0_18px_48px_rgba(15,23,42,0.14)] ring-0.5 ring-black/5"
+        data-select-field-target="panel"
+      >
+        <% if searchable? %>
+          <div class="pb-2" data-select-field-target="searchWrapper">
+            <div class="relative" data-controller="clearable-input">
+              <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-black/35">
+                <%= helpers.lucide_icon('search', class: 'h-4 w-4', "aria-hidden": true) %>
+              </span>
+              <input
+                type="text"
+                class="w-full rounded-xl border border-stone-200 bg-stone-50 py-2 pl-10 pr-10 text-sm text-black outline-none transition focus:border-primary-400 focus:bg-white focus:ring-4 focus:ring-primary-100"
+                placeholder="<%= search_placeholder %>"
+                data-select-field-target="search"
+                data-clearable-input-target="input"
+                data-action="input->select-field#filterWithDebounce input->clearable-input#sync keydown.down->select-field#focusFirstOption"
+              >
+              <button
+                type="button"
+                class="absolute inset-y-0 right-0 hidden items-center pr-3 text-black/35 transition hover:text-black"
+                data-clearable-input-target="clear"
+                data-action="click->clearable-input#clear"
+                aria-label="Xóa nội dung"
+              >
+                <%= helpers.lucide_icon('x', class: 'h-4 w-4', "aria-hidden": true) %>
+              </button>
+            </div>
+          </div>
         <% end %>
+
+        <div class="<%= options_wrapper_classes %>" data-select-field-target="optionsWrapper">
+          <% normalized_choices.each do |choice| %>
+            <button
+              type="button"
+              class="<%= option_classes(choice) %>"
+              data-action="click->select-field#choose"
+              data-value="<%= choice[:value] %>"
+              data-label="<%= choice[:label] %>"
+              data-select-field-target="option"
+              role="option"
+              aria-selected="<%= choice[:selected] %>"
+            >
+              <span class="truncate"><%= choice[:label] %></span>
+              <span class="<%= choice[:selected] ? 'text-primary-700' : 'invisible' %>" data-select-field-check>
+                <%= helpers.lucide_icon('check', class: 'h-4 w-4', "aria-hidden": true) %>
+              </span>
+            </button>
+          <% end %>
+
+          <% if searchable? %>
+            <div
+              class="hidden rounded-xl px-3 py-3 text-center text-sm text-black/45"
+              data-select-field-target="emptyState"
+            >
+              Không tìm thấy kết quả phù hợp.
+            </div>
+          <% end %>
+        </div>
       </div>
     </div>
   </div>

@@ -44,7 +44,8 @@ module Admin
       else
         load_members
         @open_create_modal = true
-        render_members_response(status: :unprocessable_entity)
+        flash.now[:alert] = @new_member.errors.full_messages
+        render_members_response(status: :unprocessable_entity, replace_page: false)
       end
     end
 
@@ -64,7 +65,8 @@ module Admin
         @new_member = build_member
         @edit_member = @member
         @open_edit_member_id = @member.id
-        render_members_response(status: :unprocessable_entity)
+        flash.now[:alert] = @member.errors.full_messages
+        render_members_response(status: :unprocessable_entity, replace_page: false)
       end
     end
 
@@ -110,7 +112,8 @@ module Admin
         @new_member = build_member
         @password_member = @member
         @open_reset_password_member_id = @member.id
-        render_members_response(status: :unprocessable_entity)
+        flash.now[:alert] = @member.errors.full_messages
+        render_members_response(status: :unprocessable_entity, replace_page: false)
       end
     end
 
@@ -122,6 +125,10 @@ module Admin
 
     def load_members
       @members = User.order(:id)
+      return if params[:q].to_s.strip.blank?
+
+      query = "%#{ActiveRecord::Base.sanitize_sql_like(params[:q].to_s.strip)}%"
+      @members = @members.where('name ILIKE ? OR email ILIKE ?', query, query)
     end
 
     def build_member(attributes = {})
@@ -171,10 +178,16 @@ module Admin
       }
     end
 
-    def render_members_response(status:)
+    def render_members_response(status:, replace_page: true)
       respond_to do |format|
         format.html { render :index, status: status }
-        format.turbo_stream { render_members_turbo_stream(status: status) }
+        format.turbo_stream do
+          if replace_page
+            render_members_turbo_stream(status: status)
+          else
+            render_flash_turbo_stream(status: status)
+          end
+        end
       end
     end
 
@@ -190,6 +203,14 @@ module Admin
           locals: { flash: flash }
         )
       ], status: status
+    end
+
+    def render_flash_turbo_stream(status: :ok)
+      render turbo_stream: turbo_stream.update(
+        'flash_container',
+        partial: 'shared/flash',
+        locals: { flash: flash }
+      ), status: status
     end
   end
 end

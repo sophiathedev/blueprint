@@ -24,8 +24,10 @@ class DropdownComponent < ViewComponent::Base
     items.map do |item|
       {
         label: item.fetch(:label),
-        href: item.fetch(:href),
+        href: item[:href],
+        button: item.fetch(:button, false),
         icon: item[:icon],
+        data: item.fetch(:data, {}),
         method: item[:method],
         tone: item.fetch(:tone, :default).to_sym,
         confirm_label: item[:confirm_label],
@@ -42,9 +44,10 @@ class DropdownComponent < ViewComponent::Base
   end
 
   def item_data(item)
-    return {} if item[:method].blank?
+    data = item[:data].dup
+    return data if item[:method].blank?
 
-    { turbo_method: item[:method] }
+    data.merge(turbo_method: item[:method])
   end
 
   def menu_position_classes

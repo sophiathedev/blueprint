@@ -1,4 +1,15 @@
 <div class="space-y-2">
   <%= form.label field, label, class: 'text-sm font-semibold text-black/80' %>
-  <%= form.public_send(field_method, field, **input_options) %>
+  <div class="relative" data-controller="clearable-input">
+    <%= form.public_send(field_method, field, **input_options.merge(data: options.fetch(:data, {}).merge(clearable_input_target: 'input', action: [options.dig(:data, :action), 'input->clearable-input#sync'].compact.join(' ')))) %>
+    <button
+      type="button"
+      class="absolute inset-y-0 right-0 hidden items-center pr-3 text-black/35 transition hover:text-black"
+      data-clearable-input-target="clear"
+      data-action="click->clearable-input#clear"
+      aria-label="Xóa nội dung"
+    >
+      <%= helpers.lucide_icon('x', class: 'h-4 w-4', "aria-hidden": true) %>
+    </button>
+  </div>
 </div>

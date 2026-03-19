@@ -1,0 +1,71 @@
+<section id="admin_services_page" data-controller="modal" data-modal-open-value="<%= @open_service_modal.present? %>">
+  <div class="rounded-[28px] border border-black/10 bg-white p-5 md:p-6">
+    <div class="flex flex-col gap-4 border-b border-black/10 pb-5 md:flex-row md:items-end md:justify-between">
+      <div class="flex items-center gap-3">
+        <%= link_to admin_partners_path,
+          class: 'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-stone-200 bg-stone-100 text-black transition-colors hover:border-stone-300 hover:bg-stone-200 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2',
+          aria: { label: 'Quay lại danh sách đối tác' } do %>
+          <%= lucide_icon('arrow-left', class: 'h-4 w-4', "aria-hidden": true) %>
+        <% end %>
+
+        <h1 class="text-3xl font-semibold tracking-tight text-black">
+          Gói dịch vụ của <span class="text-primary-600"><%= @partner.name %></span>
+        </h1>
+      </div>
+
+      <div class="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center">
+        <%= form_with url: admin_partner_services_path(@partner), method: :get, class: 'w-full md:w-[280px]', data: { turbo_frame: 'services_list_frame', controller: 'debounced-submit' } do %>
+          <div class="relative w-full" data-controller="clearable-input">
+            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-black/35">
+              <%= lucide_icon('search', class: 'h-4 w-4', "aria-hidden": true) %>
+            </span>
+            <input
+              type="text"
+              name="q"
+              value="<%= @query %>"
+              placeholder="Tìm theo tên gói dịch vụ"
+              class="w-full rounded-2xl border border-stone-200 bg-stone-50 py-2 pl-10 pr-10 text-sm text-black outline-none transition focus:border-primary-400 focus:bg-white focus:ring-4 focus:ring-primary-100"
+              data-clearable-input-target="input"
+              data-action="input->debounced-submit#submit input->clearable-input#sync"
+            >
+            <button
+              type="button"
+              class="absolute inset-y-0 right-0 hidden items-center pr-3 text-black/35 transition hover:text-black"
+              data-clearable-input-target="clear"
+              data-action="click->clearable-input#clear click->debounced-submit#submit"
+              aria-label="Xóa nội dung"
+            >
+              <%= lucide_icon('x', class: 'h-4 w-4', "aria-hidden": true) %>
+            </button>
+          </div>
+        <% end %>
+
+        <button
+          type="button"
+          class="inline-flex items-center justify-center gap-2 rounded-2xl border border-primary-500 bg-primary-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:border-primary-600 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2"
+          data-action="click->modal#open"
+        >
+          <%= lucide_icon('plus', class: 'h-4 w-4 shrink-0', "aria-hidden": true) %>
+          <span>Thêm gói dịch vụ</span>
+        </button>
+      </div>
+    </div>
+
+    <%= render 'admin/services/services_list',
+      partner: @partner,
+      services: @services,
+      query: @query,
+      row_offset: @row_offset,
+      next_page: @next_page %>
+  </div>
+
+  <%= render ModalComponent.new(
+    title: ("Tạo gói dịch vụ cho ".html_safe + content_tag(:span, @partner.name, class: 'text-primary-600')),
+    description: 'Mỗi gói dịch vụ chỉ có một trường là tên và tên cần là duy nhất.',
+    open: @open_service_modal.present?
+  ) do |modal| %>
+    <% modal.with_body do %>
+      <%= render 'form', partner: @partner, service: @service %>
+    <% end %>
+  <% end %>
+</section>

@@ -1,0 +1,60 @@
+<section
+  id="admin_partners_page"
+  data-controller="search-form modal"
+  data-search-form-mode-value="server"
+  data-modal-open-value="<%= @open_partner_modal.present? %>"
+>
+  <div class="rounded-[28px] border border-black/10 bg-white p-5 md:p-6">
+    <div class="flex flex-col gap-4 border-b border-black/10 pb-5 md:flex-row md:items-end md:justify-between">
+      <h1 class="text-3xl font-semibold tracking-tight text-black">Quản lý đối tác</h1>
+
+      <div class="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center">
+        <div class="relative w-full md:w-[280px]" data-controller="clearable-input">
+          <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-black/35">
+            <%= lucide_icon('search', class: 'h-4 w-4', "aria-hidden": true) %>
+          </span>
+          <input
+            type="text"
+            name="q"
+            value="<%= @query %>"
+            placeholder="Tìm theo tên đối tác"
+            class="w-full rounded-2xl border border-stone-200 bg-stone-50 py-2 pl-10 pr-10 text-sm text-black outline-none transition focus:border-primary-400 focus:bg-white focus:ring-4 focus:ring-primary-100"
+            data-search-form-target="input"
+            data-clearable-input-target="input"
+            data-action="input->search-form#submitWithDebounce input->clearable-input#sync"
+          >
+          <button
+            type="button"
+            class="absolute inset-y-0 right-0 hidden items-center pr-3 text-black/35 transition hover:text-black"
+            data-clearable-input-target="clear"
+            data-action="click->clearable-input#clear"
+            aria-label="Xóa nội dung"
+          >
+            <%= lucide_icon('x', class: 'h-4 w-4', "aria-hidden": true) %>
+          </button>
+        </div>
+
+        <button
+          type="button"
+          class="inline-flex items-center justify-center gap-2 rounded-2xl border border-primary-500 bg-primary-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:border-primary-600 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2"
+          data-action="click->modal#open"
+        >
+          <%= lucide_icon('plus', class: 'h-4 w-4 shrink-0', "aria-hidden": true) %>
+          <span>Thêm đối tác</span>
+        </button>
+      </div>
+    </div>
+
+    <%= render 'admin/partners/partners_list',
+      partners: @partners,
+      query: @query,
+      row_offset: @row_offset,
+      next_page: @next_page %>
+  </div>
+
+  <%= render ModalComponent.new(title: 'Tạo đối tác mới', open: @open_partner_modal.present?) do |modal| %>
+    <% modal.with_body do %>
+      <%= render 'form', partner: @partner, from_modal: true %>
+    <% end %>
+  <% end %>
+</section>

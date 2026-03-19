@@ -2,7 +2,7 @@
   class="relative"
   data-controller="dropdown"
   data-dropdown-direction-value="<%= direction %>"
-  data-action="keydown.esc@window->dropdown#close click@window->dropdown#closeOnOutside"
+  data-action="keydown.esc@window->dropdown#close click@window->dropdown#closeOnOutside focusin@window->dropdown#closeOnFocusOutside"
 >
   <div data-action="click->dropdown#toggle">
     <%= trigger %>
@@ -18,7 +18,7 @@
     <div class="rounded-2xl border border-black/10 bg-white p-1 shadow-[0_18px_48px_rgba(15,23,42,0.14)] ring-0.5 ring-black/5">
       <% items.each do |item| %>
         <% if item[:method].present? && item[:confirm_label].present? %>
-          <%= form_with url: item[:href], method: item[:method], class: 'w-full' do %>
+          <%= form_with url: item[:href], method: item[:method], class: 'w-full', data: item[:data] do %>
             <button
               type="button"
               class="<%= item_classes(item) %>"
@@ -39,6 +39,17 @@
               <span class="transition-all duration-200 ease-out" data-dropdown-confirm-text><%= item[:label] %></span>
             </button>
           <% end %>
+        <% elsif item[:button] %>
+          <button
+            type="button"
+            class="<%= item_classes(item) %>"
+            data-action="<%= item[:data][:action] %>"
+          >
+            <% if item[:icon].present? %>
+              <%= helpers.lucide_icon(item[:icon], class: 'h-4 w-4 shrink-0', "aria-hidden": true) %>
+            <% end %>
+            <span><%= item[:label] %></span>
+          </button>
         <% else %>
           <%= link_to item[:href], class: item_classes(item), data: item_data(item) do %>
             <% if item[:icon].present? %>

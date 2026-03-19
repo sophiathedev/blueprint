@@ -1,7 +1,7 @@
 <div
   class="<%= [
     'fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 py-6 backdrop-blur-sm transition-all duration-300 ease-out',
-    open? ? 'opacity-100' : 'pointer-events-none opacity-0'
+    open? ? 'opacity-100' : 'pointer-events-none opacity-0 hidden'
   ].join(' ') %>"
   data-modal-target="overlay"
   data-action="click->modal#closeOnBackdrop"
@@ -19,9 +19,6 @@
     <div class="flex items-center justify-between gap-4 border-b border-black/10 px-5 py-5 md:px-6">
       <div class="min-w-0">
         <h2 id="modal-title" class="text-xl font-semibold tracking-tight text-black"><%= title %></h2>
-        <% if description.present? %>
-          <p class="mt-2 text-sm leading-6 text-black/60"><%= description %></p>
-        <% end %>
       </div>
 
       <button

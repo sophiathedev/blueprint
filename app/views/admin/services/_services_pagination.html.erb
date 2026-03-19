@@ -1,0 +1,11 @@
+<div id="services_pagination">
+  <% if next_page.present? %>
+    <div class="flex justify-center px-3 py-4">
+      <div
+        class="h-6 w-full"
+        data-controller="infinite-scroll"
+        data-infinite-scroll-url-value="<%= admin_partner_services_path(partner, q: query, page: next_page, format: :turbo_stream) %>"
+      ></div>
+    </div>
+  <% end %>
+</div>

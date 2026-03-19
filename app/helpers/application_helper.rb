@@ -17,7 +17,7 @@ module ApplicationHelper
       {
         label: 'Đối tác',
         href: admin_partners_path,
-        active: controller_path == 'admin/partners',
+        active: controller_path.in?(%w[admin/partners admin/services admin/tasks]),
         icon: 'handshake'
       },
       {

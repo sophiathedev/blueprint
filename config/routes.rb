@@ -23,7 +23,12 @@ Rails.application.routes.draw do
       patch :reset_password, on: :member
     end
 
-    resources :partners
+    resources :partners do
+      resources :services, only: %i[index create update destroy] do
+        get :tasks_panel, on: :member
+        resources :tasks, only: %i[index create update destroy]
+      end
+    end
   end
 
   root 'home#index'

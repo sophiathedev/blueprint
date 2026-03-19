@@ -48,6 +48,10 @@ class User < ApplicationParanoia
     admin? ? 'Admin' : 'Member'
   end
 
+  def display_name
+    name.presence || email
+  end
+
   def self.sample_from(characters)
     characters[SecureRandom.random_number(characters.length)]
   end

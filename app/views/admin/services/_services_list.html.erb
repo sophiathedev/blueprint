@@ -1,0 +1,51 @@
+<%= turbo_frame_tag 'services_list_frame' do %>
+  <% if services.any? %>
+    <div class="mt-5 overflow-visible">
+      <div class="overflow-hidden rounded-t-[24px] border border-black/10 border-b-0">
+        <div class="grid grid-cols-[56px_minmax(0,1fr)_92px] items-center gap-2 bg-stone-50 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-black/45">
+          <span class="text-center">STT</span>
+          <span>Tên gói dịch vụ</span>
+          <span class="text-right"></span>
+        </div>
+      </div>
+
+      <div class="overflow-visible rounded-b-[24px] border border-black/10 bg-white">
+        <div id="services_rows">
+          <%= render partial: 'admin/services/service_row',
+            collection: services,
+            as: :service,
+            locals: { partner: partner, query: query, row_offset: row_offset } %>
+        </div>
+
+        <%= render 'admin/services/services_pagination', partner: partner, query: query, next_page: next_page %>
+      </div>
+    </div>
+  <% elsif query.present? %>
+    <div class="mt-5 rounded-[24px] border border-dashed border-black/15 bg-stone-50 px-5 py-10 text-center">
+      <h2 class="text-lg font-semibold text-black">Không tìm thấy gói dịch vụ phù hợp</h2>
+      <p class="mt-2 text-sm leading-6 text-black/55">
+        Thử nhập lại tên gói dịch vụ với từ khóa khác.
+      </p>
+    </div>
+  <% else %>
+    <div class="mt-5 rounded-[24px] border border-dashed border-black/15 bg-stone-50 px-5 py-10 text-center">
+      <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-primary-600 shadow-sm ring-1 ring-black/5">
+        <%= lucide_icon('briefcase-business', class: 'h-6 w-6', "aria-hidden": true) %>
+      </div>
+      <h2 class="mt-4 text-xl font-semibold text-black">Chưa có gói dịch vụ nào</h2>
+      <p class="mt-2 text-sm leading-6 text-black/55">
+        Tạo gói dịch vụ đầu tiên cho đối tác này để bắt đầu quản lý.
+      </p>
+      <div class="mt-5">
+        <button
+          type="button"
+          class="inline-flex items-center justify-center gap-2 rounded-2xl border border-primary-500 bg-primary-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:border-primary-600 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2"
+          data-action="click->modal#open"
+        >
+          <%= lucide_icon('plus', class: 'h-4 w-4 shrink-0', "aria-hidden": true) %>
+          <span>Tạo gói dịch vụ đầu tiên</span>
+        </button>
+      </div>
+    </div>
+  <% end %>
+<% end %>
