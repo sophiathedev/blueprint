@@ -1,4 +1,9 @@
-<div id="all_services_modals">
+<div
+  id="all_services_modals"
+  data-controller="service-creation-flow"
+  data-service-creation-flow-prompt-open-value="<%= @show_create_task_prompt.present? %>"
+  data-service-creation-flow-service-id-value="<%= @created_service&.id %>"
+>
   <%= render ModalComponent.new(title: 'Tạo dịch vụ', open: @open_service_modal.present?) do |modal| %>
     <% modal.with_body do %>
       <%= render 'form', service: @service, partner_options: @partner_options %>
@@ -6,36 +11,106 @@
   <% end %>
 
   <% if @created_service.present? %>
-    <%= render ModalComponent.new(title: 'Tạo task cho dịch vụ mới', open: @show_create_task_prompt.present?) do |modal| %>
-      <% modal.with_body do %>
-        <div class="space-y-5">
-          <p class="text-sm leading-6 text-black/65">
-            Gói dịch vụ <span class="font-semibold text-black"><%= @created_service.name %></span> vừa được tạo và hiện chưa có task nào. Bạn có muốn tạo task mới ngay bây giờ không?
-          </p>
+    <div
+      class="<%= [
+        'fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 py-6 backdrop-blur-sm transition-all duration-300 ease-out',
+        @show_create_task_prompt.present? ? 'opacity-0' : 'pointer-events-none opacity-0 hidden'
+      ].join(' ') %>"
+      data-service-creation-flow-target="promptOverlay"
+      data-action="click->service-creation-flow#closePromptOnBackdrop"
+    >
+      <div
+        class="<%= [
+          'w-full max-w-2xl rounded-[30px] border border-black/10 bg-stone-100 shadow-[0_24px_80px_rgba(15,23,42,0.24)] transition-all duration-300 ease-out',
+          'translate-y-4 scale-[0.97] opacity-0'
+        ].join(' ') %>"
+        data-service-creation-flow-target="promptPanel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="service-creation-prompt-title"
+      >
+        <div class="flex items-center justify-between gap-4 border-b border-black/10 px-5 py-5 md:px-6">
+          <div class="min-w-0">
+            <h2 id="service-creation-prompt-title" class="text-xl font-semibold tracking-tight text-black">Tạo task cho dịch vụ mới</h2>
+          </div>
 
-          <div class="flex items-center justify-end gap-2">
-            <%= link_to 'Để sau',
-              admin_services_path(partner_id: @selected_partner_id),
-              class: 'inline-flex items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-stone-100 px-3 py-2 text-sm font-semibold text-black transition-colors hover:border-stone-300 hover:bg-stone-200' %>
+          <button
+            type="button"
+            class="inline-flex h-8.5 w-8.5 items-center justify-center rounded-full bg-white text-black/60 ring-1 ring-black/10 transition hover:text-black"
+            data-action="service-creation-flow#closePrompt"
+            aria-label="Đóng modal"
+          >
+            <%= lucide_icon('x', class: 'h-3.5 w-3.5', "aria-hidden": true) %>
+          </button>
+        </div>
 
-            <%= link_to 'Tạo task ngay',
-              admin_services_path(partner_id: @selected_partner_id, created_service_id: @created_service.id, open_task_form: true),
-              class: 'inline-flex items-center justify-center gap-2 rounded-2xl border border-primary-500 bg-primary-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:border-primary-600 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2' %>
+        <div class="px-5 py-5 md:px-6">
+          <div class="space-y-5">
+            <p class="text-sm leading-6 text-black/65">
+              Gói dịch vụ <span class="font-semibold text-black"><%= @created_service.name %></span> vừa được tạo và hiện chưa có task nào. Bạn có muốn tạo task mới ngay bây giờ không?
+            </p>
+
+            <div class="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                class="inline-flex items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-stone-100 px-3 py-2 text-sm font-semibold text-black transition-colors hover:border-stone-300 hover:bg-stone-200"
+                data-action="service-creation-flow#closePrompt"
+              >
+                Để sau
+              </button>
+
+              <button
+                type="button"
+                class="inline-flex items-center justify-center gap-2 rounded-2xl border border-primary-500 bg-primary-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:border-primary-600 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2"
+                data-action="service-creation-flow#openTaskModal"
+              >
+                Tạo task ngay
+              </button>
+            </div>
           </div>
         </div>
-      <% end %>
-    <% end %>
+      </div>
+    </div>
 
-    <% if @open_task_modal.present? && @task.present? %>
-      <%= render ModalComponent.new(title: "Tạo task cho #{@created_service.name}", open: true) do |modal| %>
-        <% modal.with_body do %>
-          <%= render 'admin/tasks/form',
-            partner: @created_service.partner,
-            service: @created_service,
-            task: @task,
-            member_options: @member_options %>
-        <% end %>
-      <% end %>
+    <% if @task.present? %>
+      <div
+        class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/45 px-4 py-6 opacity-0 backdrop-blur-sm transition-all duration-300 ease-out pointer-events-none"
+        data-service-creation-flow-target="taskOverlay"
+        data-action="click->service-creation-flow#closeTaskOnBackdrop"
+      >
+        <div
+          class="w-full max-w-2xl rounded-[30px] border border-black/10 bg-stone-100 translate-y-4 scale-[0.97] opacity-0 shadow-[0_24px_80px_rgba(15,23,42,0.24)] transition-all duration-300 ease-out"
+          data-service-creation-flow-target="taskPanel"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="service-creation-task-title"
+        >
+          <div class="flex items-center justify-between gap-4 border-b border-black/10 px-5 py-5 md:px-6">
+            <div class="min-w-0">
+              <h2 id="service-creation-task-title" class="text-xl font-semibold tracking-tight text-black">Tạo task cho <%= @created_service.name %></h2>
+            </div>
+
+            <button
+              type="button"
+              class="inline-flex h-8.5 w-8.5 items-center justify-center rounded-full bg-white text-black/60 ring-1 ring-black/10 transition hover:text-black"
+              data-action="service-creation-flow#closeTask"
+              aria-label="Đóng modal"
+            >
+              <%= lucide_icon('x', class: 'h-3.5 w-3.5', "aria-hidden": true) %>
+            </button>
+          </div>
+
+          <div class="px-5 py-5 md:px-6">
+            <%= render 'admin/tasks/form',
+              partner: @created_service.partner,
+              service: @created_service,
+              task: @task,
+              member_options: @member_options,
+              form_data: { modal_form_close_mode_value: 'service-creation-task' },
+              cancel_action: 'service-creation-flow#closeTask' %>
+          </div>
+        </div>
+      </div>
     <% end %>
   <% end %>
 </div>

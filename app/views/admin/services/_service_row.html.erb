@@ -1,13 +1,20 @@
+<% row_partner = local_assigns[:partner] || service.partner %>
+<% show_partner = local_assigns.fetch(:show_partner, false) %>
+<% selected_partner_id = local_assigns[:selected_partner_id] %>
+<% tasks_panel_path = show_partner ? tasks_panel_admin_service_path(service) : tasks_panel_admin_partner_service_path(row_partner, service) %>
+<% update_path = show_partner ? admin_service_path(service) : admin_partner_service_path(row_partner, service) %>
+<% destroy_path = show_partner ? admin_service_path(service, q: local_assigns[:query], partner_id: selected_partner_id) : admin_partner_service_path(row_partner, service) %>
+
 <div
   class="<%= [local_assigns.fetch(:row_offset, 0).zero? && service_iteration.index.zero? ? nil : 'border-t border-black/10'].compact.join(' ') %>"
   data-search-name="<%= service.name %>"
   data-controller="service-row-collapse"
   data-service-row-collapse-last-value="<%= service_iteration.last? %>"
-  data-service-row-collapse-src-value="<%= tasks_panel_admin_partner_service_path(partner, service) %>"
+  data-service-row-collapse-src-value="<%= tasks_panel_path %>"
   data-service-row-item
 >
   <div
-    class="<%= ['grid cursor-pointer grid-cols-[56px_minmax(0,1fr)_92px] items-center gap-2 px-3 py-2.5 transition hover:bg-stone-50 focus:outline-none focus-visible:bg-stone-50', service_iteration.last? ? 'rounded-b-[24px]' : nil].compact.join(' ') %>"
+    class="<%= ['grid cursor-pointer items-center gap-2 px-3 py-2.5 transition hover:bg-stone-50 focus:outline-none focus-visible:bg-stone-50', show_partner ? 'grid-cols-[56px_minmax(0,1.2fr)_minmax(0,1fr)_92px]' : 'grid-cols-[56px_minmax(0,1fr)_92px]', service_iteration.last? ? 'rounded-b-[24px]' : nil].compact.join(' ') %>"
     data-action="click->service-row-collapse#toggle keydown->service-row-collapse#toggleWithKeyboard"
     data-service-row-collapse-target="trigger"
     tabindex="0"
@@ -30,8 +37,11 @@
       </div>
 
       <div id="service-edit-<%= service.id %>" class="hidden w-full">
-        <%= form_with model: [:admin, partner, service], class: 'w-full' do |form| %>
+        <%= form_with model: service, url: update_path, class: 'w-full' do |form| %>
           <%= hidden_field_tag :q, local_assigns[:query] %>
+          <% if show_partner %>
+            <%= hidden_field_tag :partner_id, selected_partner_id %>
+          <% end %>
           <div class="relative" data-controller="clearable-input">
             <%= form.text_field :name,
               id: "service-input-#{service.id}",
@@ -54,11 +64,17 @@
       </div>
     </div>
 
+    <% if show_partner %>
+      <div class="min-w-0">
+        <span class="block truncate text-sm font-medium text-black/70"><%= row_partner.name %></span>
+      </div>
+    <% end %>
+
     <div class="flex items-center justify-end gap-2 overflow-visible">
       <%= render DropdownComponent.new(
         items: [
-          { label: 'Task', href: admin_partner_service_tasks_path(partner, service), icon: 'list-todo', data: { turbo_frame: '_top' } },
-          { label: 'Xóa gói dịch vụ', href: admin_partner_service_path(partner, service), method: :delete, icon: 'trash-2', tone: :danger, confirm_label: 'Xác nhận xóa?', confirm_icon: 'check' }
+          { label: 'Task', href: admin_partner_service_tasks_path(row_partner, service), icon: 'list-todo', data: { turbo_frame: '_top' } },
+          { label: 'Xóa dịch vụ', href: destroy_path, method: :delete, icon: 'trash-2', tone: :danger, confirm_label: 'Xác nhận xóa?', confirm_icon: 'check' }
         ],
         direction: :bottom_right
       ) do |dropdown| %>

@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { application } from "controllers/application"
 
 export default class extends Controller {
   static values = {
@@ -6,7 +7,7 @@ export default class extends Controller {
   }
 
   connect() {
-    this.removeDuplicateToasts()
+    if (this.skipIfDuplicateToastExists()) return
 
     requestAnimationFrame(() => {
       this.element.classList.remove("translate-x-4", "opacity-0")
@@ -35,14 +36,24 @@ export default class extends Controller {
     this.timeoutId = null
   }
 
-  removeDuplicateToasts() {
+  skipIfDuplicateToastExists() {
     const key = this.element.dataset.flashKey
-    if (!key) return
+    if (!key) return false
 
-    document.querySelectorAll(`[data-controller~="flash"][data-flash-key="${CSS.escape(key)}"]`).forEach((toast) => {
-      if (toast === this.element) return
+    const existingToast = Array.from(
+      document.querySelectorAll(`[data-controller~="flash"][data-flash-key="${CSS.escape(key)}"]`)
+    ).find((toast) => toast !== this.element)
 
-      toast.remove()
-    })
+    if (!existingToast) return false
+
+    const existingController = application.getControllerForElementAndIdentifier(existingToast, "flash")
+    existingController?.restartTimer()
+    this.element.remove()
+    return true
+  }
+
+  restartTimer() {
+    this.clearTimeout()
+    this.timeoutId = window.setTimeout(() => this.close(), this.delayValue)
   }
 }

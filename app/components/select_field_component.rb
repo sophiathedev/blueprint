@@ -49,7 +49,7 @@ class SelectFieldComponent < ViewComponent::Base
   end
 
   def selected_value
-    @selected_value ||= selected.presence&.to_s || form.object.public_send(field).to_s
+    @selected_value ||= selected.presence&.to_s || form.object&.public_send(field).to_s
   end
 
   def selected_label

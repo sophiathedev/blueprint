@@ -21,6 +21,12 @@ module ApplicationHelper
         icon: 'handshake'
       },
       {
+        label: 'Dịch vụ',
+        href: admin_services_path,
+        active: controller_path == 'admin/all_services',
+        icon: 'briefcase-business'
+      },
+      {
         label: 'Thành viên',
         href: admin_members_path,
         active: controller_path == 'admin/members',

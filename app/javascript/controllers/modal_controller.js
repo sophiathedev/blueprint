@@ -38,14 +38,15 @@ export default class extends Controller {
   }
 
   sync({ skipAnimation = false } = {}) {
-    if (!this.hasOverlayTarget) return
+    const modalTargets = this.currentModalTargets(this.openValue ? "open" : "close")
+    if (!modalTargets) return
 
     if (this.openValue) {
-      this.showModal(skipAnimation)
+      this.showModal(modalTargets, skipAnimation)
       this.enableScrollLock()
       document.addEventListener("keydown", this.boundHandleKeydown)
     } else {
-      this.hideModal(skipAnimation)
+      this.hideModal(modalTargets, skipAnimation)
       this.disableScrollLock()
       document.removeEventListener("keydown", this.boundHandleKeydown)
     }
@@ -71,70 +72,68 @@ export default class extends Controller {
     }, 180)
   }
 
-  showModal(skipAnimation) {
+  showModal({ overlay, panel }, skipAnimation) {
     this.clearCloseTimeout()
-    this.overlayTarget.classList.remove("hidden", "pointer-events-none")
+    overlay.classList.remove("hidden", "pointer-events-none")
 
     if (skipAnimation) {
-      this.disableTransitionTemporarily()
-      this.applyOpenState()
+      this.disableTransitionTemporarily({ overlay, panel })
+      this.applyOpenState({ overlay, panel })
       return
     }
 
-    this.applyClosedState()
-    this.overlayTarget.getBoundingClientRect()
+    this.applyClosedState({ overlay, panel })
+    overlay.getBoundingClientRect()
 
     requestAnimationFrame(() => {
-      this.applyOpenState()
+      this.applyOpenState({ overlay, panel })
     })
   }
 
-  hideModal(skipAnimation) {
+  hideModal({ overlay, panel }, skipAnimation) {
     this.clearCloseTimeout()
 
     if (skipAnimation) {
-      this.disableTransitionTemporarily()
-      this.applyClosedState()
-      this.overlayTarget.classList.add("hidden", "pointer-events-none")
+      this.disableTransitionTemporarily({ overlay, panel })
+      this.applyClosedState({ overlay, panel })
+      overlay.classList.add("hidden", "pointer-events-none")
       return
     }
 
-    this.applyClosedState()
-    this.overlayTarget.classList.add("pointer-events-none")
+    this.applyClosedState({ overlay, panel })
+    overlay.classList.add("pointer-events-none")
     this.closeTimeout = window.setTimeout(() => {
       if (this.openValue) return
 
-      this.overlayTarget.classList.add("hidden")
+      overlay.classList.add("hidden")
     }, this.constructor.TRANSITION_DURATION)
   }
 
-  applyOpenState() {
-    this.overlayTarget.classList.remove("opacity-0")
-    this.overlayTarget.classList.add("opacity-100")
+  applyOpenState({ overlay, panel }) {
+    overlay.classList.remove("opacity-0")
+    overlay.classList.add("opacity-100")
+    if (!panel) return
 
-    if (!this.hasPanelTarget) return
-
-    this.panelTarget.classList.remove("translate-y-4", "scale-[0.97]", "opacity-0")
-    this.panelTarget.classList.add("translate-y-0", "scale-100", "opacity-100")
+    panel.classList.remove("translate-y-4", "scale-[0.97]", "opacity-0")
+    panel.classList.add("translate-y-0", "scale-100", "opacity-100")
   }
 
-  applyClosedState() {
-    this.overlayTarget.classList.remove("opacity-100")
-    this.overlayTarget.classList.add("opacity-0")
+  applyClosedState({ overlay, panel }) {
+    overlay.classList.remove("opacity-100")
+    overlay.classList.add("opacity-0")
+    if (!panel) return
 
-    if (!this.hasPanelTarget) return
-
-    this.panelTarget.classList.remove("translate-y-0", "scale-100", "opacity-100")
-    this.panelTarget.classList.add("translate-y-4", "scale-[0.97]", "opacity-0")
+    panel.classList.remove("translate-y-0", "scale-100", "opacity-100")
+    panel.classList.add("translate-y-4", "scale-[0.97]", "opacity-0")
   }
 
-  disableTransitionTemporarily() {
-    this.overlayTarget?.classList.add("transition-none")
-    this.panelTarget?.classList.add("transition-none")
+  disableTransitionTemporarily({ overlay, panel }) {
+    overlay?.classList.add("transition-none")
+    panel?.classList.add("transition-none")
 
     requestAnimationFrame(() => {
-      this.overlayTarget?.classList.remove("transition-none")
-      this.panelTarget?.classList.remove("transition-none")
+      overlay?.classList.remove("transition-none")
+      panel?.classList.remove("transition-none")
     })
   }
 
@@ -143,5 +142,21 @@ export default class extends Controller {
 
     window.clearTimeout(this.closeTimeout)
     this.closeTimeout = null
+  }
+
+  currentModalTargets(mode) {
+    if (!this.hasOverlayTarget) return null
+
+    const visibleIndexes = this.overlayTargets
+      .map((overlay, index) => ({ overlay, index }))
+      .filter(({ overlay }) => !overlay.classList.contains("hidden"))
+      .map(({ index }) => index)
+
+    const targetIndex = visibleIndexes.at(-1) ?? 0
+
+    return {
+      overlay: this.overlayTargets[targetIndex],
+      panel: this.panelTargets[targetIndex]
+    }
   }
 }

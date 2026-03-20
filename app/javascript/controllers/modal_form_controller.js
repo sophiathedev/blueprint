@@ -3,7 +3,10 @@ import { Controller } from "@hotwired/stimulus"
 import { application } from "controllers/application"
 
 export default class extends Controller {
-  static values = { closeDelay: { type: Number, default: 300 } }
+  static values = {
+    closeDelay: { type: Number, default: 300 },
+    closeMode: { type: String, default: "modal" }
+  }
 
   connect() {
     this.submitting = false
@@ -26,14 +29,14 @@ export default class extends Controller {
     const contentType = fetchResponse.response.headers.get("Content-Type") || ""
     if (!contentType.includes("turbo-stream")) return
 
-    const modalController = this.modalController()
-    if (!modalController) return
+    const closer = this.modalCloser()
+    if (!closer) return
 
     event.preventDefault()
 
     fetchResponse.responseText.then((html) => {
       this.element.reset()
-      modalController.close()
+      closer.close()
 
       window.setTimeout(() => {
         Turbo.renderStreamMessage(html)
@@ -48,11 +51,37 @@ export default class extends Controller {
     this.finishSubmission()
   }
 
-  modalController() {
-    const modalElement = this.element.closest("[data-controller~='modal']")
-    if (!modalElement) return null
+  modalCloser() {
+    if (this.closeModeValue === "service-creation-task") {
+      return this.serviceCreationTaskCloser()
+    }
 
-    return application.getControllerForElementAndIdentifier(modalElement, "modal")
+    const modalElement = this.element.closest("[data-controller~='modal']")
+    if (modalElement) {
+      const modalController = application.getControllerForElementAndIdentifier(modalElement, "modal")
+      if (modalController) {
+        return {
+          close: () => modalController.close()
+        }
+      }
+    }
+
+    return this.serviceCreationTaskCloser()
+  }
+
+  serviceCreationTaskCloser() {
+    const serviceCreationFlowElement = this.element.closest("[data-controller~='service-creation-flow']")
+    if (!serviceCreationFlowElement) return null
+
+    const serviceCreationFlowController = application.getControllerForElementAndIdentifier(
+      serviceCreationFlowElement,
+      "service-creation-flow"
+    )
+    if (!serviceCreationFlowController) return null
+
+    return {
+      close: () => serviceCreationFlowController.closeTask()
+    }
   }
 
   finishSubmission() {

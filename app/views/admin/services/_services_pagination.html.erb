@@ -4,7 +4,7 @@
       <div
         class="h-6 w-full"
         data-controller="infinite-scroll"
-        data-infinite-scroll-url-value="<%= admin_partner_services_path(partner, q: query, page: next_page, format: :turbo_stream) %>"
+        data-infinite-scroll-url-value="<%= local_assigns[:pagination_url] || admin_partner_services_path(partner, q: query, page: next_page, format: :turbo_stream) %>"
       ></div>
     </div>
   <% end %>
