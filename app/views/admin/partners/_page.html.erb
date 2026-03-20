@@ -45,11 +45,13 @@
       </div>
     </div>
 
-    <%= render 'admin/partners/partners_list',
-      partners: @partners,
-      query: @query,
-      row_offset: @row_offset,
-      next_page: @next_page %>
+    <div id="partners_list_section">
+      <%= render 'admin/partners/partners_list',
+        partners: @partners,
+        query: @query,
+        row_offset: @row_offset,
+        next_page: @next_page %>
+    </div>
   </div>
 
   <%= render ModalComponent.new(title: 'Tạo đối tác mới', open: @open_partner_modal.present?) do |modal| %>

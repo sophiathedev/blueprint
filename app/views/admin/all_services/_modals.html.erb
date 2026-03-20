@@ -1,0 +1,41 @@
+<div id="all_services_modals">
+  <%= render ModalComponent.new(title: 'Tạo dịch vụ', open: @open_service_modal.present?) do |modal| %>
+    <% modal.with_body do %>
+      <%= render 'form', service: @service, partner_options: @partner_options %>
+    <% end %>
+  <% end %>
+
+  <% if @created_service.present? %>
+    <%= render ModalComponent.new(title: 'Tạo task cho dịch vụ mới', open: @show_create_task_prompt.present?) do |modal| %>
+      <% modal.with_body do %>
+        <div class="space-y-5">
+          <p class="text-sm leading-6 text-black/65">
+            Gói dịch vụ <span class="font-semibold text-black"><%= @created_service.name %></span> vừa được tạo và hiện chưa có task nào. Bạn có muốn tạo task mới ngay bây giờ không?
+          </p>
+
+          <div class="flex items-center justify-end gap-2">
+            <%= link_to 'Để sau',
+              admin_services_path(partner_id: @selected_partner_id),
+              class: 'inline-flex items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-stone-100 px-3 py-2 text-sm font-semibold text-black transition-colors hover:border-stone-300 hover:bg-stone-200' %>
+
+            <%= link_to 'Tạo task ngay',
+              admin_services_path(partner_id: @selected_partner_id, created_service_id: @created_service.id, open_task_form: true),
+              class: 'inline-flex items-center justify-center gap-2 rounded-2xl border border-primary-500 bg-primary-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:border-primary-600 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2' %>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+
+    <% if @open_task_modal.present? && @task.present? %>
+      <%= render ModalComponent.new(title: "Tạo task cho #{@created_service.name}", open: true) do |modal| %>
+        <% modal.with_body do %>
+          <%= render 'admin/tasks/form',
+            partner: @created_service.partner,
+            service: @created_service,
+            task: @task,
+            member_options: @member_options %>
+        <% end %>
+      <% end %>
+    <% end %>
+  <% end %>
+</div>

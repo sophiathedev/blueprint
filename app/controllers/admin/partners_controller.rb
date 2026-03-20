@@ -42,7 +42,16 @@ module Admin
       @partner = Partner.new(partner_params)
 
       if @partner.save
-        redirect_to admin_partners_path, notice: 'Tạo đối tác thành công.'
+        respond_to do |format|
+          format.html { redirect_to admin_partners_path, notice: 'Tạo đối tác thành công.' }
+          format.turbo_stream do
+            @query = params[:q].to_s.strip
+            load_partners
+            @partner = Partner.new
+            flash.now[:notice] = 'Tạo đối tác thành công.'
+            render_partners_turbo_stream
+          end
+        end
       else
         if from_modal?
           load_partners
@@ -151,21 +160,27 @@ module Admin
     def render_partners_turbo_stream(status: :ok)
       render turbo_stream: [
         turbo_stream.replace(
-          'admin_partners_page',
-          partial: 'admin/partners/page'
+          'partners_list_section',
+          partial: 'admin/partners/partners_list',
+          locals: {
+            partners: @partners,
+            query: @query,
+            row_offset: @row_offset,
+            next_page: @next_page
+          }
         ),
-        turbo_stream.update(
-          'flash_container',
-          partial: 'shared/flash',
+        turbo_stream.prepend(
+          'flash_messages',
+          partial: 'shared/flash_messages',
           locals: { flash: flash }
         )
       ], status: status
     end
 
     def render_flash_turbo_stream(status: :ok)
-      render turbo_stream: turbo_stream.update(
-        'flash_container',
-        partial: 'shared/flash',
+      render turbo_stream: turbo_stream.prepend(
+        'flash_messages',
+        partial: 'shared/flash_messages',
         locals: { flash: flash }
       ), status: status
     end

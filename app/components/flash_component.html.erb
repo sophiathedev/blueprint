@@ -1,23 +1,26 @@
-<% if messages.any? %>
+<% if render_container? %>
   <div class="pointer-events-none fixed right-4 top-5 z-[80] w-full max-w-sm sm:right-6">
-    <div class="flex flex-col gap-3">
-      <% messages.each do |entry| %>
-        <div class="<%= [
-          'pointer-events-auto flex translate-x-4 cursor-pointer items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-sm font-medium opacity-0 shadow-xl ring-1 ring-black/5 transition duration-200 ease-out',
-          entry[:style][:container]
-        ].join(' ') %>"
-          data-controller="flash"
-          data-flash-delay-value="5000"
-          data-action="click->flash#close">
-          <div class="<%= [
-            'flex h-7 w-7 shrink-0 items-center justify-center rounded-full',
-            entry[:style][:icon_wrapper]
-          ].join(' ') %>">
-            <%= helpers.lucide_icon(entry[:style][:icon], class: 'h-4 w-4', "aria-hidden": true) %>
-          </div>
-          <p class="pr-1 leading-5"><%= entry[:message] %></p>
-        </div>
-      <% end %>
+    <div id="flash_messages" class="flex flex-col gap-3">
+      <%= render FlashComponent.new(flash: flash, render_container: false) %>
     </div>
   </div>
+<% elsif messages.any? %>
+    <% messages.each do |entry| %>
+      <div class="<%= [
+        'pointer-events-auto flex translate-x-4 cursor-pointer items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-sm font-medium opacity-0 shadow-xl ring-1 ring-black/5 transition duration-200 ease-out',
+        entry[:style][:container]
+      ].join(' ') %>"
+        data-controller="flash"
+        data-flash-key="<%= entry[:key] %>"
+        data-flash-delay-value="5000"
+        data-action="click->flash#close">
+        <div class="<%= [
+          'flex h-7 w-7 shrink-0 items-center justify-center rounded-full',
+          entry[:style][:icon_wrapper]
+        ].join(' ') %>">
+          <%= helpers.lucide_icon(entry[:style][:icon], class: 'h-4 w-4', "aria-hidden": true) %>
+        </div>
+        <p class="pr-1 leading-5"><%= entry[:message] %></p>
+      </div>
+    <% end %>
 <% end %>

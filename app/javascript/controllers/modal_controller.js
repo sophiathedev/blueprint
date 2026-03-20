@@ -1,16 +1,18 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
+  static TRANSITION_DURATION = 300
   static targets = ["overlay", "panel"]
   static values = { open: { type: Boolean, default: false } }
 
   connect() {
     this.boundHandleKeydown = this.handleKeydown.bind(this)
-    this.disableInitialAnimationIfNeeded()
-    this.sync()
+    this.closeTimeout = null
+    this.sync({ skipAnimation: true })
   }
 
   disconnect() {
+    this.clearCloseTimeout()
     this.disableScrollLock()
     document.removeEventListener("keydown", this.boundHandleKeydown)
   }
@@ -35,27 +37,15 @@ export default class extends Controller {
     if (this.openValue) this.focusAutofocusField()
   }
 
-  sync() {
+  sync({ skipAnimation = false } = {}) {
     if (!this.hasOverlayTarget) return
 
-    this.overlayTarget.classList.toggle("hidden", !this.openValue)
-    this.overlayTarget.classList.toggle("pointer-events-none", !this.openValue)
-    this.overlayTarget.classList.toggle("opacity-0", !this.openValue)
-    this.overlayTarget.classList.toggle("opacity-100", this.openValue)
-
-    if (this.hasPanelTarget) {
-      this.panelTarget.classList.toggle("translate-y-4", !this.openValue)
-      this.panelTarget.classList.toggle("scale-[0.98]", !this.openValue)
-      this.panelTarget.classList.toggle("opacity-0", !this.openValue)
-      this.panelTarget.classList.toggle("translate-y-0", this.openValue)
-      this.panelTarget.classList.toggle("scale-100", this.openValue)
-      this.panelTarget.classList.toggle("opacity-100", this.openValue)
-    }
-
     if (this.openValue) {
+      this.showModal(skipAnimation)
       this.enableScrollLock()
       document.addEventListener("keydown", this.boundHandleKeydown)
     } else {
+      this.hideModal(skipAnimation)
       this.disableScrollLock()
       document.removeEventListener("keydown", this.boundHandleKeydown)
     }
@@ -81,9 +71,64 @@ export default class extends Controller {
     }, 180)
   }
 
-  disableInitialAnimationIfNeeded() {
-    if (!this.openValue) return
+  showModal(skipAnimation) {
+    this.clearCloseTimeout()
+    this.overlayTarget.classList.remove("hidden", "pointer-events-none")
 
+    if (skipAnimation) {
+      this.disableTransitionTemporarily()
+      this.applyOpenState()
+      return
+    }
+
+    this.applyClosedState()
+    this.overlayTarget.getBoundingClientRect()
+
+    requestAnimationFrame(() => {
+      this.applyOpenState()
+    })
+  }
+
+  hideModal(skipAnimation) {
+    this.clearCloseTimeout()
+
+    if (skipAnimation) {
+      this.disableTransitionTemporarily()
+      this.applyClosedState()
+      this.overlayTarget.classList.add("hidden", "pointer-events-none")
+      return
+    }
+
+    this.applyClosedState()
+    this.overlayTarget.classList.add("pointer-events-none")
+    this.closeTimeout = window.setTimeout(() => {
+      if (this.openValue) return
+
+      this.overlayTarget.classList.add("hidden")
+    }, this.constructor.TRANSITION_DURATION)
+  }
+
+  applyOpenState() {
+    this.overlayTarget.classList.remove("opacity-0")
+    this.overlayTarget.classList.add("opacity-100")
+
+    if (!this.hasPanelTarget) return
+
+    this.panelTarget.classList.remove("translate-y-4", "scale-[0.97]", "opacity-0")
+    this.panelTarget.classList.add("translate-y-0", "scale-100", "opacity-100")
+  }
+
+  applyClosedState() {
+    this.overlayTarget.classList.remove("opacity-100")
+    this.overlayTarget.classList.add("opacity-0")
+
+    if (!this.hasPanelTarget) return
+
+    this.panelTarget.classList.remove("translate-y-0", "scale-100", "opacity-100")
+    this.panelTarget.classList.add("translate-y-4", "scale-[0.97]", "opacity-0")
+  }
+
+  disableTransitionTemporarily() {
     this.overlayTarget?.classList.add("transition-none")
     this.panelTarget?.classList.add("transition-none")
 
@@ -91,5 +136,12 @@ export default class extends Controller {
       this.overlayTarget?.classList.remove("transition-none")
       this.panelTarget?.classList.remove("transition-none")
     })
+  }
+
+  clearCloseTimeout() {
+    if (!this.closeTimeout) return
+
+    window.clearTimeout(this.closeTimeout)
+    this.closeTimeout = null
   }
 }

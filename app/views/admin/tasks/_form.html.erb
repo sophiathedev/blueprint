@@ -1,4 +1,10 @@
-<%= form_with model: [:admin, partner, service, task], class: 'space-y-4', data: local_assigns[:form_data] do |form| %>
+<%
+  form_data = (local_assigns[:form_data] || {}).deep_dup
+  form_data[:controller] = [form_data[:controller], 'modal-form'].compact.join(' ')
+  form_data[:action] = [form_data[:action], 'submit->modal-form#handleSubmit turbo:before-fetch-response->modal-form#beforeFetchResponse turbo:submit-end->modal-form#submitEnd'].compact.join(' ')
+%>
+
+<%= form_with model: [:admin, partner, service, task], class: 'space-y-4', data: form_data do |form| %>
   <% if task.errors.any? %>
     <div class="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
       <%= lucide_icon('circle-alert', class: 'mt-0.5 h-4 w-4 shrink-0', "aria-hidden": true) %>
@@ -12,6 +18,7 @@
     label: 'Tên task',
     placeholder: 'Nhập tên task',
     autofocus: true,
+    onkeydown: "if (event.key === 'Enter') { event.preventDefault(); this.form?.requestSubmit(); }",
     data: { autofocus_modal: true }
   ) %>
 

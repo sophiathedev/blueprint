@@ -1,9 +1,20 @@
-<%= form_with model: [:admin, partner, service], class: 'space-y-4', data: { controller: 'modal-form', action: 'submit->modal-form#handleSubmit turbo:before-fetch-response->modal-form#beforeFetchResponse turbo:submit-end->modal-form#submitEnd' } do |form| %>
+<%= form_with model: service, url: admin_services_path, class: 'space-y-4', data: { controller: 'modal-form', action: 'submit->modal-form#handleSubmit turbo:before-fetch-response->modal-form#beforeFetchResponse turbo:submit-end->modal-form#submitEnd' } do |form| %>
+  <%= render SelectFieldComponent.new(
+    form: form,
+    field: :partner_id,
+    label: 'Đối tác',
+    choices: partner_options.reject { |_label, value| value.blank? },
+    selected: service.partner_id,
+    prompt: 'Chọn đối tác',
+    searchable: true,
+    search_placeholder: 'Tìm đối tác...'
+  ) %>
+
   <%= render InputFieldComponent.new(
     form: form,
     field: :name,
-    label: 'Tên gói dịch vụ',
-    placeholder: 'Nhập tên gói dịch vụ',
+    label: 'Tên dịch vụ',
+    placeholder: 'Nhập tên dịch vụ',
     autofocus: true,
     onkeydown: "if (event.key === 'Enter') { event.preventDefault(); this.form?.requestSubmit(); }",
     data: { autofocus_modal: true }
@@ -19,7 +30,7 @@
     </button>
 
     <%= render ButtonComponent.new(
-      label: 'Tạo gói dịch vụ',
+      label: 'Tạo dịch vụ',
       type: :submit,
       variant: :primary,
       icon: 'plus'

@@ -34,13 +34,18 @@ class FlashComponent < ViewComponent::Base
     }
   }.freeze
 
-  def initialize(flash:)
+  def initialize(flash:, render_container: true)
     @flash = flash
+    @render_container = render_container
   end
 
   private
 
   attr_reader :flash
+
+  def render_container?
+    @render_container
+  end
 
   def messages
     flash.to_hash.filter_map do |type, message|
@@ -54,9 +59,10 @@ class FlashComponent < ViewComponent::Base
         {
           type: type.to_sym,
           message: entry,
+          key: "#{type}:#{entry}",
           style: TYPE_STYLES.fetch(type.to_sym, TYPE_STYLES[:info])
         }
       end
-    end.flatten
+    end.flatten.uniq { |entry| [ entry[:type], entry[:message] ] }
   end
 end

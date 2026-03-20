@@ -1,6 +1,6 @@
 <% from_modal = local_assigns.fetch(:from_modal, false) %>
 
-<%= form_with model: [:admin, partner], class: 'space-y-4' do |form| %>
+<%= form_with model: [:admin, partner], class: 'space-y-4', data: { controller: 'modal-form', action: 'submit->modal-form#handleSubmit turbo:before-fetch-response->modal-form#beforeFetchResponse turbo:submit-end->modal-form#submitEnd' } do |form| %>
   <%= hidden_field_tag :from_modal, '1' if from_modal %>
 
   <% if from_modal %>
@@ -10,6 +10,7 @@
       label: 'Tên',
       placeholder: 'Nhập tên đối tác',
       autofocus: true,
+      onkeydown: "if (event.key === 'Enter') { event.preventDefault(); this.form?.requestSubmit(); }",
       data: { autofocus_modal: true }
     ) %>
   <% else %>

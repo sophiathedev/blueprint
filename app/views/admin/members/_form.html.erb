@@ -1,13 +1,14 @@
 <% submit_label = local_assigns.fetch(:submit_label, member.persisted? ? 'Lưu thay đổi' : 'Tạo người dùng') %>
 <% password_note = local_assigns[:password_note] %>
 
-<%= form_with url: member.persisted? ? admin_member_path(member) : admin_members_path, method: member.persisted? ? :patch : :post, model: member, class: 'space-y-4' do |form| %>
+<%= form_with url: member.persisted? ? admin_member_path(member) : admin_members_path, method: member.persisted? ? :patch : :post, model: member, class: 'space-y-4', data: { controller: 'modal-form', action: 'submit->modal-form#handleSubmit turbo:before-fetch-response->modal-form#beforeFetchResponse turbo:submit-end->modal-form#submitEnd' } do |form| %>
   <%= render InputFieldComponent.new(
     form: form,
     field: :name,
     label: 'Tên',
     placeholder: 'Nhập tên người dùng',
     autofocus: true,
+    onkeydown: "if (event.key === 'Enter') { event.preventDefault(); this.form?.requestSubmit(); }",
     data: { autofocus_modal: true }
   ) %>
 

@@ -37,7 +37,16 @@ module Admin
       @service = @partner.services.build(service_params)
 
       if @service.save
-        redirect_to admin_partner_services_path(@partner), notice: 'Tạo gói dịch vụ thành công.'
+        respond_to do |format|
+          format.html { redirect_to admin_partner_services_path(@partner), notice: 'Tạo gói dịch vụ thành công.' }
+          format.turbo_stream do
+            @query = params[:q].to_s.strip
+            load_services
+            @service = @partner.services.build
+            flash.now[:notice] = 'Tạo gói dịch vụ thành công.'
+            render_services_turbo_stream
+          end
+        end
       else
         load_services
         @open_service_modal = true
@@ -134,21 +143,28 @@ module Admin
     def render_services_turbo_stream(status: :ok)
       render turbo_stream: [
         turbo_stream.replace(
-          'admin_services_page',
-          partial: 'admin/services/page'
+          'services_list_frame',
+          partial: 'admin/services/services_list',
+          locals: {
+            partner: @partner,
+            services: @services,
+            query: @query,
+            row_offset: @row_offset,
+            next_page: @next_page
+          }
         ),
-        turbo_stream.update(
-          'flash_container',
-          partial: 'shared/flash',
+        turbo_stream.prepend(
+          'flash_messages',
+          partial: 'shared/flash_messages',
           locals: { flash: flash }
         )
       ], status: status
     end
 
     def render_flash_turbo_stream(status: :ok)
-      render turbo_stream: turbo_stream.update(
-        'flash_container',
-        partial: 'shared/flash',
+      render turbo_stream: turbo_stream.prepend(
+        'flash_messages',
+        partial: 'shared/flash_messages',
         locals: { flash: flash }
       ), status: status
     end

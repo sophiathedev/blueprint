@@ -1,0 +1,74 @@
+<section id="admin_all_services_page" data-controller="modal" data-modal-open-value="<%= (@open_service_modal.present? || @show_create_task_prompt.present? || @open_task_modal.present?).to_s %>">
+  <div class="rounded-[28px] border border-black/10 bg-white p-5 md:p-6">
+    <div class="flex flex-col gap-4 border-b border-black/10 pb-5 lg:flex-row lg:items-center lg:justify-between">
+      <h1 class="shrink-0 text-3xl font-semibold tracking-tight text-black">Dịch vụ</h1>
+
+      <div class="flex w-full flex-col gap-3 md:flex-row md:items-center lg:w-auto">
+        <%= form_with url: admin_services_path, method: :get, class: 'flex w-full flex-col gap-3 md:flex-row md:items-center lg:w-auto', data: { turbo_frame: 'services_list_frame', controller: 'debounced-submit' } do |form| %>
+          <div class="w-full md:w-[260px]">
+            <%= render SelectFieldComponent.new(
+              form: form,
+              field: :partner_id,
+              label: 'Đối tác',
+              choices: @partner_options,
+              selected: @selected_partner_id,
+              selected_label: @selected_partner&.name,
+              prompt: 'Tất cả đối tác',
+              searchable: true,
+              search_placeholder: 'Tìm đối tác...',
+              submit_on_choose: true,
+              show_label: false,
+              trigger_icon: 'building-2',
+              class: 'w-full'
+            ) %>
+          </div>
+
+          <div class="relative w-full md:w-[320px]" data-controller="clearable-input">
+            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-black/35">
+              <%= lucide_icon('search', class: 'h-4 w-4', "aria-hidden": true) %>
+            </span>
+            <input
+              type="text"
+              name="q"
+              value="<%= @query %>"
+              placeholder="Tìm theo tên dịch vụ"
+              class="w-full rounded-2xl border border-stone-200 bg-stone-50 py-2 pl-10 pr-10 text-sm text-black outline-none transition focus:border-primary-400 focus:bg-white focus:ring-4 focus:ring-primary-100"
+              data-clearable-input-target="input"
+              data-action="input->debounced-submit#submit input->clearable-input#sync"
+            >
+            <button
+              type="button"
+              class="absolute inset-y-0 right-0 hidden items-center pr-3 text-black/35 transition hover:text-black"
+              data-clearable-input-target="clear"
+              data-action="click->clearable-input#clear click->debounced-submit#submit"
+              aria-label="Xóa nội dung"
+            >
+              <%= lucide_icon('x', class: 'h-4 w-4', "aria-hidden": true) %>
+            </button>
+          </div>
+        <% end %>
+
+        <button
+          type="button"
+          class="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl border border-primary-500 bg-primary-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:border-primary-600 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2"
+          data-action="click->modal#open"
+        >
+          <%= lucide_icon('plus', class: 'h-4 w-4 shrink-0', "aria-hidden": true) %>
+          <span>Thêm dịch vụ</span>
+        </button>
+      </div>
+    </div>
+
+    <%= render 'admin/services/services_list',
+      services: @services,
+      query: @query,
+      filter_active: @query.present? || @selected_partner_id.present?,
+      row_offset: @row_offset,
+      next_page: @next_page,
+      pagination_url: admin_services_path(q: @query, partner_id: @selected_partner_id, page: @next_page, format: :turbo_stream),
+      show_partner: true,
+      show_create_button: false %>
+  </div>
+
+  <%= render 'modals' %>
+</section>

@@ -194,21 +194,25 @@ module Admin
     def render_members_turbo_stream(status: :ok)
       render turbo_stream: [
         turbo_stream.replace(
-          'admin_members_page',
-          partial: 'admin/members/page'
+          'members_list_section',
+          partial: 'admin/members/members_list'
         ),
-        turbo_stream.update(
-          'flash_container',
-          partial: 'shared/flash',
+        turbo_stream.replace(
+          'members_modals',
+          partial: 'admin/members/modals'
+        ),
+        turbo_stream.prepend(
+          'flash_messages',
+          partial: 'shared/flash_messages',
           locals: { flash: flash }
         )
       ], status: status
     end
 
     def render_flash_turbo_stream(status: :ok)
-      render turbo_stream: turbo_stream.update(
-        'flash_container',
-        partial: 'shared/flash',
+      render turbo_stream: turbo_stream.prepend(
+        'flash_messages',
+        partial: 'shared/flash_messages',
         locals: { flash: flash }
       ), status: status
     end

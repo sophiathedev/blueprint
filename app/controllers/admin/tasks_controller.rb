@@ -17,7 +17,17 @@ module Admin
       @task = @service.tasks.build(task_params)
 
       if @task.save
-        redirect_to admin_partner_service_tasks_path(@partner, @service), notice: 'Tạo task thành công.'
+        respond_to do |format|
+          format.html { redirect_to admin_partner_service_tasks_path(@partner, @service), notice: 'Tạo task thành công.' }
+          format.turbo_stream do
+            @query = params[:q].to_s.strip
+            load_assignable_members
+            load_tasks
+            @task = @service.tasks.build
+            flash.now[:notice] = 'Tạo task thành công.'
+            render_tasks_turbo_stream
+          end
+        end
       else
         load_assignable_members
         load_tasks
@@ -106,21 +116,22 @@ module Admin
     def render_tasks_turbo_stream(status: :ok)
       render turbo_stream: [
         turbo_stream.replace(
-          'admin_tasks_page',
-          partial: 'admin/tasks/page'
+          'tasks_list_section',
+          partial: 'admin/tasks/tasks_list',
+          locals: { tasks: @tasks }
         ),
-        turbo_stream.update(
-          'flash_container',
-          partial: 'shared/flash',
+        turbo_stream.prepend(
+          'flash_messages',
+          partial: 'shared/flash_messages',
           locals: { flash: flash }
         )
       ], status: status
     end
 
     def render_flash_turbo_stream(status: :ok)
-      render turbo_stream: turbo_stream.update(
-        'flash_container',
-        partial: 'shared/flash',
+      render turbo_stream: turbo_stream.prepend(
+        'flash_messages',
+        partial: 'shared/flash_messages',
         locals: { flash: flash }
       ), status: status
     end

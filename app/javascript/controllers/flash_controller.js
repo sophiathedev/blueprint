@@ -6,6 +6,8 @@ export default class extends Controller {
   }
 
   connect() {
+    this.removeDuplicateToasts()
+
     requestAnimationFrame(() => {
       this.element.classList.remove("translate-x-4", "opacity-0")
     })
@@ -31,5 +33,16 @@ export default class extends Controller {
 
     window.clearTimeout(this.timeoutId)
     this.timeoutId = null
+  }
+
+  removeDuplicateToasts() {
+    const key = this.element.dataset.flashKey
+    if (!key) return
+
+    document.querySelectorAll(`[data-controller~="flash"][data-flash-key="${CSS.escape(key)}"]`).forEach((toast) => {
+      if (toast === this.element) return
+
+      toast.remove()
+    })
   }
 }
