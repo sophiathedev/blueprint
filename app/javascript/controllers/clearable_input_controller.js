@@ -4,6 +4,10 @@ export default class extends Controller {
   static targets = ["input", "clear"]
 
   connect() {
+    if (this.hasClearTarget) {
+      this.clearTarget.tabIndex = -1
+    }
+
     this.sync()
   }
 
