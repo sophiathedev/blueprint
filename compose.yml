@@ -21,7 +21,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
-    restart: unless-stopped
 
   rails:
     build:
@@ -39,7 +38,6 @@ services:
     depends_on:
       - postgres
       - redis
-    restart: unless-stopped
     stdin_open: true
     tty: true
 
