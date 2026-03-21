@@ -1,0 +1,29 @@
+<% content_for :title, 'Blueprint | Settings' %>
+
+<section id="admin_settings_page" class="space-y-4">
+  <div class="rounded-[28px] border border-black/10 bg-white p-5 md:p-6">
+    <div class="mb-5 border-b border-black/10 pb-5">
+      <h1 class="text-3xl font-semibold tracking-tight text-black">Settings hệ thống</h1>
+    </div>
+
+    <%= form_with model: @setting, url: admin_settings_path, method: :patch, class: 'space-y-5' do |form| %>
+      <%= render InputFieldComponent.new(
+        form: form,
+        field: :telegram_api_key,
+        label: 'Telegram API key',
+        placeholder: 'Nhập Telegram API key',
+        autocomplete: 'off',
+        spellcheck: false
+      ) %>
+
+      <div class="flex items-center justify-end">
+        <%= render ButtonComponent.new(
+          label: 'Lưu thay đổi',
+          type: :submit,
+          variant: :primary,
+          icon: 'save'
+        ) %>
+      </div>
+    <% end %>
+  </div>
+</section>

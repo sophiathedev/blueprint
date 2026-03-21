@@ -13,6 +13,10 @@ module Admin
       @task = @service.tasks.build
     end
 
+    def new
+      @order_task_name = @service.name
+    end
+
     def create
       @task = @service.tasks.build(task_params)
 
@@ -150,5 +154,6 @@ module Admin
         show_all_tasks: show_all_tasks
       }, status: status
     end
+
   end
 end

@@ -23,6 +23,8 @@ Rails.application.routes.draw do
       patch :reset_password, on: :member
     end
 
+    resource :settings, only: %i[show update]
+
     resources :services, controller: 'all_services', only: %i[index create update destroy] do
       get :tasks_panel, on: :member
     end
@@ -30,7 +32,7 @@ Rails.application.routes.draw do
     resources :partners do
       resources :services, only: %i[index create update destroy] do
         get :tasks_panel, on: :member
-        resources :tasks, only: %i[index create update destroy]
+        resources :tasks, only: %i[index new create update destroy]
       end
     end
   end

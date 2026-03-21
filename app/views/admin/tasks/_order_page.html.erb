@@ -1,0 +1,292 @@
+<%
+  priority_options = [
+    {
+      value: 'low',
+      label: 'Thấp',
+      icon: 'arrow-down',
+      tone: 'low',
+      wrapper_class: 'border-stone-200 bg-stone-50 text-stone-500',
+      icon_class: 'bg-stone-200 text-stone-500',
+      checked_class: 'peer-checked:border-sky-400 peer-checked:bg-sky-100 peer-checked:text-sky-700 peer-checked:ring-4 peer-checked:ring-sky-100'
+    },
+    {
+      value: 'medium',
+      label: 'Trung Bình',
+      icon: 'arrow-right',
+      tone: 'medium',
+      wrapper_class: 'border-stone-200 bg-stone-50 text-stone-500',
+      icon_class: 'bg-stone-200 text-stone-500',
+      checked_class: 'peer-checked:border-amber-400 peer-checked:bg-amber-100 peer-checked:text-amber-700 peer-checked:ring-4 peer-checked:ring-amber-100'
+    },
+    {
+      value: 'high',
+      label: 'Cao',
+      icon: 'arrow-up',
+      tone: 'high',
+      wrapper_class: 'border-stone-200 bg-stone-50 text-stone-500',
+      icon_class: 'bg-stone-200 text-stone-500',
+      checked_class: 'peer-checked:border-emerald-400 peer-checked:bg-emerald-100 peer-checked:text-emerald-700 peer-checked:ring-4 peer-checked:ring-emerald-100'
+    },
+    {
+      value: 'urgent',
+      label: 'Khẩn cấp',
+      icon: 'triangle-alert',
+      tone: 'urgent',
+      wrapper_class: 'border-stone-200 bg-stone-50 text-stone-500',
+      icon_class: 'bg-stone-200 text-stone-500',
+      checked_class: 'peer-checked:border-rose-400 peer-checked:bg-rose-100 peer-checked:text-rose-700 peer-checked:ring-4 peer-checked:ring-rose-100'
+    }
+  ]
+%>
+
+<% content_for :head do %>
+  <style>
+    .priority-option:has(.priority-option__input:checked) .priority-option__icon {
+      color: inherit;
+    }
+
+    .priority-option[data-priority-tone="low"]:has(.priority-option__input:checked) .priority-option__icon {
+      background-color: rgb(186 230 253);
+      color: rgb(3 105 161);
+    }
+
+    .priority-option[data-priority-tone="medium"]:has(.priority-option__input:checked) .priority-option__icon {
+      background-color: rgb(253 224 71);
+      color: rgb(180 83 9);
+    }
+
+    .priority-option[data-priority-tone="high"]:has(.priority-option__input:checked) .priority-option__icon {
+      background-color: rgb(110 231 183);
+      color: rgb(4 120 87);
+    }
+
+    .priority-option[data-priority-tone="urgent"]:has(.priority-option__input:checked) .priority-option__icon {
+      background-color: rgb(254 205 211);
+      color: rgb(190 24 93);
+    }
+  </style>
+<% end %>
+
+<section id="admin_task_order_page" data-controller="modal completion-date-picker" data-action="click@window->completion-date-picker#closeCalendarOnOutside">
+  <div class="rounded-[32px] bg-white px-5 py-6 md:px-8 md:pt-8 md:pb-6">
+    <div class="flex flex-col gap-4 border-b border-black/10 pb-6 md:flex-row md:items-end md:justify-between">
+      <div class="flex items-center gap-3">
+        <%= link_to admin_partner_services_path(@partner),
+          class: 'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-stone-200 bg-stone-100 text-black transition-colors hover:border-stone-300 hover:bg-stone-200 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2',
+          aria: { label: 'Quay lại danh sách gói dịch vụ' } do %>
+          <%= lucide_icon('arrow-left', class: 'h-4 w-4', "aria-hidden": true) %>
+        <% end %>
+
+        <h1 class="text-3xl font-semibold tracking-tight text-black md:text-4xl">
+          Đặt dịch vụ <span class="text-primary-600"><%= @service.name %></span>
+        </h1>
+      </div>
+    </div>
+
+    <%= form_with url: '#', scope: :order_request, class: 'mt-6' do |form| %>
+      <div class="px-1 pb-6">
+        <div class="grid gap-5 md:grid-cols-2">
+          <div class="space-y-2">
+            <label class="text-sm font-semibold text-black/80">Tên dịch vụ</label>
+            <input
+              type="text"
+              value="<%= @service.name %>"
+              class="w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm font-medium text-black outline-none"
+              readonly
+            >
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-sm font-semibold text-black/80">Tên đối tác</label>
+            <input
+              type="text"
+              value="<%= @partner.name %>"
+              class="w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm font-medium text-black outline-none"
+              readonly
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="border-t border-black/10 px-1 pt-6">
+        <div class="grid gap-5 md:grid-cols-2">
+          <div class="space-y-2">
+            <%= form.label :completion_date, 'Ngày hoàn thành', class: 'text-sm font-semibold text-black/80' %>
+            <%= form.hidden_field :completion_date, data: { completion_date_picker_target: 'valueInput' } %>
+            <%= form.hidden_field :completion_date_enabled, value: '1', data: { completion_date_picker_target: 'dayEnabledInput' } %>
+            <%= form.hidden_field :completion_time_enabled, value: '0', data: { completion_date_picker_target: 'timeEnabledInput' } %>
+            <%= form.hidden_field :completion_hour, data: { completion_date_picker_target: 'hourInput' } %>
+            <%= form.hidden_field :completion_minute, data: { completion_date_picker_target: 'minuteInput' } %>
+            <button
+              type="button"
+              class="flex w-full items-center justify-between gap-3 rounded-2xl border border-stone-200 bg-stone-50 px-4 py-2 text-left text-sm text-black outline-none transition hover:border-stone-300 focus:border-primary-400 focus:bg-white focus:ring-4 focus:ring-primary-100"
+              data-action="click->modal#open click->completion-date-picker#prepareOpen"
+            >
+              <span class="flex min-w-0 items-center gap-3">
+                <span class="flex shrink-0 items-center justify-center text-black/55">
+                  <%= lucide_icon('calendar-days', class: 'h-4 w-4', "aria-hidden": true) %>
+                </span>
+                <span class="min-w-0">
+                  <span class="block font-semibold text-black" data-completion-date-picker-target="display">
+                    Chọn ngày hoàn thành
+                  </span>
+                </span>
+              </span>
+              <%= lucide_icon('chevron-right', class: 'h-4 w-4 shrink-0 text-black/35', "aria-hidden": true) %>
+            </button>
+          </div>
+
+          <div class="space-y-2">
+            <%= form.label :assignee_name, 'Tên nhân sự của đối tác', class: 'text-sm font-semibold text-black/80' %>
+            <%= form.text_field :assignee_name,
+              placeholder: 'Nhập tên người phụ trách',
+              class: 'w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-black outline-none transition focus:border-primary-400 focus:bg-white focus:ring-4 focus:ring-primary-100' %>
+          </div>
+
+          <div class="space-y-2 md:col-span-2">
+            <%= form.label :priority_status, 'Trạng thái ưu tiên', class: 'text-sm font-semibold text-black/80' %>
+
+            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <% priority_options.each_with_index do |priority, index| %>
+                <label class="priority-option block cursor-pointer" data-priority-tone="<%= priority[:tone] %>">
+                  <%= form.radio_button :priority_status,
+                    priority[:label],
+                    checked: index == 1,
+                    class: 'priority-option__input peer sr-only' %>
+
+                  <span class="<%= [
+                    'flex items-center gap-3 rounded-[24px] border px-4 py-3 transition duration-200',
+                    priority[:wrapper_class],
+                    priority[:checked_class]
+                  ].join(' ') %>">
+                    <span class="<%= ['priority-option__icon flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl transition duration-200', priority[:icon_class]].join(' ') %>">
+                      <%= lucide_icon(priority[:icon], class: 'h-5 w-5', "aria-hidden": true) %>
+                    </span>
+
+                    <span class="min-w-0">
+                      <span class="block text-sm font-semibold"><%= priority[:label] %></span>
+                      <span class="block text-xs text-current/80">
+                        <%= priority[:label] == 'Khẩn cấp' ? 'Cần xử lý ngay' : "Mức ưu tiên #{priority[:label].downcase}" %>
+                      </span>
+                    </span>
+                  </span>
+                </label>
+              <% end %>
+            </div>
+          </div>
+
+          <div class="space-y-2 md:col-span-2">
+            <%= form.label :detailed_notes, 'Ghi chú chi tiết', class: 'text-sm font-semibold text-black/80' %>
+            <%= form.text_area :detailed_notes,
+              rows: 7,
+              placeholder: 'Mô tả brief, yêu cầu đặc biệt, deadline hoặc các lưu ý quan trọng...',
+              class: 'h-[clamp(220px,30vh,340px)] min-h-[220px] w-full resize-y rounded-[24px] border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-black outline-none transition focus:border-primary-400 focus:bg-white focus:ring-4 focus:ring-primary-100 md:h-[clamp(240px,34vh,360px)]' %>
+          </div>
+        </div>
+
+        <div class="mt-5 flex items-center justify-end gap-2 border-t border-black/10 pt-5">
+          <%= link_to admin_partner_services_path(@partner),
+            class: 'inline-flex items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-stone-100 px-3 py-2 text-sm font-semibold text-black transition-colors hover:border-stone-300 hover:bg-stone-200' do %>
+            Hủy
+          <% end %>
+
+          <button
+            type="button"
+            class="inline-flex items-center justify-center gap-2 rounded-2xl border border-primary-500 bg-primary-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-primary-600 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2"
+          >
+            <%= lucide_icon('shopping-cart', class: 'h-4 w-4 shrink-0', "aria-hidden": true) %>
+            <span>Đặt dịch vụ</span>
+          </button>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <%= render ModalComponent.new(
+    title: 'Chọn ngày hoàn thành',
+    description: 'Chọn ngày bạn muốn hoàn tất dịch vụ.',
+    panel_class: 'max-w-3xl'
+  ) do |modal| %>
+    <% modal.with_body do %>
+      <div class="space-y-5">
+        <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+          <div class="min-w-0">
+            <%= render ToggleComponent.new(
+              id: 'completion-time-toggle',
+              name: 'completion_time_toggle',
+              label: 'Giờ',
+              wrapper_class: '!border-0 !bg-transparent !px-0 !py-0 hover:!border-0',
+              content_class: 'pr-4',
+              switch_wrapper_class: 'mr-3',
+              input_data: {
+                action: 'change->completion-date-picker#toggleTime',
+                completion_date_picker_target: 'timeToggle'
+              }
+            ) %>
+          </div>
+
+          <div class="flex justify-start md:justify-end">
+            <%= render TimeSelectComponent.new(
+              hour_id: 'completion-hour-select',
+              minute_id: 'completion-minute-select',
+              hour_target: 'hourSelect',
+              minute_target: 'minuteSelect'
+            ) %>
+          </div>
+        </div>
+
+        <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+          <div class="min-w-0">
+            <%= render ToggleComponent.new(
+              id: 'completion-day-toggle',
+              name: 'completion_day_toggle',
+              label: 'Ngày',
+              checked: true,
+              wrapper_class: '!border-0 !bg-transparent !px-0 !py-0 hover:!border-0',
+              content_class: 'pr-4',
+              switch_wrapper_class: 'mr-3',
+              input_data: {
+                action: 'change->completion-date-picker#toggleDay',
+                completion_date_picker_target: 'dayToggle'
+              }
+            ) %>
+          </div>
+
+          <div class="flex justify-start md:justify-end" data-completion-date-picker-target="dateSection">
+            <div class="min-w-[176px] md:min-w-[190px]">
+              <%= render DatePickerComponent.new(
+                field_id: 'completion-date-modal-input',
+                input_target: 'pickerInput',
+                trigger_label_target: 'calendarTriggerLabel',
+                month_label_target: 'calendarMonthLabel',
+                days_target: 'calendarDays',
+                panel_target: 'calendarPanel'
+              ) %>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <% modal.with_footer do %>
+      <div class="flex items-center justify-end gap-2">
+        <button
+          type="button"
+          class="inline-flex items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-white px-3 py-2 text-sm font-semibold text-black transition-colors hover:border-stone-300 hover:bg-stone-100"
+          data-action="modal#close"
+        >
+          Hủy
+        </button>
+
+        <button
+          type="button"
+          class="inline-flex items-center justify-center gap-2 rounded-2xl border border-primary-500 bg-primary-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-primary-600 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2"
+          data-action="click->completion-date-picker#apply click->modal#close"
+        >
+          <%= lucide_icon('check', class: 'h-4 w-4 shrink-0', "aria-hidden": true) %>
+          <span>Xác nhận ngày</span>
+        </button>
+      </div>
+    <% end %>
+  <% end %>
+</section>

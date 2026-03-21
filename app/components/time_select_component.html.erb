@@ -1,0 +1,33 @@
+<div class="<%= ['min-w-0', hidden? ? 'hidden' : 'block'].join(' ') %>" data-completion-date-picker-target="timeSection">
+  <div class="flex items-center gap-1 rounded-2xl border border-stone-200 bg-white px-1.5 py-0.5">
+    <div class="min-w-[44px]">
+      <label for="<%= hour_id %>" class="sr-only">Giờ</label>
+      <select
+        id="<%= hour_id %>"
+        class="w-full appearance-none rounded-xl border-0 bg-transparent px-1 py-0.5 text-center text-sm font-semibold text-black outline-none transition focus:ring-0"
+        data-completion-date-picker-target="<%= hour_target %>"
+      >
+        <% 24.times.each do |hour| %>
+          <% formatted_hour = format('%02d', hour) %>
+          <option value="<%= formatted_hour %>"><%= formatted_hour %></option>
+        <% end %>
+      </select>
+    </div>
+
+    <span class="w-2 text-center text-sm font-semibold text-black/40">:</span>
+
+    <div class="min-w-[44px]">
+      <label for="<%= minute_id %>" class="sr-only">Phút</label>
+      <select
+        id="<%= minute_id %>"
+        class="w-full appearance-none rounded-xl border-0 bg-transparent px-1 py-0.5 text-center text-sm font-semibold text-black outline-none transition focus:ring-0"
+        data-completion-date-picker-target="<%= minute_target %>"
+      >
+        <% 60.times.each do |minute| %>
+          <% formatted_minute = format('%02d', minute) %>
+          <option value="<%= formatted_minute %>"><%= formatted_minute %></option>
+        <% end %>
+      </select>
+    </div>
+  </div>
+</div>

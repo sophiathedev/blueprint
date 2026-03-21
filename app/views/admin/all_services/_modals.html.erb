@@ -3,6 +3,7 @@
   data-controller="service-creation-flow"
   data-service-creation-flow-prompt-open-value="<%= @show_create_task_prompt.present? %>"
   data-service-creation-flow-service-id-value="<%= @created_service&.id %>"
+  data-service-creation-flow-clear-params-value='["open_service_modal","create_task_prompt","open_task_modal","created_service_id"]'
 >
   <%= render ModalComponent.new(title: 'Tạo dịch vụ', open: @open_service_modal.present?) do |modal| %>
     <% modal.with_body do %>

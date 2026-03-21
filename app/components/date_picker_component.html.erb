@@ -1,0 +1,50 @@
+<div class="relative w-full min-w-[190px]" data-action="click->completion-date-picker#keepOpen">
+  <input id="<%= field_id %>" type="hidden" data-completion-date-picker-target="<%= input_target %>">
+
+  <button
+    type="button"
+    class="flex w-full items-center justify-between gap-3 rounded-2xl border border-stone-200 bg-white px-3 py-1.5 text-sm font-semibold text-black transition hover:border-stone-300 focus:outline-none focus:ring-4 focus:ring-primary-100"
+    data-action="click->completion-date-picker#toggleCalendar"
+    aria-haspopup="dialog"
+    aria-expanded="false"
+  >
+    <span class="truncate text-center flex-1" data-completion-date-picker-target="<%= trigger_label_target %>"></span>
+    <%= helpers.lucide_icon('calendar-days', class: 'h-4 w-4 shrink-0 text-black/70', "aria-hidden": true) %>
+  </button>
+
+  <div
+    class="absolute right-0 top-full z-20 mt-2 hidden w-[280px] rounded-[24px] border border-black/10 bg-white p-3 shadow-[0_18px_48px_rgba(15,23,42,0.14)]"
+    data-completion-date-picker-target="<%= panel_target %>"
+    data-action="click->completion-date-picker#keepOpen"
+  >
+    <div class="mb-3 flex items-center justify-between gap-2">
+      <button
+        type="button"
+        class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-stone-100 text-black/70 transition hover:bg-stone-200 hover:text-black"
+        data-action="click->completion-date-picker#showPreviousMonth"
+        aria-label="Tháng trước"
+      >
+        <%= helpers.lucide_icon('chevron-left', class: 'h-4 w-4', "aria-hidden": true) %>
+      </button>
+
+      <div class="text-sm font-semibold text-black" data-completion-date-picker-target="<%= month_label_target %>"></div>
+
+      <button
+        type="button"
+        class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-stone-100 text-black/70 transition hover:bg-stone-200 hover:text-black"
+        data-action="click->completion-date-picker#showNextMonth"
+        aria-label="Tháng sau"
+      >
+        <%= helpers.lucide_icon('chevron-right', class: 'h-4 w-4', "aria-hidden": true) %>
+      </button>
+    </div>
+
+    <div class="mb-2 grid grid-cols-7 gap-1 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-black/40">
+      <% %w[T2 T3 T4 T5 T6 T7 CN].each do |weekday| %>
+        <span class="py-1"><%= weekday %></span>
+      <% end %>
+    </div>
+
+    <div class="grid grid-cols-7 gap-1" data-completion-date-picker-target="<%= days_target %>"></div>
+  </div>
+</div>

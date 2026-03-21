@@ -31,6 +31,12 @@ module ApplicationHelper
         href: admin_members_path,
         active: controller_path == 'admin/members',
         icon: 'users-round'
+      },
+      {
+        label: 'Settings',
+        href: admin_settings_path,
+        active: controller_path == 'admin/settings',
+        icon: 'settings'
       }
     ]
   end

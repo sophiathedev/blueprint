@@ -1,13 +1,16 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static values = { promptOpen: Boolean, serviceId: String }
+  static values = { promptOpen: Boolean, serviceId: String, clearParams: Array }
   static targets = ["promptOverlay", "promptPanel", "taskOverlay", "taskPanel"]
   static TRANSITION_DURATION = 300
 
   connect() {
     this.showTimeout = null
     this.hideTimeout = null
+    this.boundBeforeCache = this.beforeCache.bind(this)
+    this.clearModalParamsFromUrl()
+    document.addEventListener("turbo:before-cache", this.boundBeforeCache)
 
     if (this.promptOpenValue && this.hasPromptOverlayTarget && this.hasPromptPanelTarget) {
       if (!this.promptAlreadyAnimated()) {
@@ -28,6 +31,7 @@ export default class extends Controller {
   disconnect() {
     this.clearTimers()
     this.disableScrollLock()
+    document.removeEventListener("turbo:before-cache", this.boundBeforeCache)
   }
 
   openTaskModal(event) {
@@ -145,5 +149,38 @@ export default class extends Controller {
 
     window.__serviceCreationAnimatedIds ||= new Set()
     window.__serviceCreationAnimatedIds.add(this.serviceIdValue)
+  }
+
+  clearModalParamsFromUrl() {
+    if (!this.hasClearParamsValue || this.clearParamsValue.length === 0) return
+
+    const url = new URL(window.location.href)
+    const hadAnyModalParam = this.clearParamsValue.some((paramName) => url.searchParams.has(paramName))
+
+    if (!hadAnyModalParam) return
+
+    this.clearParamsValue.forEach((paramName) => url.searchParams.delete(paramName))
+
+    const nextUrl = `${url.pathname}${url.search}${url.hash}`
+    window.history.replaceState({}, "", nextUrl)
+  }
+
+  beforeCache() {
+    this.clearTimers()
+    this.promptOpenValue = false
+
+    if (this.hasPromptOverlayTarget && this.hasPromptPanelTarget) {
+      this.applyClosedState(this.promptOverlayTarget, this.promptPanelTarget)
+      this.promptOverlayTarget.classList.add("hidden", "pointer-events-none")
+      this.promptOverlayTarget.classList.remove("flex")
+    }
+
+    if (this.hasTaskOverlayTarget && this.hasTaskPanelTarget) {
+      this.applyClosedState(this.taskOverlayTarget, this.taskPanelTarget)
+      this.taskOverlayTarget.classList.add("hidden", "pointer-events-none")
+      this.taskOverlayTarget.classList.remove("flex")
+    }
+
+    this.disableScrollLock()
   }
 }

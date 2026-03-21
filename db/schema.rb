@@ -10,9 +10,15 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_19_113000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_21_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "app_settings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "telegram_api_key"
+    t.datetime "updated_at", null: false
+  end
 
   create_table "partners", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -29,7 +35,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_113000) do
     t.string "name", null: false
     t.bigint "partner_id", null: false
     t.datetime "updated_at", null: false
-    t.index "lower((name)::text)", name: "index_services_on_lower_name_active", unique: true, where: "(deleted_at IS NULL)"
     t.index ["deleted_at"], name: "index_services_on_deleted_at"
     t.index ["partner_id"], name: "index_services_on_partner_id"
   end

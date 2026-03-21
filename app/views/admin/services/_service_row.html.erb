@@ -4,6 +4,7 @@
 <% tasks_panel_path = show_partner ? tasks_panel_admin_service_path(service) : tasks_panel_admin_partner_service_path(row_partner, service) %>
 <% update_path = show_partner ? admin_service_path(service) : admin_partner_service_path(row_partner, service) %>
 <% destroy_path = show_partner ? admin_service_path(service, q: local_assigns[:query], partner_id: selected_partner_id) : admin_partner_service_path(row_partner, service) %>
+<% order_now_path = new_admin_partner_service_task_path(row_partner, service) %>
 
 <div
   class="<%= [local_assigns.fetch(:row_offset, 0).zero? && service_iteration.index.zero? ? nil : 'border-t border-black/10'].compact.join(' ') %>"
@@ -14,7 +15,7 @@
   data-service-row-item
 >
   <div
-    class="<%= ['grid cursor-pointer items-center gap-2 px-3 py-2.5 transition hover:bg-stone-50 focus:outline-none focus-visible:bg-stone-50', show_partner ? 'grid-cols-[56px_minmax(0,1.2fr)_minmax(0,1fr)_92px]' : 'grid-cols-[56px_minmax(0,1fr)_92px]', service_iteration.last? ? 'rounded-b-[24px]' : nil].compact.join(' ') %>"
+    class="<%= ['group grid cursor-pointer items-center gap-2 px-3 py-2.5 transition hover:bg-stone-50 focus:outline-none focus-visible:bg-stone-50', show_partner ? 'grid-cols-[56px_minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,220px)_92px]' : 'grid-cols-[56px_minmax(0,1fr)_minmax(0,220px)_92px]', service_iteration.last? ? 'rounded-b-[24px]' : nil].compact.join(' ') %>"
     data-action="click->service-row-collapse#toggle keydown->service-row-collapse#toggleWithKeyboard"
     data-service-row-collapse-target="trigger"
     tabindex="0"
@@ -69,6 +70,16 @@
         <span class="block truncate text-sm font-medium text-black/70"><%= row_partner.name %></span>
       </div>
     <% end %>
+
+    <div class="flex min-h-9 items-center justify-start">
+      <%= link_to order_now_path,
+        class: 'pointer-events-none inline-flex items-center gap-1.5 rounded-full border border-dashed border-primary-300 bg-white px-3 py-1.5 text-sm font-semibold text-primary-600 opacity-0 transition duration-150 hover:border-primary-400 hover:bg-primary-50 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100',
+        data: { turbo_frame: '_top' },
+        onclick: 'event.stopPropagation();' do %>
+        <span>Đặt dịch vụ ngay</span>
+        <span aria-hidden="true">-&gt;</span>
+      <% end %>
+    </div>
 
     <div class="flex items-center justify-end gap-2 overflow-visible">
       <%= render DropdownComponent.new(

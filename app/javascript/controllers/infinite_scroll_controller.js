@@ -3,14 +3,15 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static values = {
-    url: String
+    url: String,
+    preloadOffset: { type: Number, default: 50 }
   }
 
   connect() {
     this.loading = false
     this.observer = new IntersectionObserver((entries) => {
       if (entries.some((entry) => entry.isIntersecting)) this.load()
-    }, { rootMargin: "200px 0px" })
+    }, { rootMargin: `${this.preloadOffsetValue}px 0px` })
 
     this.observer.observe(this.element)
   }

@@ -1,0 +1,20 @@
+<div class="<%= wrapper_classes %>">
+  <div class="<%= content_classes %>">
+    <p class="text-sm font-semibold text-black"><%= label %></p>
+    <% if description.present? %>
+      <p class="mt-1 text-xs leading-5 text-black/55"><%= description %></p>
+    <% end %>
+  </div>
+
+  <div class="<%= switch_classes %>">
+    <%= tag.input(**input_options) %>
+    <label
+      for="<%= id %>"
+      class="block cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70 peer-checked:[&_.toggle-track]:bg-primary-500 peer-disabled:[&_.toggle-track]:bg-stone-200/80 peer-checked:[&_.toggle-thumb]:translate-x-5"
+    >
+      <span class="toggle-track flex h-7 w-12 items-center rounded-full bg-stone-200 p-1 transition">
+        <span class="toggle-thumb h-5 w-5 rounded-full bg-white shadow-sm transition-transform"></span>
+      </span>
+    </label>
+  </div>
+</div>

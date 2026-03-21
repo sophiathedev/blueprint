@@ -139,7 +139,7 @@ module Admin
         partners = partners.where('name ILIKE ?', "%#{ActiveRecord::Base.sanitize_sql_like(@query)}%")
       end
 
-      @page = [params[:page].to_i, 1].max
+      @page = [ params[:page].to_i, 1 ].max
       @row_offset = (@page - 1) * PARTNER_PAGE_SIZE
       @partners = partners.offset(@row_offset).limit(PARTNER_PAGE_SIZE).to_a
       @next_page = partners.offset(@row_offset + PARTNER_PAGE_SIZE).limit(1).exists? ? @page + 1 : nil
