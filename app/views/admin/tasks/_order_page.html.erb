@@ -176,11 +176,15 @@
           </div>
 
           <div class="space-y-2 md:col-span-2">
-            <%= form.label :detailed_notes, 'Ghi chú chi tiết', class: 'text-sm font-semibold text-black/80' %>
-            <%= form.text_area :detailed_notes,
+            <%= render MarkdownEditorComponent.new(
+              form: form,
+              field: :detailed_notes,
+              label: 'Ghi chú chi tiết',
               rows: 7,
               placeholder: 'Mô tả brief, yêu cầu đặc biệt, deadline hoặc các lưu ý quan trọng...',
-              class: 'h-[clamp(220px,30vh,340px)] min-h-[220px] w-full resize-y rounded-[24px] border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-black outline-none transition focus:border-primary-400 focus:bg-white focus:ring-4 focus:ring-primary-100 md:h-[clamp(240px,34vh,360px)]' %>
+              hint: 'Hỗ trợ markdown để trình bày nội dung rõ ràng hơn.',
+              class: 'md:h-[clamp(240px,34vh,360px)]'
+            ) %>
           </div>
         </div>
 
@@ -210,58 +214,72 @@
     <% modal.with_body do %>
       <div class="space-y-5">
         <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
-          <div class="min-w-0">
-            <%= render ToggleComponent.new(
-              id: 'completion-time-toggle',
-              name: 'completion_time_toggle',
-              label: 'Giờ',
-              wrapper_class: '!border-0 !bg-transparent !px-0 !py-0 hover:!border-0',
-              content_class: 'pr-4',
-              switch_wrapper_class: 'mr-3',
-              input_data: {
-                action: 'change->completion-date-picker#toggleTime',
-                completion_date_picker_target: 'timeToggle'
-              }
-            ) %>
-          </div>
+          <p class="text-sm font-semibold text-black">Giờ</p>
 
-          <div class="flex justify-start md:justify-end">
+          <div class="flex items-center justify-start gap-3 md:justify-end">
             <%= render TimeSelectComponent.new(
               hour_id: 'completion-hour-select',
               minute_id: 'completion-minute-select',
               hour_target: 'hourSelect',
               minute_target: 'minuteSelect'
             ) %>
+
+            <div class="shrink-0">
+              <input
+                id="completion-time-toggle"
+                name="completion_time_toggle"
+                type="checkbox"
+                class="peer sr-only"
+                data-action="change->completion-date-picker#toggleTime"
+                data-completion-date-picker-target="timeToggle"
+              >
+              <label
+                for="completion-time-toggle"
+                class="block cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70 peer-checked:[&_.toggle-track]:bg-primary-500 peer-disabled:[&_.toggle-track]:bg-stone-200/80 peer-checked:[&_.toggle-thumb]:translate-x-5"
+              >
+                <span class="toggle-track flex h-7 w-12 items-center rounded-full bg-stone-200 p-1 transition">
+                  <span class="toggle-thumb h-5 w-5 rounded-full bg-white shadow-sm transition-transform"></span>
+                </span>
+              </label>
+            </div>
           </div>
         </div>
 
         <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
-          <div class="min-w-0">
-            <%= render ToggleComponent.new(
-              id: 'completion-day-toggle',
-              name: 'completion_day_toggle',
-              label: 'Ngày',
-              checked: true,
-              wrapper_class: '!border-0 !bg-transparent !px-0 !py-0 hover:!border-0',
-              content_class: 'pr-4',
-              switch_wrapper_class: 'mr-3',
-              input_data: {
-                action: 'change->completion-date-picker#toggleDay',
-                completion_date_picker_target: 'dayToggle'
-              }
-            ) %>
-          </div>
+          <p class="text-sm font-semibold text-black">Ngày</p>
 
-          <div class="flex justify-start md:justify-end" data-completion-date-picker-target="dateSection">
-            <div class="min-w-[176px] md:min-w-[190px]">
-              <%= render DatePickerComponent.new(
-                field_id: 'completion-date-modal-input',
-                input_target: 'pickerInput',
-                trigger_label_target: 'calendarTriggerLabel',
-                month_label_target: 'calendarMonthLabel',
-                days_target: 'calendarDays',
-                panel_target: 'calendarPanel'
-              ) %>
+          <div class="flex items-center justify-start gap-3 md:justify-end">
+            <div class="flex justify-start" data-completion-date-picker-target="dateSection">
+              <div class="min-w-[176px] md:min-w-[190px]">
+                <%= render DatePickerComponent.new(
+                  field_id: 'completion-date-modal-input',
+                  input_target: 'pickerInput',
+                  trigger_label_target: 'calendarTriggerLabel',
+                  month_label_target: 'calendarMonthLabel',
+                  days_target: 'calendarDays',
+                  panel_target: 'calendarPanel'
+                ) %>
+              </div>
+            </div>
+
+            <div class="shrink-0">
+              <input
+                id="completion-day-toggle"
+                name="completion_day_toggle"
+                type="checkbox"
+                checked
+                class="peer sr-only"
+                data-action="change->completion-date-picker#toggleDay"
+                data-completion-date-picker-target="dayToggle"
+              >
+              <label
+                for="completion-day-toggle"
+                class="block cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70 peer-checked:[&_.toggle-track]:bg-primary-500 peer-disabled:[&_.toggle-track]:bg-stone-200/80 peer-checked:[&_.toggle-thumb]:translate-x-5"
+              >
+                <span class="toggle-track flex h-7 w-12 items-center rounded-full bg-stone-200 p-1 transition">
+                  <span class="toggle-thumb h-5 w-5 rounded-full bg-white shadow-sm transition-transform"></span>
+                </span>
+              </label>
             </div>
           </div>
         </div>

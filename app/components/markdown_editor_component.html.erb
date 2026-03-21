@@ -1,0 +1,238 @@
+<%
+  heading_items = [
+    ['Tiêu đề 1', 'heading1', 'heading-1'],
+    ['Tiêu đề 2', 'heading2', 'heading-2'],
+    ['Tiêu đề 3', 'heading3', 'heading-3'],
+    ['Tiêu đề 4', 'heading4', 'heading-4'],
+    ['Tiêu đề 5', 'heading5', 'heading-5'],
+    ['Tiêu đề 6', 'heading6', 'heading-6']
+  ]
+
+  helper_items = [
+    { icon: 'bold', action: 'bold', label: 'Chữ đậm' },
+    { icon: 'italic', action: 'italic', label: 'Chữ nghiêng' },
+    { icon: 'list', action: 'list', label: 'Danh sách' },
+    { icon: 'text-quote', action: 'quote', label: 'Trích dẫn' },
+    { icon: 'link', action: 'link', label: 'Chèn link' },
+    { icon: 'code-xml', action: 'code', label: 'Inline code' }
+  ]
+%>
+
+<div
+  class="<%= wrapper_classes %>"
+  data-controller="markdown-editor"
+>
+  <div class="flex items-center justify-between gap-3">
+    <%= form.label field, label, class: 'text-sm font-semibold text-black/80' %>
+    <% if hint.present? %>
+      <p class="text-xs text-black/45"><%= hint %></p>
+    <% end %>
+  </div>
+
+  <div class="overflow-hidden rounded-[28px] border border-stone-200 bg-white shadow-sm">
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 bg-stone-50 px-3 py-2">
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          class="<%= tab_base_classes %> bg-primary-500 text-white shadow-sm"
+          data-markdown-editor-target="editTab"
+          data-action="markdown-editor#showEdit"
+        >
+          Edit
+        </button>
+
+        <div
+          class="inline-flex items-center gap-2"
+          data-markdown-editor-target="previewAction"
+          data-action="focusin->markdown-editor#showPreviewAction focusout->markdown-editor#hidePreviewAction"
+        >
+          <button
+            type="button"
+            class="<%= tab_base_classes %> text-black/60 hover:bg-stone-200"
+            data-markdown-editor-target="previewTab"
+            data-action="markdown-editor#showPreview"
+          >
+            Preview
+          </button>
+
+          <button
+            type="button"
+            class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-transparent bg-stone-50 text-black/60 outline-none transition hover:border-primary-500 hover:bg-primary-50 hover:text-primary-700 focus:outline-none focus:ring-0"
+            data-markdown-editor-target="previewActionButton"
+            data-action="click->markdown-editor#openFullscreen"
+            aria-label="Mở markdown editor toàn màn hình"
+            title="Mở markdown editor toàn màn hình"
+          >
+            <%= helpers.lucide_icon('expand', class: 'h-4 w-4', "aria-hidden": true) %>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-1.5">
+        <div
+          class="relative"
+          data-controller="dropdown"
+          data-dropdown-direction-value="right_end"
+          data-action="keydown.esc@window->dropdown#close click@window->dropdown#closeOnOutside focusin@window->dropdown#closeOnFocusOutside"
+        >
+          <button
+            type="button"
+            class="inline-flex h-9 items-center justify-center gap-1 rounded-xl border border-stone-200 bg-white px-2.5 text-black/70 outline-none transition hover:border-primary-500 hover:bg-primary-50 hover:text-primary-700 focus:outline-none focus:ring-0"
+            data-action="click->dropdown#toggle"
+            aria-label="Chọn cấp tiêu đề"
+            title="Chọn cấp tiêu đề"
+          >
+            <%= helpers.lucide_icon('text-cursor-input', class: 'h-4 w-4', "aria-hidden": true) %>
+            <%= helpers.lucide_icon('chevron-down', class: 'h-3.5 w-3.5', "aria-hidden": true) %>
+          </button>
+
+          <div
+            class="pointer-events-none absolute right-0 top-full z-30 mt-2 w-40 translate-x-1 opacity-0 transition duration-150 ease-out"
+            data-dropdown-target="menu"
+          >
+            <div class="rounded-2xl border border-black/10 bg-white p-1 shadow-[0_18px_48px_rgba(15,23,42,0.14)] ring-0.5 ring-black/5">
+              <% heading_items.each do |label_text, action_name, icon_name| %>
+                <button
+                  type="button"
+                  class="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-black/75 transition hover:bg-primary-50 hover:text-primary-700"
+                  data-action="click->markdown-editor#insertHelper click->dropdown#close"
+                  data-markdown-helper="<%= action_name %>"
+                >
+                  <%= helpers.lucide_icon(icon_name, class: 'h-4 w-4 shrink-0', "aria-hidden": true) %>
+                  <span><%= label_text %></span>
+                </button>
+              <% end %>
+            </div>
+          </div>
+        </div>
+
+        <% helper_items.each do |item| %>
+          <button
+            type="button"
+            class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-transparent bg-stone-50 text-black/60 outline-none transition hover:border-primary-500 hover:bg-primary-50 hover:text-primary-700 focus:outline-none focus:ring-0"
+            data-action="markdown-editor#insertHelper"
+            data-markdown-helper="<%= item[:action] %>"
+            aria-label="<%= item[:label] %>"
+            title="<%= item[:label] %>"
+          >
+            <%= helpers.lucide_icon(item[:icon], class: 'h-4 w-4', "aria-hidden": true) %>
+          </button>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="rounded-b-[28px] bg-stone-50" data-markdown-editor-target="editPanel">
+      <div class="relative">
+        <%= form.text_area field, **textarea_options %>
+
+        <div class="pointer-events-none absolute right-4 bottom-3 flex items-center gap-2 text-[11px] font-medium text-black/35">
+          <span>Kéo để mở rộng</span>
+          <%= helpers.lucide_icon('grip', class: 'h-4 w-4', "aria-hidden": true) %>
+        </div>
+      </div>
+    </div>
+
+    <div class="hidden rounded-b-[28px] bg-stone-50" data-markdown-editor-target="previewPanel">
+      <div
+        class="markdown-preview min-h-[220px] px-4 py-3 text-sm text-black"
+        data-markdown-editor-target="preview"
+      >
+        <p class="text-sm text-black/45">Chưa có nội dung để xem trước.</p>
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="fixed inset-0 z-[70] hidden pointer-events-none flex items-center justify-center bg-black/45 px-5 py-6 opacity-0 backdrop-blur-sm transition"
+    data-markdown-editor-target="fullscreenModal"
+  >
+    <div class="flex h-[90vh] w-[90vw] max-w-[1600px] flex-col overflow-hidden rounded-[32px] border border-black/10 bg-stone-100 shadow-[0_24px_80px_rgba(15,23,42,0.24)]">
+      <div class="flex items-center justify-between gap-4 border-b border-black/10 bg-white px-5 py-4">
+        <div>
+          <p class="text-base font-semibold text-black">Markdown Editor</p>
+          <p class="text-xs text-black/45">Không tự đóng khi bấm ra ngoài modal.</p>
+        </div>
+
+        <button
+          type="button"
+          class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-black/60 ring-1 ring-black/10 transition hover:text-black"
+          data-action="click->markdown-editor#closeFullscreen"
+          aria-label="Đóng markdown editor toàn màn hình"
+        >
+          <%= helpers.lucide_icon('x', class: 'h-4 w-4', "aria-hidden": true) %>
+        </button>
+      </div>
+
+      <div class="border-b border-black/10 bg-stone-50 px-5 py-3">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <div
+            class="relative"
+            data-controller="dropdown"
+            data-dropdown-direction-value="right_end"
+            data-action="keydown.esc@window->dropdown#close click@window->dropdown#closeOnOutside focusin@window->dropdown#closeOnFocusOutside"
+          >
+            <button
+              type="button"
+              class="inline-flex h-9 items-center justify-center gap-1 rounded-xl border border-stone-200 bg-white px-2.5 text-black/70 outline-none transition hover:border-primary-500 hover:bg-primary-50 hover:text-primary-700 focus:outline-none focus:ring-0"
+              data-action="click->dropdown#toggle"
+              aria-label="Chọn cấp tiêu đề"
+              title="Chọn cấp tiêu đề"
+            >
+              <%= helpers.lucide_icon('text-cursor-input', class: 'h-4 w-4', "aria-hidden": true) %>
+              <%= helpers.lucide_icon('chevron-down', class: 'h-3.5 w-3.5', "aria-hidden": true) %>
+            </button>
+
+            <div
+              class="pointer-events-none absolute left-0 top-full z-30 mt-2 w-40 translate-y-1 opacity-0 transition duration-150 ease-out"
+              data-dropdown-target="menu"
+            >
+              <div class="rounded-2xl border border-black/10 bg-white p-1 shadow-[0_18px_48px_rgba(15,23,42,0.14)] ring-0.5 ring-black/5">
+                <% heading_items.each do |label_text, action_name, icon_name| %>
+                  <button
+                    type="button"
+                    class="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-black/75 transition hover:bg-primary-50 hover:text-primary-700"
+                    data-action="click->markdown-editor#insertHelper click->dropdown#close"
+                    data-markdown-helper="<%= action_name %>"
+                  >
+                    <%= helpers.lucide_icon(icon_name, class: 'h-4 w-4 shrink-0', "aria-hidden": true) %>
+                    <span><%= label_text %></span>
+                  </button>
+                <% end %>
+              </div>
+            </div>
+          </div>
+
+          <% helper_items.each do |item| %>
+            <button
+              type="button"
+              class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-transparent bg-stone-50 text-black/60 outline-none transition hover:border-primary-500 hover:bg-primary-50 hover:text-primary-700 focus:outline-none focus:ring-0"
+              data-action="markdown-editor#insertHelper"
+              data-markdown-helper="<%= item[:action] %>"
+              aria-label="<%= item[:label] %>"
+              title="<%= item[:label] %>"
+            >
+              <%= helpers.lucide_icon(item[:icon], class: 'h-4 w-4', "aria-hidden": true) %>
+            </button>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="grid min-h-0 flex-1 gap-px bg-black/10 lg:grid-cols-2">
+        <div class="flex min-h-0 flex-col bg-stone-50">
+          <div class="border-b border-black/10 px-5 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-black/45">Edit</div>
+          <textarea
+            class="min-h-0 w-full flex-1 resize-none bg-transparent px-5 py-4 text-sm text-black outline-none focus:outline-none focus:ring-0"
+            data-markdown-editor-target="modalInput"
+            data-action="input->markdown-editor#handleInput paste->markdown-editor#handlePaste"
+            placeholder="<%= placeholder %>"
+          ></textarea>
+        </div>
+
+        <div class="flex min-h-0 flex-col bg-white">
+          <div class="border-b border-black/10 px-5 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-black/45">Preview</div>
+          <div class="markdown-preview min-h-0 flex-1 overflow-auto px-5 py-4 text-sm text-black" data-markdown-editor-target="modalPreview"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

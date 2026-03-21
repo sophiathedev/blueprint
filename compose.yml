@@ -3,6 +3,9 @@ x-configs:
   database_env: &database-env
     POSTGRES_USER: postgres
     POSTGRES_PASSWORD: dummy
+  minio_env: &minio-env
+    MINIO_ROOT_USER: minio
+    MINIO_ROOT_PASSWORD: minio123
   rails_env: &rails-env
     POSTGRES_HOST: postgres
     POSTGRES_PORT: 5432
@@ -11,6 +14,13 @@ x-configs:
     RAILS_ENV: development
     RAILS_MAX_THREADS: 6
     REDIS_URL: redis://redis:6379/1
+    ACTIVE_STORAGE_SERVICE: minio
+    AWS_ACCESS_KEY_ID: minio
+    AWS_SECRET_ACCESS_KEY: minio123
+    AWS_REGION: us-east-1
+    AWS_BUCKET: blueprint-development
+    AWS_ENDPOINT: http://minio:9000
+    AWS_FORCE_PATH_STYLE: "true"
 
 services:
   postgres:
@@ -38,6 +48,7 @@ services:
     depends_on:
       - postgres
       - redis
+      - minio
     stdin_open: true
     tty: true
 
@@ -50,6 +61,17 @@ services:
       retries: 5
     command: ["redis-server"]
 
+  minio:
+    image: minio/minio:latest
+    environment:
+      <<: *minio-env
+    command: ["server", "/data", "--console-address", ":9001"]
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+
   sidekiq:
     build:
       context: .
@@ -59,6 +81,7 @@ services:
     depends_on:
       - postgres
       - redis
+      - minio
     tty: true
     stdin_open: true
     environment:
@@ -66,5 +89,6 @@ services:
     command: ["bundle", "exec", "sidekiq"]
 
 volumes:
+  minio_data:
   postgres_data:
   rails_tmp:

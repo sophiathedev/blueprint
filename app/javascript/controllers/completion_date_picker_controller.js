@@ -29,12 +29,13 @@ export default class extends Controller {
   prepareOpen() {
     this.dayToggleTarget.checked = this.dayEnabled
     this.timeToggleTarget.checked = this.timeEnabled
-    this.pickerInputTarget.value = this.valueInputTarget.value || this.today()
+    this.ensurePickerDate()
     this.hourSelectTarget.value = this.hourInputTarget.value || "09"
     this.minuteSelectTarget.value = this.minuteInputTarget.value || "00"
     this.syncVisibility()
     this.setVisibleMonthFromValue()
     this.renderCalendar()
+    this.syncDisplay()
     this.closeCalendar()
   }
 
@@ -42,20 +43,21 @@ export default class extends Controller {
     if (!this.dayToggleTarget.checked) {
       this.timeToggleTarget.checked = false
       this.closeCalendar()
-    } else if (!this.pickerInputTarget.value) {
-      this.pickerInputTarget.value = this.valueInputTarget.value || this.today()
+    } else {
+      this.ensurePickerDate()
       this.setVisibleMonthFromValue()
       this.renderCalendar()
     }
 
     this.syncVisibility()
+    this.syncDisplay()
   }
 
   toggleTime() {
     if (this.timeToggleTarget.checked) {
       this.dayToggleTarget.checked = true
 
-      if (!this.pickerInputTarget.value) this.pickerInputTarget.value = this.valueInputTarget.value || this.today()
+      this.ensurePickerDate()
       if (!this.hourSelectTarget.value) this.hourSelectTarget.value = this.hourInputTarget.value || "09"
       if (!this.minuteSelectTarget.value) this.minuteSelectTarget.value = this.minuteInputTarget.value || "00"
       this.setVisibleMonthFromValue()
@@ -63,6 +65,7 @@ export default class extends Controller {
     }
 
     this.syncVisibility()
+    this.syncDisplay()
   }
 
   toggleCalendar(event) {
@@ -70,9 +73,11 @@ export default class extends Controller {
     event.stopPropagation()
     if (!this.dayToggleTarget.checked) return
 
+    this.ensurePickerDate()
     this.calendarPanelTarget.classList.toggle("hidden")
     this.setVisibleMonthFromValue()
     this.renderCalendar()
+    this.syncDisplay()
   }
 
   keepOpen(event) {
@@ -211,6 +216,12 @@ export default class extends Controller {
   setVisibleMonthFromValue() {
     const baseDate = this.parseDate(this.pickerInputTarget.value || this.valueInputTarget.value || this.today())
     this.visibleMonth = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1)
+  }
+
+  ensurePickerDate() {
+    if (!this.pickerInputTarget.value) {
+      this.pickerInputTarget.value = this.valueInputTarget.value || this.today()
+    }
   }
 
   parseDate(value) {
