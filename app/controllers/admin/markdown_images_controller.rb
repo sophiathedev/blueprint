@@ -2,6 +2,8 @@
 
 module Admin
   class MarkdownImagesController < BaseController
+    include AssetsUrlBuilder
+
     DEFAULT_IMAGE_LIMIT = 10
     MAX_IMAGE_LIMIT = 10
     MAX_FILE_SIZE = 64.megabytes
@@ -55,7 +57,7 @@ module Admin
     def serialize_image(blob)
       {
         id: blob.id,
-        url: helpers.rails_storage_proxy_url(blob, host: request.base_url),
+        url: absolute_assets_url(helpers.rails_storage_proxy_path(blob)),
         filename: blob.filename.to_s,
         byte_size: blob.byte_size,
         created_at: blob.created_at.iso8601

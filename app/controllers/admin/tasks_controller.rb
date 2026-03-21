@@ -14,10 +14,12 @@ module Admin
     end
 
     def new
-      @order_task_name = @service.name
+      build_order_service_form
     end
 
     def create
+      return create_order_service if order_request_submission?
+
       @task = @service.tasks.build(task_params)
 
       if @task.save
@@ -110,6 +112,116 @@ module Admin
       params.expect(task: %i[name member_id])
     end
 
+    def order_request_submission?
+      params[:order_request].present?
+    end
+
+    def create_order_service
+      @order_service = @service.order_services.build(order_service_attributes)
+
+      if @order_service.save
+        redirect_to new_admin_partner_service_task_path(@partner, @service), notice: 'Đặt dịch vụ thành công.'
+      else
+        flash.now[:alert] = order_service_error_messages
+        render :new, status: :unprocessable_entity
+      end
+    end
+
+    def build_order_service_form
+      @order_service = @service.order_services.build
+      @order_request_data = default_order_request_data
+    end
+
+    def order_service_attributes
+      @order_request_data = normalized_order_request_data
+
+      {
+        completed_at: build_completed_at(@order_request_data),
+        partner_assignee_name: @order_request_data[:partner_assignee_name],
+        priority_status: @order_request_data[:priority_status],
+        notes: @order_request_data[:detailed_notes]
+      }
+    end
+
+    def order_request_params
+      params.expect(order_request: %i[
+        completion_date
+        completion_date_enabled
+        completion_time_enabled
+        completion_hour
+        completion_minute
+        partner_assignee_name
+        priority_status
+        detailed_notes
+      ])
+    end
+
+    def normalized_order_request_data
+      request_params = order_request_params
+      completion_date = request_params[:completion_date].to_s
+      completion_time_enabled = ActiveModel::Type::Boolean.new.cast(request_params[:completion_time_enabled])
+
+      default_order_request_data.merge(
+        completion_date: completion_date,
+        completion_date_enabled: request_params[:completion_date_enabled].presence || (completion_date.present? ? '1' : '0'),
+        completion_time_enabled: completion_time_enabled ? '1' : '0',
+        completion_hour: completion_time_enabled ? normalized_time_part(request_params[:completion_hour]) : '',
+        completion_minute: completion_time_enabled ? normalized_time_part(request_params[:completion_minute]) : '',
+        partner_assignee_name: request_params[:partner_assignee_name].to_s,
+        priority_status: request_params[:priority_status].to_s,
+        detailed_notes: request_params[:detailed_notes].to_s
+      )
+    end
+
+    def build_completed_at(order_request_data)
+      completion_date = order_request_data[:completion_date]
+      return if completion_date.blank?
+
+      return completion_date unless order_request_data[:completion_time_enabled] == '1'
+
+      "#{completion_date} #{order_request_data[:completion_hour]}:#{order_request_data[:completion_minute]}"
+    end
+
+    def normalized_time_part(value)
+      format('%02d', value.to_i)
+    end
+
+    def default_order_request_data
+      {
+        completion_date: '',
+        completion_date_enabled: '1',
+        completion_time_enabled: '0',
+        completion_hour: '',
+        completion_minute: '',
+        partner_assignee_name: '',
+        priority_status: 'medium',
+        detailed_notes: ''
+      }
+    end
+
+    def order_service_error_messages
+      @order_service.errors.map do |error|
+        next 'Vui lòng chọn thời gian hoàn thành.' if error.attribute == :completed_at && error.type == :blank
+        next 'Vui lòng chọn thời gian hoàn thành từ hiện tại trở đi.' if error.attribute == :completed_at && error.type == :invalid
+        next 'Vui lòng chọn thời gian hoàn thành từ hiện tại trở đi.' if error.attribute == :completed_at && error.message == 'phải từ thời điểm hiện tại trở đi'
+
+        "#{order_service_attribute_label(error.attribute)} #{error.message}"
+      end.uniq
+    end
+
+    def order_service_attribute_label(attribute)
+      case attribute.to_sym
+      when :partner_assignee_name
+        'Tên nhân sự của đối tác'
+      when :priority_status
+        'Trạng thái ưu tiên'
+      when :completed_at
+        'Thời gian hoàn thành'
+      else
+        OrderService.human_attribute_name(attribute)
+      end
+    end
+
     def load_assignable_members
       @member_options = User.member.order(created_at: :desc, id: :desc).map do |member|
         [ member.display_name, member.id ]
@@ -154,6 +266,5 @@ module Admin
         show_all_tasks: show_all_tasks
       }, status: status
     end
-
   end
 end

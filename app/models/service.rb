@@ -2,6 +2,7 @@
 
 class Service < ApplicationParanoia
   belongs_to :partner
+  has_many :order_services
   has_many :tasks, dependent: :destroy
 
   normalizes :name, with: ->(name) { name.to_s.squish }

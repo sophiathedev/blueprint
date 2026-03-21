@@ -356,12 +356,13 @@
   >
 
   <div
-    class="fixed inset-0 z-[80] hidden pointer-events-none flex items-center justify-center bg-black/45 px-5 py-6 opacity-0 backdrop-blur-sm transition"
+    class="fixed inset-0 z-[80] hidden pointer-events-none flex items-center justify-center bg-black/45 px-5 py-6 opacity-0 backdrop-blur-sm transition duration-200 ease-out"
     data-markdown-editor-target="imageLibraryModal"
     data-action="click->markdown-editor#closeImageLibraryOnBackdrop"
   >
     <div
-      class="flex h-[85vh] w-[85vw] max-w-[1700px] flex-col overflow-hidden rounded-[32px] border border-black/10 bg-stone-100 shadow-[0_24px_80px_rgba(15,23,42,0.24)]"
+      class="flex h-[85vh] w-[85vw] max-w-[1700px] scale-[0.98] flex-col overflow-hidden rounded-[32px] border border-black/10 bg-stone-100 opacity-0 shadow-[0_24px_80px_rgba(15,23,42,0.24)] transition duration-200 ease-out"
+      data-markdown-editor-target="imageLibraryPanel"
       data-action="click->markdown-editor#keepImageLibraryOpen"
     >
       <div class="flex items-center justify-between gap-4 border-b border-black/10 bg-white px-5 py-4">
@@ -452,6 +453,42 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="fixed inset-0 z-[90] hidden pointer-events-none flex items-center justify-center bg-black/55 px-5 py-6 opacity-0 backdrop-blur-sm transition duration-200 ease-out"
+    data-markdown-editor-target="imagePreviewModal"
+    data-action="click->markdown-editor#closeImagePreviewOnBackdrop"
+  >
+    <div
+      class="flex h-[82vh] w-[82vw] max-w-[1400px] scale-[0.98] flex-col overflow-hidden rounded-[32px] border border-black/10 bg-white opacity-0 shadow-[0_24px_80px_rgba(15,23,42,0.28)] transition duration-200 ease-out"
+      data-markdown-editor-target="imagePreviewPanel"
+    >
+      <div class="flex items-center justify-between gap-4 border-b border-black/10 bg-white px-5 py-4">
+        <div class="min-w-0">
+          <p class="truncate text-base font-semibold text-black" data-markdown-editor-target="imagePreviewFilename">Preview</p>
+          <p class="truncate text-xs text-black/45" data-markdown-editor-target="imagePreviewMeta"></p>
+        </div>
+
+        <button
+          type="button"
+          class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-black/60 ring-1 ring-black/10 transition hover:text-black"
+          data-action="click->markdown-editor#closeImagePreview"
+          aria-label="Đóng xem trước ảnh"
+        >
+          <%= helpers.lucide_icon('x', class: 'h-4 w-4', "aria-hidden": true) %>
+        </button>
+      </div>
+
+      <div class="flex min-h-0 flex-1 items-center justify-center bg-stone-950/95 p-6">
+        <img
+          src=""
+          alt=""
+          class="max-h-full max-w-full rounded-[24px] object-contain shadow-[0_16px_50px_rgba(0,0,0,0.35)]"
+          data-markdown-editor-target="imagePreviewElement"
+        >
       </div>
     </div>
   </div>

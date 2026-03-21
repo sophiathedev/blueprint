@@ -7,6 +7,7 @@ export default class extends Controller {
   static IMAGE_BATCH_SIZE = 10
   static IMAGE_SCROLL_THRESHOLD = 160
   static MODAL_PREVIEW_DEBOUNCE_MS = 200
+  static MODAL_TRANSITION_MS = 200
 
   static values = {
     attachmentUploadUrl: String,
@@ -25,10 +26,16 @@ export default class extends Controller {
     "preview",
     "uploadStatus",
     "imageLibraryModal",
+    "imageLibraryPanel",
     "imageLibraryGrid",
     "imageLibraryEmpty",
     "imageLibraryPaginationStatus",
     "imageLibraryScroller",
+    "imagePreviewModal",
+    "imagePreviewPanel",
+    "imagePreviewElement",
+    "imagePreviewFilename",
+    "imagePreviewMeta",
     "attachmentUploadInput",
     "attachmentLoadingFilename",
     "attachmentLoadingModal",
@@ -60,6 +67,8 @@ export default class extends Controller {
   disconnect() {
     clearTimeout(this.uploadStatusTimeout)
     clearTimeout(this.modalPreviewTimeout)
+    clearTimeout(this.imageLibraryCloseTimeout)
+    clearTimeout(this.imagePreviewCloseTimeout)
   }
 
   showEdit() {
@@ -351,17 +360,38 @@ export default class extends Controller {
   openImageLibrary() {
     if (!this.hasImageLibraryModalTarget) return
 
+    clearTimeout(this.imageLibraryCloseTimeout)
     this.rememberInsertionPoint()
-    this.imageLibraryModalTarget.classList.remove("hidden", "pointer-events-none", "opacity-0")
-    this.imageLibraryModalTarget.classList.add("opacity-100")
+    this.imageLibraryModalTarget.classList.remove("hidden", "pointer-events-none")
+
+    requestAnimationFrame(() => {
+      this.imageLibraryModalTarget.classList.remove("opacity-0")
+      this.imageLibraryModalTarget.classList.add("opacity-100")
+
+      if (this.hasImageLibraryPanelTarget) {
+        this.imageLibraryPanelTarget.classList.remove("scale-[0.98]", "opacity-0")
+        this.imageLibraryPanelTarget.classList.add("scale-100", "opacity-100")
+      }
+    })
+
     this.loadImageLibrary()
   }
 
   closeImageLibrary() {
     if (!this.hasImageLibraryModalTarget) return
 
-    this.imageLibraryModalTarget.classList.add("hidden", "pointer-events-none", "opacity-0")
+    this.imageLibraryModalTarget.classList.add("opacity-0")
     this.imageLibraryModalTarget.classList.remove("opacity-100")
+
+    if (this.hasImageLibraryPanelTarget) {
+      this.imageLibraryPanelTarget.classList.add("scale-[0.98]", "opacity-0")
+      this.imageLibraryPanelTarget.classList.remove("scale-100", "opacity-100")
+    }
+
+    clearTimeout(this.imageLibraryCloseTimeout)
+    this.imageLibraryCloseTimeout = window.setTimeout(() => {
+      this.imageLibraryModalTarget.classList.add("hidden", "pointer-events-none")
+    }, this.constructor.MODAL_TRANSITION_MS)
 
     if (this.hasImageUploadInputTarget) {
       this.imageUploadInputTarget.value = ""
@@ -372,6 +402,56 @@ export default class extends Controller {
     if (event.target !== this.imageLibraryModalTarget) return
 
     this.closeImageLibrary()
+  }
+
+  openImagePreview(event) {
+    event.stopPropagation()
+
+    if (!this.hasImagePreviewModalTarget) return
+
+    const { markdownEditorImageUrl: url, markdownEditorImageFilename: filename, markdownEditorImageMeta: meta } = event.currentTarget.dataset
+    if (!url) return
+
+    clearTimeout(this.imagePreviewCloseTimeout)
+    this.imagePreviewElementTarget.src = url
+    this.imagePreviewElementTarget.alt = filename || "image"
+    this.imagePreviewFilenameTarget.textContent = filename || "image"
+    this.imagePreviewMetaTarget.textContent = meta || ""
+
+    this.imagePreviewModalTarget.classList.remove("hidden", "pointer-events-none")
+
+    requestAnimationFrame(() => {
+      this.imagePreviewModalTarget.classList.remove("opacity-0")
+      this.imagePreviewModalTarget.classList.add("opacity-100")
+
+      if (this.hasImagePreviewPanelTarget) {
+        this.imagePreviewPanelTarget.classList.remove("scale-[0.98]", "opacity-0")
+        this.imagePreviewPanelTarget.classList.add("scale-100", "opacity-100")
+      }
+    })
+  }
+
+  closeImagePreview() {
+    if (!this.hasImagePreviewModalTarget) return
+
+    this.imagePreviewModalTarget.classList.add("opacity-0")
+    this.imagePreviewModalTarget.classList.remove("opacity-100")
+
+    if (this.hasImagePreviewPanelTarget) {
+      this.imagePreviewPanelTarget.classList.add("scale-[0.98]", "opacity-0")
+      this.imagePreviewPanelTarget.classList.remove("scale-100", "opacity-100")
+    }
+
+    clearTimeout(this.imagePreviewCloseTimeout)
+    this.imagePreviewCloseTimeout = window.setTimeout(() => {
+      this.imagePreviewModalTarget.classList.add("hidden", "pointer-events-none")
+    }, this.constructor.MODAL_TRANSITION_MS)
+  }
+
+  closeImagePreviewOnBackdrop(event) {
+    if (event.target !== this.imagePreviewModalTarget) return
+
+    this.closeImagePreview()
   }
 
   keepImageLibraryOpen(event) {
@@ -532,24 +612,47 @@ export default class extends Controller {
     const imageUrl = this.escapeHtmlAttribute(image.url || "")
     const createdAt = image.created_at ? new Date(image.created_at).toLocaleString("vi-VN") : ""
     const meta = [this.formatFileSize(image.byte_size), createdAt].filter(Boolean).join(" • ")
+    const escapedMeta = this.escapeHtml(meta)
+    const escapedMetaAttribute = this.escapeHtmlAttribute(meta)
 
     return `
-      <button
-        type="button"
-        class="group overflow-hidden rounded-[24px] border border-black/10 bg-stone-50 text-left transition hover:-translate-y-0.5 hover:border-primary-400 hover:bg-primary-50"
-        data-action="click->markdown-editor#selectImageFromLibrary"
-        data-markdown-editor-image-url="${imageUrl}"
-        data-markdown-editor-image-filename="${this.escapeHtmlAttribute(image.filename || "image")}"
-      >
-        <div class="relative aspect-[4/3] overflow-hidden bg-white">
-          <div class="absolute inset-0 animate-pulse bg-stone-200" data-markdown-editor-image-skeleton></div>
-          <img src="${imageUrl}" alt="${filename}" class="h-full w-full object-cover opacity-0 transition duration-200 group-hover:scale-[1.02]" loading="lazy" data-action="load->markdown-editor#handleLibraryImageLoaded error->markdown-editor#handleLibraryImageLoaded">
+      <div class="group overflow-hidden rounded-[24px] border border-black/10 bg-stone-50 text-left transition hover:-translate-y-0.5 hover:border-primary-400 hover:bg-primary-50">
+        <button
+          type="button"
+          class="block w-full text-left"
+          data-action="click->markdown-editor#selectImageFromLibrary"
+          data-markdown-editor-image-url="${imageUrl}"
+          data-markdown-editor-image-filename="${this.escapeHtmlAttribute(image.filename || "image")}"
+        >
+          <div class="relative aspect-[4/3] overflow-hidden bg-white">
+            <div class="absolute inset-0 animate-pulse bg-stone-200" data-markdown-editor-image-skeleton></div>
+            <img src="${imageUrl}" alt="${filename}" class="h-full w-full object-cover opacity-0 transition duration-200 group-hover:scale-[1.02]" loading="lazy" data-action="load->markdown-editor#handleLibraryImageLoaded error->markdown-editor#handleLibraryImageLoaded">
+          </div>
+        </button>
+
+        <div class="flex items-end justify-between gap-3 px-4 py-3">
+          <div class="min-w-0 flex-1 space-y-1">
+            <p class="truncate text-sm font-semibold text-black">${filename}</p>
+            <p class="truncate text-xs text-black/50">${escapedMeta}</p>
+          </div>
+
+          <button
+            type="button"
+            class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-stone-200 bg-white text-black/55 transition hover:border-primary-500 hover:bg-primary-50 hover:text-primary-700"
+            data-action="click->markdown-editor#openImagePreview"
+            data-markdown-editor-image-url="${imageUrl}"
+            data-markdown-editor-image-filename="${this.escapeHtmlAttribute(image.filename || "image")}"
+            data-markdown-editor-image-meta="${escapedMetaAttribute}"
+            aria-label="Xem trước ảnh"
+            title="Xem trước ảnh"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+              <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
         </div>
-        <div class="space-y-1 px-4 py-3">
-          <p class="truncate text-sm font-semibold text-black">${filename}</p>
-          <p class="text-xs text-black/50">${this.escapeHtml(meta)}</p>
-        </div>
-      </button>
+      </div>
     `
   }
 

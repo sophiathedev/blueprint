@@ -1,10 +1,11 @@
 <div class="<%= ['min-w-0', hidden? ? 'hidden' : 'block'].join(' ') %>" data-completion-date-picker-target="timeSection">
-  <div class="flex items-center gap-1 rounded-2xl border border-stone-200 bg-white px-1.5 py-0.5">
-    <div class="min-w-[44px]">
+  <div class="inline-flex items-center gap-1.5 rounded-2xl border border-stone-200 bg-white px-2 py-1">
+    <div class="min-w-[48px]">
       <label for="<%= hour_id %>" class="sr-only">Giờ</label>
       <select
         id="<%= hour_id %>"
         class="w-full appearance-none rounded-xl border-0 bg-transparent px-1 py-0.5 text-center text-sm font-semibold text-black outline-none transition focus:ring-0"
+        data-action="change->completion-date-picker#apply"
         data-completion-date-picker-target="<%= hour_target %>"
       >
         <% 24.times.each do |hour| %>
@@ -16,11 +17,12 @@
 
     <span class="w-2 text-center text-sm font-semibold text-black/40">:</span>
 
-    <div class="min-w-[44px]">
+    <div class="min-w-[48px]">
       <label for="<%= minute_id %>" class="sr-only">Phút</label>
       <select
         id="<%= minute_id %>"
         class="w-full appearance-none rounded-xl border-0 bg-transparent px-1 py-0.5 text-center text-sm font-semibold text-black outline-none transition focus:ring-0"
+        data-action="change->completion-date-picker#apply"
         data-completion-date-picker-target="<%= minute_target %>"
       >
         <% 60.times.each do |minute| %>

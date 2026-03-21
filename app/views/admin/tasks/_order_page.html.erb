@@ -1,4 +1,7 @@
 <%
+  order_request_data = @order_request_data || {}
+  selected_priority_status = order_request_data[:priority_status].presence || 'medium'
+  required_badge_classes = 'ml-1 text-rose-600'
   priority_options = [
     {
       value: 'low',
@@ -64,26 +67,76 @@
       background-color: rgb(254 205 211);
       color: rgb(190 24 93);
     }
+
+    .completion-date-picker__day {
+      background-color: transparent;
+      color: rgb(0 0 0);
+    }
+
+    .completion-date-picker__day:hover {
+      background-color: var(--color-primary-100);
+      color: var(--color-primary-700);
+    }
+
+    .completion-date-picker__day--outside {
+      color: rgb(0 0 0 / 0.3);
+    }
+
+    .completion-date-picker__day--outside:hover {
+      background-color: var(--color-primary-50);
+      color: var(--color-primary-500);
+    }
+
+    .completion-date-picker__day--today:not(.completion-date-picker__day--selected) {
+      color: var(--color-primary-700);
+    }
+
+    .completion-date-picker__day--selected,
+    .completion-date-picker__day--selected:hover {
+      background-color: var(--color-primary-500);
+      color: rgb(255 255 255);
+    }
+
+    .completion-date-picker__day--disabled,
+    .completion-date-picker__day--disabled:hover {
+      background-color: transparent;
+      color: rgb(0 0 0 / 0.18);
+      cursor: not-allowed;
+    }
+
+    .completion-date-picker__panel {
+      opacity: 0;
+      transform: translateY(10px) scale(0.98);
+      transform-origin: top left;
+      pointer-events: none;
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .completion-date-picker__panel.is-open {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
   </style>
 <% end %>
 
-<section id="admin_task_order_page" data-controller="modal completion-date-picker" data-action="click@window->completion-date-picker#closeCalendarOnOutside">
-  <div class="rounded-[32px] bg-white px-5 py-6 md:px-8 md:pt-8 md:pb-6">
-    <div class="flex flex-col gap-4 border-b border-black/10 pb-6 md:flex-row md:items-end md:justify-between">
-      <div class="flex items-center gap-3">
-        <%= link_to admin_partner_services_path(@partner),
-          class: 'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-stone-200 bg-stone-100 text-black transition-colors hover:border-stone-300 hover:bg-stone-200 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2',
-          aria: { label: 'Quay lại danh sách gói dịch vụ' } do %>
-          <%= lucide_icon('arrow-left', class: 'h-4 w-4', "aria-hidden": true) %>
-        <% end %>
+<section id="admin_task_order_page" data-controller="completion-date-picker" data-action="click@window->completion-date-picker#closeCalendarOnOutside">
+    <div class="rounded-[32px] bg-white px-5 py-6 md:px-8 md:pt-8 md:pb-6">
+      <div class="border-b border-black/10 pb-6">
+        <div class="flex items-center gap-3">
+          <%= link_to admin_partner_services_path(@partner),
+            class: 'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-stone-200 bg-stone-100 text-black transition-colors hover:border-stone-300 hover:bg-stone-200 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2',
+            aria: { label: 'Quay lại danh sách gói dịch vụ' } do %>
+            <%= lucide_icon('arrow-left', class: 'h-4 w-4', "aria-hidden": true) %>
+          <% end %>
 
-        <h1 class="text-3xl font-semibold tracking-tight text-black md:text-4xl">
-          Đặt dịch vụ <span class="text-primary-600"><%= @service.name %></span>
-        </h1>
+          <h1 class="text-3xl font-semibold tracking-tight text-black md:text-4xl">
+            Đặt dịch vụ <span class="text-primary-600"><%= @service.name %></span>
+          </h1>
+        </div>
       </div>
-    </div>
 
-    <%= form_with url: '#', scope: :order_request, class: 'mt-6' do |form| %>
+    <%= form_with url: admin_partner_service_tasks_path(@partner, @service), scope: :order_request, class: 'mt-6' do |form| %>
       <div class="px-1 pb-6">
         <div class="grid gap-5 md:grid-cols-2">
           <div class="space-y-2">
@@ -108,50 +161,126 @@
         </div>
       </div>
 
-      <div class="border-t border-black/10 px-1 pt-6">
-        <div class="grid gap-5 md:grid-cols-2">
+        <div class="border-t border-black/10 px-1 pt-6">
+          <div class="grid gap-5 md:grid-cols-2">
           <div class="space-y-2">
-            <%= form.label :completion_date, 'Ngày hoàn thành', class: 'text-sm font-semibold text-black/80' %>
-            <%= form.hidden_field :completion_date, data: { completion_date_picker_target: 'valueInput' } %>
-            <%= form.hidden_field :completion_date_enabled, value: '1', data: { completion_date_picker_target: 'dayEnabledInput' } %>
-            <%= form.hidden_field :completion_time_enabled, value: '0', data: { completion_date_picker_target: 'timeEnabledInput' } %>
-            <%= form.hidden_field :completion_hour, data: { completion_date_picker_target: 'hourInput' } %>
-            <%= form.hidden_field :completion_minute, data: { completion_date_picker_target: 'minuteInput' } %>
-            <button
-              type="button"
-              class="flex w-full items-center justify-between gap-3 rounded-2xl border border-stone-200 bg-stone-50 px-4 py-2 text-left text-sm text-black outline-none transition hover:border-stone-300 focus:border-primary-400 focus:bg-white focus:ring-4 focus:ring-primary-100"
-              data-action="click->modal#open click->completion-date-picker#prepareOpen"
-            >
-              <span class="flex min-w-0 items-center gap-3">
-                <span class="flex shrink-0 items-center justify-center text-black/55">
-                  <%= lucide_icon('calendar-days', class: 'h-4 w-4', "aria-hidden": true) %>
-                </span>
-                <span class="min-w-0">
-                  <span class="block font-semibold text-black" data-completion-date-picker-target="display">
-                    Chọn ngày hoàn thành
+            <%= form.label :completion_date, class: 'text-sm font-semibold text-black/80' do %>
+              Thời gian hoàn thành
+              <span class="<%= required_badge_classes %>">*</span>
+            <% end %>
+            <%= form.hidden_field :completion_date, value: order_request_data[:completion_date], data: { completion_date_picker_target: 'valueInput' } %>
+            <%= form.hidden_field :completion_date_enabled, value: order_request_data.fetch(:completion_date_enabled, '1'), data: { completion_date_picker_target: 'dayEnabledInput' } %>
+            <%= form.hidden_field :completion_time_enabled, value: '1', data: { completion_date_picker_target: 'timeEnabledInput' } %>
+            <%= form.hidden_field :completion_hour, value: order_request_data[:completion_hour], data: { completion_date_picker_target: 'hourInput' } %>
+            <%= form.hidden_field :completion_minute, value: order_request_data[:completion_minute], data: { completion_date_picker_target: 'minuteInput' } %>
+            <div class="relative" data-completion-date-picker-target="dateSection" data-action="click->completion-date-picker#keepOpen">
+              <input id="completion-date-inline-input" type="hidden" data-completion-date-picker-target="pickerInput">
+
+              <button
+                type="button"
+                class="flex w-full items-center justify-between gap-3 rounded-2xl border border-stone-200 bg-stone-50 px-4 py-2 text-left text-sm text-black outline-none transition hover:border-stone-300 focus:border-primary-400 focus:bg-white focus:ring-4 focus:ring-primary-100"
+                data-action="click->completion-date-picker#toggleCalendar"
+                aria-haspopup="dialog"
+                aria-expanded="false"
+              >
+                <span class="flex min-w-0 items-center gap-3">
+                  <span class="flex shrink-0 items-center justify-center text-black/55">
+                    <%= lucide_icon('calendar-days', class: 'h-4 w-4', "aria-hidden": true) %>
+                  </span>
+                  <span class="min-w-0 text-sm text-black/70" data-completion-date-picker-target="display">
+                    Chọn thời gian hoàn thành
                   </span>
                 </span>
-              </span>
-              <%= lucide_icon('chevron-right', class: 'h-4 w-4 shrink-0 text-black/35', "aria-hidden": true) %>
-            </button>
+                <%= lucide_icon('chevron-right', class: 'h-4 w-4 shrink-0 text-black/35', "aria-hidden": true) %>
+              </button>
+
+              <div
+                class="completion-date-picker__panel absolute left-0 top-full z-20 mt-2 hidden w-full min-w-[300px] rounded-[24px] border border-black/10 bg-white p-4 shadow-[0_18px_48px_rgba(15,23,42,0.14)] md:w-[360px]"
+                data-completion-date-picker-target="calendarPanel"
+              >
+                <div class="space-y-4">
+                  <div class="flex items-center justify-between gap-3">
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-black/45">Giờ</p>
+                    <%= render TimeSelectComponent.new(
+                      hour_id: 'completion-hour-select',
+                      minute_id: 'completion-minute-select',
+                      hour_target: 'hourSelect',
+                      minute_target: 'minuteSelect',
+                      hidden: false
+                    ) %>
+                  </div>
+
+                  <div class="space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                      <button
+                        type="button"
+                        class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-stone-100 text-black/70 transition hover:bg-stone-200 hover:text-black"
+                        data-action="click->completion-date-picker#showPreviousMonth"
+                        aria-label="Tháng trước"
+                      >
+                        <%= lucide_icon('chevron-left', class: 'h-4 w-4', "aria-hidden": true) %>
+                      </button>
+
+                      <div class="text-sm font-semibold text-black" data-completion-date-picker-target="calendarMonthLabel"></div>
+
+                      <button
+                        type="button"
+                        class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-stone-100 text-black/70 transition hover:bg-stone-200 hover:text-black"
+                        data-action="click->completion-date-picker#showNextMonth"
+                        aria-label="Tháng sau"
+                      >
+                        <%= lucide_icon('chevron-right', class: 'h-4 w-4', "aria-hidden": true) %>
+                      </button>
+                    </div>
+
+                    <div class="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-black/40">
+                      <% %w[T2 T3 T4 T5 T6 T7 CN].each do |weekday| %>
+                        <span class="py-1"><%= weekday %></span>
+                      <% end %>
+                    </div>
+
+                    <div class="grid grid-cols-7 gap-1" data-completion-date-picker-target="calendarDays"></div>
+                  </div>
+
+                  <div class="flex justify-end">
+                    <button
+                      type="button"
+                      class="inline-flex items-center justify-center rounded-xl bg-primary-500 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2"
+                      data-action="click->completion-date-picker#closeCalendar"
+                    >
+                      OK
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="space-y-2">
-            <%= form.label :assignee_name, 'Tên nhân sự của đối tác', class: 'text-sm font-semibold text-black/80' %>
-            <%= form.text_field :assignee_name,
+            <%= form.label :partner_assignee_name, class: 'text-sm font-semibold text-black/80' do %>
+              Tên nhân sự của đối tác
+              <span class="<%= required_badge_classes %>">*</span>
+            <% end %>
+            <%= form.text_field :partner_assignee_name,
+              value: order_request_data[:partner_assignee_name],
               placeholder: 'Nhập tên người phụ trách',
+              required: true,
               class: 'w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-black outline-none transition focus:border-primary-400 focus:bg-white focus:ring-4 focus:ring-primary-100' %>
           </div>
 
           <div class="space-y-2 md:col-span-2">
-            <%= form.label :priority_status, 'Trạng thái ưu tiên', class: 'text-sm font-semibold text-black/80' %>
+            <%= form.label :priority_status, class: 'text-sm font-semibold text-black/80' do %>
+              Trạng thái ưu tiên
+              <span class="<%= required_badge_classes %>">*</span>
+            <% end %>
 
             <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <% priority_options.each_with_index do |priority, index| %>
                 <label class="priority-option block cursor-pointer" data-priority-tone="<%= priority[:tone] %>">
                   <%= form.radio_button :priority_status,
-                    priority[:label],
-                    checked: index == 1,
+                    priority[:value],
+                    checked: selected_priority_status == priority[:value] || (selected_priority_status.blank? && index == 1),
+                    required: true,
                     class: 'priority-option__input peer sr-only' %>
 
                   <span class="<%= [
@@ -181,130 +310,29 @@
               field: :detailed_notes,
               label: 'Ghi chú chi tiết',
               rows: 7,
+              value: order_request_data[:detailed_notes],
               placeholder: 'Mô tả brief, yêu cầu đặc biệt, deadline hoặc các lưu ý quan trọng...',
               hint: 'Hỗ trợ markdown để trình bày nội dung rõ ràng hơn.',
               class: 'md:h-[clamp(240px,34vh,360px)]'
             ) %>
+            </div>
           </div>
         </div>
 
-        <div class="mt-5 flex items-center justify-end gap-2 border-t border-black/10 pt-5">
+        <div class="mt-4 flex items-center justify-end gap-2 border-t border-black/10 px-1 pt-4">
           <%= link_to admin_partner_services_path(@partner),
             class: 'inline-flex items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-stone-100 px-3 py-2 text-sm font-semibold text-black transition-colors hover:border-stone-300 hover:bg-stone-200' do %>
             Hủy
           <% end %>
 
           <button
-            type="button"
+            type="submit"
             class="inline-flex items-center justify-center gap-2 rounded-2xl border border-primary-500 bg-primary-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-primary-600 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2"
           >
             <%= lucide_icon('shopping-cart', class: 'h-4 w-4 shrink-0', "aria-hidden": true) %>
             <span>Đặt dịch vụ</span>
           </button>
         </div>
-      </div>
-    <% end %>
-  </div>
-
-  <%= render ModalComponent.new(
-    title: 'Chọn ngày hoàn thành',
-    description: 'Chọn ngày bạn muốn hoàn tất dịch vụ.',
-    panel_class: 'max-w-3xl'
-  ) do |modal| %>
-    <% modal.with_body do %>
-      <div class="space-y-5">
-        <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
-          <p class="text-sm font-semibold text-black">Giờ</p>
-
-          <div class="flex items-center justify-start gap-3 md:justify-end">
-            <%= render TimeSelectComponent.new(
-              hour_id: 'completion-hour-select',
-              minute_id: 'completion-minute-select',
-              hour_target: 'hourSelect',
-              minute_target: 'minuteSelect'
-            ) %>
-
-            <div class="shrink-0">
-              <input
-                id="completion-time-toggle"
-                name="completion_time_toggle"
-                type="checkbox"
-                class="peer sr-only"
-                data-action="change->completion-date-picker#toggleTime"
-                data-completion-date-picker-target="timeToggle"
-              >
-              <label
-                for="completion-time-toggle"
-                class="block cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70 peer-checked:[&_.toggle-track]:bg-primary-500 peer-disabled:[&_.toggle-track]:bg-stone-200/80 peer-checked:[&_.toggle-thumb]:translate-x-5"
-              >
-                <span class="toggle-track flex h-7 w-12 items-center rounded-full bg-stone-200 p-1 transition">
-                  <span class="toggle-thumb h-5 w-5 rounded-full bg-white shadow-sm transition-transform"></span>
-                </span>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
-          <p class="text-sm font-semibold text-black">Ngày</p>
-
-          <div class="flex items-center justify-start gap-3 md:justify-end">
-            <div class="flex justify-start" data-completion-date-picker-target="dateSection">
-              <div class="min-w-[176px] md:min-w-[190px]">
-                <%= render DatePickerComponent.new(
-                  field_id: 'completion-date-modal-input',
-                  input_target: 'pickerInput',
-                  trigger_label_target: 'calendarTriggerLabel',
-                  month_label_target: 'calendarMonthLabel',
-                  days_target: 'calendarDays',
-                  panel_target: 'calendarPanel'
-                ) %>
-              </div>
-            </div>
-
-            <div class="shrink-0">
-              <input
-                id="completion-day-toggle"
-                name="completion_day_toggle"
-                type="checkbox"
-                checked
-                class="peer sr-only"
-                data-action="change->completion-date-picker#toggleDay"
-                data-completion-date-picker-target="dayToggle"
-              >
-              <label
-                for="completion-day-toggle"
-                class="block cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70 peer-checked:[&_.toggle-track]:bg-primary-500 peer-disabled:[&_.toggle-track]:bg-stone-200/80 peer-checked:[&_.toggle-thumb]:translate-x-5"
-              >
-                <span class="toggle-track flex h-7 w-12 items-center rounded-full bg-stone-200 p-1 transition">
-                  <span class="toggle-thumb h-5 w-5 rounded-full bg-white shadow-sm transition-transform"></span>
-                </span>
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-    <% end %>
-
-    <% modal.with_footer do %>
-      <div class="flex items-center justify-end gap-2">
-        <button
-          type="button"
-          class="inline-flex items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-white px-3 py-2 text-sm font-semibold text-black transition-colors hover:border-stone-300 hover:bg-stone-100"
-          data-action="modal#close"
-        >
-          Hủy
-        </button>
-
-        <button
-          type="button"
-          class="inline-flex items-center justify-center gap-2 rounded-2xl border border-primary-500 bg-primary-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-primary-600 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2"
-          data-action="click->completion-date-picker#apply click->modal#close"
-        >
-          <%= lucide_icon('check', class: 'h-4 w-4 shrink-0', "aria-hidden": true) %>
-          <span>Xác nhận ngày</span>
-        </button>
-      </div>
-    <% end %>
-  <% end %>
+      <% end %>
+    </div>
 </section>

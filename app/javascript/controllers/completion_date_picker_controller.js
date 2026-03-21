@@ -8,10 +8,7 @@ export default class extends Controller {
     "timeEnabledInput",
     "hourInput",
     "minuteInput",
-    "dayToggle",
-    "timeToggle",
     "dateSection",
-    "timeSection",
     "pickerInput",
     "hourSelect",
     "minuteSelect",
@@ -23,58 +20,28 @@ export default class extends Controller {
 
   connect() {
     this.visibleMonth = null
-    this.syncDisplay()
-  }
-
-  prepareOpen() {
-    this.dayToggleTarget.checked = this.dayEnabled
-    this.timeToggleTarget.checked = this.timeEnabled
-    this.ensurePickerDate()
-    this.hourSelectTarget.value = this.hourInputTarget.value || "09"
-    this.minuteSelectTarget.value = this.minuteInputTarget.value || "00"
-    this.syncVisibility()
+    this.closeAnimationTimeout = null
+    this.dayEnabledInputTarget.value = "1"
+    this.timeEnabledInputTarget.value = "1"
+    this.pickerInputTarget.value = this.valueInputTarget.value || ""
+    this.hourSelectTarget.value = this.hourInputTarget.value || this.currentHour()
+    this.minuteSelectTarget.value = this.minuteInputTarget.value || this.currentMinute()
     this.setVisibleMonthFromValue()
+    this.syncTimeOptions()
     this.renderCalendar()
-    this.syncDisplay()
-    this.closeCalendar()
-  }
-
-  toggleDay() {
-    if (!this.dayToggleTarget.checked) {
-      this.timeToggleTarget.checked = false
-      this.closeCalendar()
-    } else {
-      this.ensurePickerDate()
-      this.setVisibleMonthFromValue()
-      this.renderCalendar()
-    }
-
-    this.syncVisibility()
-    this.syncDisplay()
-  }
-
-  toggleTime() {
-    if (this.timeToggleTarget.checked) {
-      this.dayToggleTarget.checked = true
-
-      this.ensurePickerDate()
-      if (!this.hourSelectTarget.value) this.hourSelectTarget.value = this.hourInputTarget.value || "09"
-      if (!this.minuteSelectTarget.value) this.minuteSelectTarget.value = this.minuteInputTarget.value || "00"
-      this.setVisibleMonthFromValue()
-      this.renderCalendar()
-    }
-
-    this.syncVisibility()
+    this.ensureValidCurrentSelection()
+    this.apply()
     this.syncDisplay()
   }
 
   toggleCalendar(event) {
     event.preventDefault()
     event.stopPropagation()
-    if (!this.dayToggleTarget.checked) return
-
-    this.ensurePickerDate()
-    this.calendarPanelTarget.classList.toggle("hidden")
+    if (this.calendarPanelTarget.classList.contains("hidden")) {
+      this.openCalendar()
+    } else {
+      this.closeCalendar()
+    }
     this.setVisibleMonthFromValue()
     this.renderCalendar()
     this.syncDisplay()
@@ -86,12 +53,18 @@ export default class extends Controller {
 
   closeCalendar() {
     if (!this.hasCalendarPanelTarget) return
+    if (this.calendarPanelTarget.classList.contains("hidden")) return
 
-    this.calendarPanelTarget.classList.add("hidden")
+    clearTimeout(this.closeAnimationTimeout)
+    this.calendarPanelTarget.classList.remove("is-open")
+    this.closeAnimationTimeout = setTimeout(() => {
+      this.calendarPanelTarget.classList.add("hidden")
+    }, 180)
   }
 
   closeCalendarOnOutside(event) {
     if (!this.hasCalendarPanelTarget || this.calendarPanelTarget.classList.contains("hidden")) return
+    if (!this.hasDateSectionTarget) return
     if (this.dateSectionTarget.contains(event.target)) return
 
     this.closeCalendar()
@@ -119,45 +92,41 @@ export default class extends Controller {
 
     this.pickerInputTarget.value = value
     this.setVisibleMonthFromValue()
+    this.syncTimeOptions()
+    this.ensureValidCurrentSelection()
     this.renderCalendar()
+    this.apply()
     this.syncDisplay()
-    this.closeCalendar()
+  }
+
+  openCalendar() {
+    if (!this.hasCalendarPanelTarget) return
+
+    clearTimeout(this.closeAnimationTimeout)
+    this.calendarPanelTarget.classList.remove("hidden")
+    requestAnimationFrame(() => {
+      this.calendarPanelTarget.classList.add("is-open")
+    })
   }
 
   apply() {
-    const dayEnabled = this.dayToggleTarget.checked
-    const timeEnabled = dayEnabled && this.timeToggleTarget.checked
-
-    this.dayEnabledInputTarget.value = dayEnabled ? "1" : "0"
-    this.timeEnabledInputTarget.value = timeEnabled ? "1" : "0"
-
-    if (!dayEnabled) {
-      this.valueInputTarget.value = ""
-      this.hourInputTarget.value = ""
-      this.minuteInputTarget.value = ""
-      this.syncDisplay()
-      return
-    }
-
-    this.valueInputTarget.value = this.pickerInputTarget.value || this.today()
-    this.hourInputTarget.value = timeEnabled ? this.hourSelectTarget.value : ""
-    this.minuteInputTarget.value = timeEnabled ? this.minuteSelectTarget.value : ""
+    this.syncTimeOptions()
+    this.ensureValidCurrentSelection()
+    this.dayEnabledInputTarget.value = "1"
+    this.timeEnabledInputTarget.value = "1"
+    this.valueInputTarget.value = this.pickerInputTarget.value || ""
+    this.hourInputTarget.value = this.hourSelectTarget.value || "00"
+    this.minuteInputTarget.value = this.minuteSelectTarget.value || "00"
     this.syncDisplay()
   }
 
-  syncVisibility() {
-    const dayEnabled = this.dayToggleTarget.checked
-    const timeEnabled = dayEnabled && this.timeToggleTarget.checked
-
-    this.dateSectionTarget.classList.toggle("hidden", !dayEnabled)
-    this.timeSectionTarget.classList.toggle("hidden", !timeEnabled)
-  }
-
   syncDisplay() {
-    this.displayTarget.textContent = this.displayValue() || "Chọn ngày hoàn thành"
+    if (this.hasDisplayTarget) {
+      this.displayTarget.textContent = this.displayValue() || "Chọn thời gian hoàn thành"
+    }
 
     if (this.hasCalendarTriggerLabelTarget) {
-      this.calendarTriggerLabelTarget.textContent = this.formattedDate(this.pickerInputTarget.value || this.valueInputTarget.value) || "Chọn ngày"
+      this.calendarTriggerLabelTarget.textContent = this.formattedDate(this.pickerInputTarget.value || this.valueInputTarget.value) || "Chọn ngày hoàn thành"
     }
   }
 
@@ -170,10 +139,9 @@ export default class extends Controller {
     const year = month.getFullYear()
     const monthIndex = month.getMonth()
 
-    this.calendarMonthLabelTarget.textContent = new Intl.DateTimeFormat("vi-VN", {
-      month: "long",
-      year: "numeric"
-    }).format(month)
+    this.calendarMonthLabelTarget.textContent = `Thang ${monthIndex + 1} Nam ${year}`
+      .replace("Thang", "Tháng")
+      .replace("Nam", "Năm")
 
     const firstDay = new Date(year, monthIndex, 1)
     const startingOffset = (firstDay.getDay() + 6) % 7
@@ -188,17 +156,20 @@ export default class extends Controller {
       const inCurrentMonth = currentDate.getMonth() === monthIndex
       const isSelected = currentValue === selectedValue
       const isToday = currentValue === todayValue
+      const isDisabled = this.isDateDisabled(currentValue)
 
       const button = document.createElement("button")
       button.type = "button"
-      button.dataset.action = "click->completion-date-picker#pickDate"
+      if (!isDisabled) button.dataset.action = "click->completion-date-picker#pickDate"
       button.dataset.value = currentValue
       button.className = [
-        "inline-flex h-9 items-center justify-center rounded-xl text-sm font-semibold transition",
-        inCurrentMonth ? "text-black hover:bg-stone-100" : "text-black/30 hover:bg-stone-50",
-        isSelected ? "bg-primary-500 text-white hover:bg-primary-500" : null,
-        isToday && !isSelected ? "ring-1 ring-primary-200" : null
+        "completion-date-picker__day inline-flex aspect-square w-[84%] justify-self-center items-center justify-center rounded-xl text-sm font-semibold transition",
+        !inCurrentMonth ? "completion-date-picker__day--outside" : null,
+        isSelected ? "completion-date-picker__day--selected" : null,
+        isToday && !isSelected ? "completion-date-picker__day--today" : null,
+        isDisabled ? "completion-date-picker__day--disabled" : null
       ].filter(Boolean).join(" ")
+      button.disabled = isDisabled
       button.textContent = String(currentDate.getDate())
       this.calendarDaysTarget.appendChild(button)
     }
@@ -216,12 +187,6 @@ export default class extends Controller {
   setVisibleMonthFromValue() {
     const baseDate = this.parseDate(this.pickerInputTarget.value || this.valueInputTarget.value || this.today())
     this.visibleMonth = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1)
-  }
-
-  ensurePickerDate() {
-    if (!this.pickerInputTarget.value) {
-      this.pickerInputTarget.value = this.valueInputTarget.value || this.today()
-    }
   }
 
   parseDate(value) {
@@ -249,6 +214,64 @@ export default class extends Controller {
 
   today() {
     return this.formatIsoDate(new Date())
+  }
+
+  currentHour() {
+    return String(new Date().getHours()).padStart(2, "0")
+  }
+
+  currentMinute() {
+    return String(new Date().getMinutes()).padStart(2, "0")
+  }
+
+  currentTimestamp() {
+    const now = new Date()
+    now.setSeconds(0, 0)
+    return now
+  }
+
+  isDateDisabled(value) {
+    return this.parseDate(value) < this.parseDate(this.today())
+  }
+
+  selectedDateIsToday() {
+    return (this.pickerInputTarget.value || this.valueInputTarget.value) === this.today()
+  }
+
+  syncTimeOptions() {
+    if (!this.hasHourSelectTarget || !this.hasMinuteSelectTarget) return
+
+    const now = this.currentTimestamp()
+    const isToday = this.selectedDateIsToday()
+    const currentHour = now.getHours()
+    const currentMinute = now.getMinutes()
+
+    Array.from(this.hourSelectTarget.options).forEach((option) => {
+      const hour = Number(option.value)
+      option.disabled = isToday && hour < currentHour
+    })
+
+    const selectedHour = Number(this.hourSelectTarget.value || currentHour)
+    Array.from(this.minuteSelectTarget.options).forEach((option) => {
+      const minute = Number(option.value)
+      option.disabled = isToday && selectedHour === currentHour && minute < currentMinute
+    })
+  }
+
+  ensureValidCurrentSelection() {
+    if (!this.hasHourSelectTarget || !this.hasMinuteSelectTarget) return
+
+    const firstEnabledHour = Array.from(this.hourSelectTarget.options).find((option) => !option.disabled)
+    if (this.hourSelectTarget.selectedOptions[0]?.disabled && firstEnabledHour) {
+      this.hourSelectTarget.value = firstEnabledHour.value
+    }
+
+    this.syncTimeOptions()
+
+    const firstEnabledMinute = Array.from(this.minuteSelectTarget.options).find((option) => !option.disabled)
+    if (this.minuteSelectTarget.selectedOptions[0]?.disabled && firstEnabledMinute) {
+      this.minuteSelectTarget.value = firstEnabledMinute.value
+    }
   }
 
   get dayEnabled() {

@@ -41,6 +41,7 @@ Rails.application.configure do
 
   # Store uploaded files in MinIO via the S3-compatible Active Storage service.
   config.active_storage.service = ENV.fetch('ACTIVE_STORAGE_SERVICE', 'minio').to_sym
+  config.active_storage.routes_prefix = '/media'
 
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false
