@@ -8,29 +8,51 @@
     ['Tiêu đề 6', 'heading6', 'heading-6']
   ]
 
-  helper_items = [
-    { icon: 'bold', action: 'bold', label: 'Chữ đậm' },
-    { icon: 'italic', action: 'italic', label: 'Chữ nghiêng' },
-    { icon: 'list', action: 'list', label: 'Danh sách' },
-    { icon: 'text-quote', action: 'quote', label: 'Trích dẫn' },
-    { icon: 'link', action: 'link', label: 'Chèn link' },
-    { icon: 'code-xml', action: 'code', label: 'Inline code' }
+  helper_groups = [
+    [
+      { icon: 'bold', action: 'bold', label: 'Chữ đậm' },
+      { icon: 'italic', action: 'italic', label: 'Chữ nghiêng' },
+      { icon: 'strikethrough', action: 'strikethrough', label: 'Gạch ngang' },
+      { icon: 'code-xml', action: 'code', label: 'Inline code' }
+    ],
+    [
+      { icon: 'list', action: 'list', label: 'Danh sách' },
+      { icon: 'list-ordered', action: 'orderedList', label: 'Danh sách số' },
+      { icon: 'list-todo', action: 'taskList', label: 'Checklist' },
+      { icon: 'text-quote', action: 'quote', label: 'Trích dẫn' }
+    ],
+    [
+      { icon: 'link', action: 'link', label: 'Chèn link' },
+      { icon: 'table', action: 'table', label: 'Chèn bảng' },
+      { icon: 'code-xml', action: 'codeBlock', label: 'Code block' },
+      { icon: 'minus', action: 'divider', label: 'Đường phân cách' }
+    ]
   ]
 %>
 
 <div
   class="<%= wrapper_classes %>"
+  data-markdown-editor-attachment-upload-url-value="<%= helpers.admin_markdown_attachments_path %>"
   data-controller="markdown-editor"
+  data-markdown-editor-images-url-value="<%= helpers.admin_markdown_images_path %>"
+  data-markdown-editor-upload-url-value="<%= helpers.admin_markdown_images_path %>"
 >
   <div class="flex items-center justify-between gap-3">
     <%= form.label field, label, class: 'text-sm font-semibold text-black/80' %>
-    <% if hint.present? %>
-      <p class="text-xs text-black/45"><%= hint %></p>
-    <% end %>
+    <div class="flex items-center gap-3">
+      <p
+        class="hidden text-xs font-medium text-primary-700"
+        data-markdown-editor-target="uploadStatus"
+      ></p>
+
+      <% if hint.present? %>
+        <p class="text-xs text-black/45"><%= hint %></p>
+      <% end %>
+    </div>
   </div>
 
   <div class="overflow-hidden rounded-[28px] border border-stone-200 bg-white shadow-sm">
-    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 bg-stone-50 px-3 py-2">
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 bg-stone-50 px-3 py-1.5">
       <div class="flex items-center gap-2">
         <button
           type="button"
@@ -106,22 +128,50 @@
           </div>
         </div>
 
-        <% helper_items.each do |item| %>
-          <button
-            type="button"
-            class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-transparent bg-stone-50 text-black/60 outline-none transition hover:border-primary-500 hover:bg-primary-50 hover:text-primary-700 focus:outline-none focus:ring-0"
-            data-action="markdown-editor#insertHelper"
-            data-markdown-helper="<%= item[:action] %>"
-            aria-label="<%= item[:label] %>"
-            title="<%= item[:label] %>"
-          >
-            <%= helpers.lucide_icon(item[:icon], class: 'h-4 w-4', "aria-hidden": true) %>
-          </button>
+        <% helper_groups.each_with_index do |group, index| %>
+          <% group.each do |item| %>
+            <button
+              type="button"
+              class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-transparent bg-stone-50 text-black/60 outline-none transition hover:border-primary-500 hover:bg-primary-50 hover:text-primary-700 focus:outline-none focus:ring-0"
+              data-action="markdown-editor#insertHelper"
+              data-markdown-helper="<%= item[:action] %>"
+              aria-label="<%= item[:label] %>"
+              title="<%= item[:label] %>"
+            >
+              <%= helpers.lucide_icon(item[:icon], class: 'h-4 w-4', "aria-hidden": true) %>
+            </button>
+          <% end %>
+
+          <% next if index == helper_groups.length - 1 %>
+
+          <span class="mx-1 h-6 w-px rounded-full bg-stone-200"></span>
         <% end %>
+
+        <span class="mx-1 h-6 w-px rounded-full bg-stone-200"></span>
+
+        <button
+          type="button"
+          class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-transparent bg-stone-50 text-black/60 outline-none transition hover:border-primary-500 hover:bg-primary-50 hover:text-primary-700 focus:outline-none focus:ring-0"
+          data-action="click->markdown-editor#openAttachmentPicker"
+          aria-label="Upload attachment"
+          title="Upload attachment"
+        >
+          <%= helpers.lucide_icon('paperclip', class: 'h-4 w-4', "aria-hidden": true) %>
+        </button>
+
+        <button
+          type="button"
+          class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-transparent bg-stone-50 text-black/60 outline-none transition hover:border-primary-500 hover:bg-primary-50 hover:text-primary-700 focus:outline-none focus:ring-0"
+          data-action="click->markdown-editor#openImageLibrary"
+          aria-label="Mở thư viện ảnh"
+          title="Mở thư viện ảnh"
+        >
+          <%= helpers.lucide_icon('image-plus', class: 'h-4 w-4', "aria-hidden": true) %>
+        </button>
       </div>
     </div>
 
-    <div class="rounded-b-[28px] bg-stone-50" data-markdown-editor-target="editPanel">
+    <div class="rounded-b-[28px] bg-white" data-markdown-editor-target="editPanel">
       <div class="relative">
         <%= form.text_area field, **textarea_options %>
 
@@ -132,7 +182,7 @@
       </div>
     </div>
 
-    <div class="hidden rounded-b-[28px] bg-stone-50" data-markdown-editor-target="previewPanel">
+    <div class="hidden rounded-b-[28px] bg-white" data-markdown-editor-target="previewPanel">
       <div
         class="markdown-preview min-h-[220px] px-4 py-3 text-sm text-black"
         data-markdown-editor-target="preview"
@@ -150,7 +200,6 @@
       <div class="flex items-center justify-between gap-4 border-b border-black/10 bg-white px-5 py-4">
         <div>
           <p class="text-base font-semibold text-black">Markdown Editor</p>
-          <p class="text-xs text-black/45">Không tự đóng khi bấm ra ngoài modal.</p>
         </div>
 
         <button
@@ -202,23 +251,51 @@
             </div>
           </div>
 
-          <% helper_items.each do |item| %>
-            <button
-              type="button"
-              class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-transparent bg-stone-50 text-black/60 outline-none transition hover:border-primary-500 hover:bg-primary-50 hover:text-primary-700 focus:outline-none focus:ring-0"
-              data-action="markdown-editor#insertHelper"
-              data-markdown-helper="<%= item[:action] %>"
-              aria-label="<%= item[:label] %>"
-              title="<%= item[:label] %>"
-            >
-              <%= helpers.lucide_icon(item[:icon], class: 'h-4 w-4', "aria-hidden": true) %>
-            </button>
+          <% helper_groups.each_with_index do |group, index| %>
+            <% group.each do |item| %>
+              <button
+                type="button"
+                class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-transparent bg-stone-50 text-black/60 outline-none transition hover:border-primary-500 hover:bg-primary-50 hover:text-primary-700 focus:outline-none focus:ring-0"
+                data-action="markdown-editor#insertHelper"
+                data-markdown-helper="<%= item[:action] %>"
+                aria-label="<%= item[:label] %>"
+                title="<%= item[:label] %>"
+              >
+                <%= helpers.lucide_icon(item[:icon], class: 'h-4 w-4', "aria-hidden": true) %>
+              </button>
+            <% end %>
+
+            <% next if index == helper_groups.length - 1 %>
+
+            <span class="mx-1 h-6 w-px rounded-full bg-stone-200"></span>
           <% end %>
+
+          <span class="mx-1 h-6 w-px rounded-full bg-stone-200"></span>
+
+          <button
+            type="button"
+            class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-transparent bg-stone-50 text-black/60 outline-none transition hover:border-primary-500 hover:bg-primary-50 hover:text-primary-700 focus:outline-none focus:ring-0"
+            data-action="click->markdown-editor#openAttachmentPicker"
+            aria-label="Upload attachment"
+            title="Upload attachment"
+          >
+            <%= helpers.lucide_icon('paperclip', class: 'h-4 w-4', "aria-hidden": true) %>
+          </button>
+
+          <button
+            type="button"
+            class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-transparent bg-stone-50 text-black/60 outline-none transition hover:border-primary-500 hover:bg-primary-50 hover:text-primary-700 focus:outline-none focus:ring-0"
+            data-action="click->markdown-editor#openImageLibrary"
+            aria-label="Mở thư viện ảnh"
+            title="Mở thư viện ảnh"
+          >
+            <%= helpers.lucide_icon('image-plus', class: 'h-4 w-4', "aria-hidden": true) %>
+          </button>
         </div>
       </div>
 
       <div class="grid min-h-0 flex-1 gap-px bg-black/10 lg:grid-cols-2">
-        <div class="flex min-h-0 flex-col bg-stone-50">
+        <div class="flex min-h-0 flex-col bg-white">
           <div class="border-b border-black/10 px-5 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-black/45">Edit</div>
           <textarea
             class="min-h-0 w-full flex-1 resize-none bg-transparent px-5 py-4 text-sm text-black outline-none focus:outline-none focus:ring-0"
@@ -231,6 +308,149 @@
         <div class="flex min-h-0 flex-col bg-white">
           <div class="border-b border-black/10 px-5 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-black/45">Preview</div>
           <div class="markdown-preview min-h-0 flex-1 overflow-auto px-5 py-4 text-sm text-black" data-markdown-editor-target="modalPreview"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <input
+    type="file"
+    class="hidden"
+    data-markdown-editor-target="attachmentUploadInput"
+    data-action="change->markdown-editor#uploadAttachmentsFromPicker"
+  >
+
+  <div
+    class="fixed inset-0 z-[85] hidden pointer-events-none flex items-center justify-center bg-black/45 px-5 py-6 opacity-0 backdrop-blur-sm transition"
+    data-markdown-editor-target="attachmentLoadingModal"
+  >
+    <div class="w-full max-w-md rounded-[32px] border border-black/10 bg-white p-8 text-center shadow-[0_24px_80px_rgba(15,23,42,0.24)]">
+      <div
+        class="mx-auto flex h-28 w-28 items-center justify-center rounded-full bg-[conic-gradient(theme(colors.primary.500)_0deg,theme(colors.primary.500)_0deg,theme(colors.primary.100)_0deg)] p-1.5 shadow-[0_18px_40px_rgba(14,165,233,0.18)] transition-[background] duration-150"
+        data-markdown-editor-target="attachmentLoadingProgressRing"
+      >
+        <div class="flex h-full w-full flex-col items-center justify-center rounded-full bg-white">
+          <span class="text-[28px] font-semibold leading-none text-black" data-markdown-editor-target="attachmentLoadingPercent">0%</span>
+          <span class="mt-1 text-[11px] font-medium uppercase tracking-[0.16em] text-black/35">Upload</span>
+        </div>
+      </div>
+
+      <p class="mt-5 text-lg font-semibold text-black">Đang tải attachment</p>
+      <p class="mt-2 text-sm leading-6 text-black/55" data-markdown-editor-target="attachmentLoadingFilename">
+        Hệ thống đang upload file, vui lòng chờ một chút.
+      </p>
+
+      <p class="mt-5 text-sm font-medium text-black/60" data-markdown-editor-target="attachmentLoadingTransferred">
+        0 B / 0 B (0 KB/s)
+      </p>
+    </div>
+  </div>
+
+  <input
+    type="file"
+    accept="image/*"
+    multiple
+    class="hidden"
+    data-markdown-editor-target="imageUploadInput"
+    data-action="change->markdown-editor#uploadImagesFromPicker"
+  >
+
+  <div
+    class="fixed inset-0 z-[80] hidden pointer-events-none flex items-center justify-center bg-black/45 px-5 py-6 opacity-0 backdrop-blur-sm transition"
+    data-markdown-editor-target="imageLibraryModal"
+    data-action="click->markdown-editor#closeImageLibraryOnBackdrop"
+  >
+    <div
+      class="flex h-[85vh] w-[85vw] max-w-[1700px] flex-col overflow-hidden rounded-[32px] border border-black/10 bg-stone-100 shadow-[0_24px_80px_rgba(15,23,42,0.24)]"
+      data-action="click->markdown-editor#keepImageLibraryOpen"
+    >
+      <div class="flex items-center justify-between gap-4 border-b border-black/10 bg-white px-5 py-4">
+        <div>
+          <p class="text-base font-semibold text-black">Thư viện ảnh</p>
+          <p class="text-xs text-black/45">Upload ảnh mới hoặc chọn ảnh đã có để chèn vào nội dung.</p>
+        </div>
+
+        <button
+          type="button"
+          class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-black/60 ring-1 ring-black/10 transition hover:text-black"
+          data-action="click->markdown-editor#closeImageLibrary"
+          aria-label="Đóng thư viện ảnh"
+        >
+          <%= helpers.lucide_icon('x', class: 'h-4 w-4', "aria-hidden": true) %>
+        </button>
+      </div>
+
+      <div class="grid min-h-0 flex-1 gap-px bg-black/10 lg:grid-cols-[360px_minmax(0,1fr)]">
+        <div class="flex min-h-0 flex-col bg-stone-50">
+          <div class="border-b border-black/10 px-5 py-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.14em] text-black/45">Upload</p>
+          </div>
+
+          <div class="flex flex-1 flex-col justify-between gap-5 px-5 py-5">
+            <div class="space-y-4">
+              <button
+                type="button"
+                class="flex w-full flex-col items-center justify-center gap-3 rounded-[28px] border border-dashed border-primary-300 bg-white px-6 py-8 text-center transition hover:border-primary-500 hover:bg-primary-50"
+                data-action="click->markdown-editor#openImagePicker"
+              >
+                <span class="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-50 text-primary-700">
+                  <%= helpers.lucide_icon('image-up', class: 'h-6 w-6', "aria-hidden": true) %>
+                </span>
+                <span class="space-y-1">
+                  <span class="block text-sm font-semibold text-black">Tải ảnh từ máy lên</span>
+                  <span class="block text-xs leading-5 text-black/55">Chọn một hoặc nhiều ảnh, tối đa 64MB mỗi ảnh.</span>
+                </span>
+              </button>
+
+              <div class="rounded-[24px] border border-black/10 bg-white px-4 py-4">
+                <p class="text-sm font-semibold text-black">Mẹo nhanh</p>
+                <ul class="mt-2 space-y-2 text-sm leading-6 text-black/60">
+                  <li>Paste ảnh trực tiếp vào editor để upload ảnh.</li>
+                  <li>Chọn ảnh ở phía bên phải để chèn vào nội dung.</li>
+                </ul>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-white px-4 text-sm font-semibold text-black/70 transition hover:border-primary-500 hover:bg-primary-50 hover:text-primary-700"
+              data-action="click->markdown-editor#refreshImageLibrary"
+            >
+              <%= helpers.lucide_icon('refresh-cw', class: 'h-4 w-4', "aria-hidden": true) %>
+              <span>Làm mới thư viện</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex min-h-0 flex-col bg-white">
+          <div class="border-b border-black/10 px-5 py-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.14em] text-black/45">Ảnh đã upload</p>
+          </div>
+
+          <div
+            class="min-h-0 flex-1 overflow-auto px-5 py-5"
+            data-markdown-editor-target="imageLibraryScroller"
+            data-action="scroll->markdown-editor#handleImageLibraryScroll"
+          >
+            <div
+              class="hidden flex h-full min-h-[320px] items-center justify-center rounded-[28px] border border-dashed border-black/10 bg-stone-50 px-6 text-center text-sm leading-6 text-black/55"
+              data-markdown-editor-target="imageLibraryEmpty"
+            >
+              Chưa có ảnh nào trong thư viện. Hãy upload ảnh đầu tiên để dùng lại về sau.
+            </div>
+
+            <div
+              class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
+              data-markdown-editor-target="imageLibraryGrid"
+            ></div>
+
+            <div
+              class="hidden pt-4 text-center text-xs font-medium text-black/45"
+              data-markdown-editor-target="imageLibraryPaginationStatus"
+            >
+              Đang tải thêm ảnh...
+            </div>
+          </div>
         </div>
       </div>
     </div>

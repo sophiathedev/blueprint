@@ -19,10 +19,6 @@ class MarkdownEditorComponent < ViewComponent::Base
     ['space-y-2', options[:wrapper_class]].compact.join(' ')
   end
 
-  def editor_id
-    "#{form.object_name}_#{field}"
-  end
-
   def tab_base_classes
     'inline-flex items-center justify-center rounded-full px-3 py-1.5 text-sm font-semibold transition'
   end

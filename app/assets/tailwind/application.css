@@ -97,21 +97,69 @@ button {
 .markdown-preview pre {
   overflow-x: auto;
   border-radius: 1rem;
-  background: rgb(28 25 23 / 0.95);
+  background: rgb(244 244 245);
   padding: 1rem;
-  color: white;
+  color: rgb(39 39 42);
+  border: 1px solid rgb(0 0 0 / 0.08);
 }
 
 .markdown-preview code {
   border-radius: 0.45rem;
-  background: rgb(0 0 0 / 0.06);
+  background: rgb(244 244 245);
   padding: 0.12rem 0.38rem;
   font-size: 0.875em;
+  color: rgb(63 63 70);
 }
 
 .markdown-preview pre code {
   background: transparent;
   padding: 0;
+  color: inherit;
+  display: block;
+  overflow-x: auto;
+}
+
+.markdown-preview pre code.hljs {
+  color: rgb(39 39 42);
+}
+
+.markdown-preview .hljs-comment,
+.markdown-preview .hljs-quote {
+  color: rgb(113 113 122);
+}
+
+.markdown-preview .hljs-keyword,
+.markdown-preview .hljs-selector-tag,
+.markdown-preview .hljs-literal,
+.markdown-preview .hljs-section,
+.markdown-preview .hljs-link {
+  color: rgb(63 63 70);
+  font-weight: 600;
+}
+
+.markdown-preview .hljs-string,
+.markdown-preview .hljs-title,
+.markdown-preview .hljs-name,
+.markdown-preview .hljs-attribute,
+.markdown-preview .hljs-symbol,
+.markdown-preview .hljs-bullet,
+.markdown-preview .hljs-addition {
+  color: rgb(82 82 91);
+}
+
+.markdown-preview .hljs-number,
+.markdown-preview .hljs-variable,
+.markdown-preview .hljs-template-variable,
+.markdown-preview .hljs-type,
+.markdown-preview .hljs-built_in,
+.markdown-preview .hljs-builtin-name {
+  color: rgb(24 24 27);
+}
+
+.markdown-preview .hljs-deletion,
+.markdown-preview .hljs-meta,
+.markdown-preview .hljs-emphasis {
+  color: rgb(82 82 91);
 }
 
 .markdown-preview table {

@@ -19,6 +19,9 @@ Rails.application.routes.draw do
   patch 'change-password', to: 'users#perform_password_change'
 
   namespace :admin do
+    resources :markdown_attachments, only: :create
+    resources :markdown_images, only: %i[index create]
+
     resources :members, except: %i[show new edit] do
       patch :reset_password, on: :member
     end
