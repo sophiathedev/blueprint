@@ -29,7 +29,7 @@
             <span><%= item[:label] %></span>
           </button>
         <% elsif item[:method].present? && item[:confirm_label].present? %>
-          <%= form_with url: item[:href], method: item[:method], class: 'w-full', data: item_form_data(item), html: item_form_options(item) do %>
+          <%= form_with url: item[:href], method: item[:method], class: 'w-full', local: true, authenticity_token: true, data: item_form_data(item), html: item_form_options(item) do %>
             <button
               type="button"
               class="<%= item_classes(item) %>"
@@ -51,7 +51,7 @@
             </button>
           <% end %>
         <% elsif item[:method].present? %>
-          <%= form_with url: item[:href], method: item[:method], class: 'w-full', data: item_form_data(item), html: item_form_options(item) do %>
+          <%= form_with url: item[:href], method: item[:method], class: 'w-full', local: true, authenticity_token: true, data: item_form_data(item), html: item_form_options(item) do %>
             <button
               type="submit"
               class="<%= item_classes(item) %>"
