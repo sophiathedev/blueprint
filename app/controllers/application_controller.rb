@@ -2,6 +2,7 @@
 
 class ApplicationController < ActionController::Base
   SESSION_TIMEOUT = 10.hours
+  RETURN_TO_SESSION_KEY = :return_to_after_authentication
 
   # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
   allow_browser versions: :modern
@@ -26,6 +27,7 @@ class ApplicationController < ActionController::Base
   def require_authentication
     return if user_signed_in?
 
+    store_return_to_location!
     redirect_to login_path, alert: 'Vui lòng đăng nhập để tiếp tục.'
   end
 
@@ -46,7 +48,29 @@ class ApplicationController < ActionController::Base
 
     return if Time.zone.at(authenticated_at.to_i) > SESSION_TIMEOUT.ago
 
+    return_to_location = session[RETURN_TO_SESSION_KEY]
     reset_session
+    session[RETURN_TO_SESSION_KEY] = return_to_location if return_to_location.present?
     redirect_to login_path, alert: 'Phiên đăng nhập đã hết hạn sau 10 tiếng. Vui lòng đăng nhập lại.'
+  end
+
+  def store_return_to_location!
+    return unless request.get?
+    return if request.xhr?
+    return unless request.format.html?
+
+    session[RETURN_TO_SESSION_KEY] = request.fullpath
+  end
+
+  def consume_return_to_location
+    return_to_location = session.delete(RETURN_TO_SESSION_KEY).to_s
+    return if return_to_location.blank?
+    return unless return_to_location.start_with?('/')
+
+    return_to_location
+  end
+
+  def post_authentication_path
+    consume_return_to_location || root_path
   end
 end

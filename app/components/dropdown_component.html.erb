@@ -10,15 +10,26 @@
 
   <div
     class="<%= [
-      'pointer-events-none absolute z-30 w-56 opacity-0 transition duration-150 ease-out',
+      'pointer-events-none absolute z-30 min-w-56 w-max max-w-none opacity-0 transition duration-150 ease-out',
       menu_position_classes
     ].join(' ') %>"
     data-dropdown-target="menu"
   >
     <div class="rounded-2xl border border-black/10 bg-white p-1 shadow-[0_18px_48px_rgba(15,23,42,0.14)] ring-0.5 ring-black/5">
       <% items.each do |item| %>
-        <% if item[:method].present? && item[:confirm_label].present? %>
-          <%= form_with url: item[:href], method: item[:method], class: 'w-full', data: item[:data] do %>
+        <% if item[:disabled] %>
+          <button
+            type="button"
+            class="<%= item_classes(item) %>"
+            disabled
+          >
+            <% if item[:icon].present? %>
+              <%= helpers.lucide_icon(item[:icon], class: 'h-4 w-4 shrink-0', "aria-hidden": true) %>
+            <% end %>
+            <span><%= item[:label] %></span>
+          </button>
+        <% elsif item[:method].present? && item[:confirm_label].present? %>
+          <%= form_with url: item[:href], method: item[:method], class: 'w-full', data: item_form_data(item), html: item_form_options(item) do %>
             <button
               type="button"
               class="<%= item_classes(item) %>"
@@ -37,6 +48,21 @@
                 </span>
               <% end %>
               <span class="transition-all duration-200 ease-out" data-dropdown-confirm-text><%= item[:label] %></span>
+            </button>
+          <% end %>
+        <% elsif item[:method].present? %>
+          <%= form_with url: item[:href], method: item[:method], class: 'w-full', data: item_form_data(item), html: item_form_options(item) do %>
+            <button
+              type="submit"
+              class="<%= item_classes(item) %>"
+              <% if item[:data][:action].present? %>
+                data-action="<%= item[:data][:action] %>"
+              <% end %>
+            >
+              <% if item[:icon].present? %>
+                <%= helpers.lucide_icon(item[:icon], class: 'h-4 w-4 shrink-0', "aria-hidden": true) %>
+              <% end %>
+              <span><%= item[:label] %></span>
             </button>
           <% end %>
         <% elsif item[:button] %>

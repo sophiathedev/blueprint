@@ -8,4 +8,8 @@ class AppSetting < ApplicationRecord
   def self.current
     order(:id).first_or_initialize
   end
+
+  def telegram_configured?
+    telegram_api_key.present?
+  end
 end

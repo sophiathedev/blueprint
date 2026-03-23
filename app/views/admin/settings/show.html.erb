@@ -15,6 +15,10 @@
         autocomplete: 'off',
         spellcheck: false
       ) %>
+      <p class="text-sm leading-6 text-black/55">
+        Sau khi lưu token, hệ thống sẽ tự gọi webhook Telegram về domain hiện tại của app nếu domain đó truy cập công khai.
+        Nếu bạn đang dùng `localhost`, hãy dùng domain public như môi trường deploy thật hoặc tunnel để Telegram gọi webhook vào được.
+      </p>
 
       <div class="flex items-center justify-end">
         <%= render ButtonComponent.new(

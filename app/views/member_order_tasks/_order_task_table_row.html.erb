@@ -1,0 +1,67 @@
+<% order_service = order_task.order_service %>
+<% service = order_task.task.service %>
+<% partner = service.partner %>
+<tr
+  id="<%= dom_id(order_task, :member_row) %>"
+  class="<%= ['group h-24 cursor-pointer transition hover:bg-stone-100', (order_task.is_overdue? && !order_task.is_completed? ? 'bg-rose-50/35 hover:bg-rose-100/70' : nil)].compact.join(' ') %>"
+  onclick="window.location='<%= admin_order_service_path(order_service, source: :member_tasks) %>'"
+>
+  <td class="cursor-pointer px-5 py-4 align-middle">
+    <div class="flex h-full items-center gap-3">
+      <%= form_with model: [:admin, order_service, order_task], method: :patch, class: 'mt-0.5 shrink-0', html: { onclick: 'event.stopPropagation()' } do |form| %>
+        <%= hidden_field_tag :source, 'member_tasks' %>
+        <%= render CheckboxComponent.new(
+          form:,
+          attribute: :is_completed,
+          id: "order_task_#{order_task.id}_is_completed",
+          checked: order_task.is_completed?,
+          disabled: order_task.is_completed?,
+          aria: { label: "Đánh dấu hoàn thành cho task #{order_task.task.name}" },
+          onchange: 'this.form.requestSubmit()'
+        ) %>
+      <% end %>
+
+      <div class="min-w-0">
+        <div class="flex flex-wrap items-center gap-2">
+          <p class="truncate text-sm font-semibold text-black"><%= order_task.task.name %></p>
+          <% if order_task.is_overdue? %>
+            <span class="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-700">
+              <span class="h-2 w-2 rounded-full bg-rose-500"></span>
+              <%= dashboard_order_task_overdue_badge_text(order_task) %>
+            </span>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </td>
+  <td class="cursor-pointer px-5 py-4 align-middle">
+    <div class="flex h-full items-center">
+      <p class="truncate text-sm font-medium text-black/75"><%= partner.name %></p>
+    </div>
+  </td>
+  <td class="cursor-pointer px-5 py-4 align-middle">
+    <div class="flex h-full flex-col justify-center">
+      <p class="text-sm font-medium text-black/75">Deadline <%= order_service.completed_at.strftime('%H:%M %d/%m/%Y') %></p>
+      <% if order_task.mark_completed_at.present? %>
+        <p class="mt-1 text-xs text-black/45">Hoàn thành <%= order_task.mark_completed_at.strftime('%H:%M %d/%m/%Y') %></p>
+      <% end %>
+    </div>
+  </td>
+  <td class="cursor-pointer px-5 py-4 align-middle">
+    <div class="flex h-full items-center">
+      <div class="flex flex-wrap items-center gap-2">
+        <% if order_task.is_completed? %>
+          <span class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+            <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+            Hoàn thành
+          </span>
+        <% else %>
+          <span class="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+            <span class="h-2 w-2 rounded-full bg-amber-500"></span>
+            Chưa hoàn thành
+          </span>
+        <% end %>
+      </div>
+    </div>
+  </td>
+</tr>

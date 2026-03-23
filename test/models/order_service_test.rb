@@ -103,6 +103,20 @@ class OrderServiceTest < ActiveSupport::TestCase
     assert_equal scheduled_job['jid'], order_service.reload.deadline_check_job_id
   end
 
+  test 'enqueues a telegram notification job for admins when order service is created' do
+    service = build_service
+
+    order_service = OrderService.create!(
+      service:,
+      completed_at: 1.day.from_now.change(hour: 11, min: 45, sec: 0),
+      partner_assignee_name: 'Nguyen Van H',
+      priority_status: :urgent
+    )
+
+    assert_equal 1, NotifyAdminsNewOrderJob.jobs.size
+    assert_equal [ order_service.id ], NotifyAdminsNewOrderJob.jobs.last['args']
+  end
+
   test 'destroying an order task does not affect its task' do
     service = build_service
     member = User.create!(

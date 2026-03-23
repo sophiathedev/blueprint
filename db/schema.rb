@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_22_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_23_070947) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -117,8 +117,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_22_160000) do
     t.string "name"
     t.string "password_digest"
     t.integer "role", default: 1, null: false
+    t.bigint "telegram_chat_id"
+    t.datetime "telegram_connected_at"
+    t.string "telegram_connection_token_digest"
+    t.datetime "telegram_connection_token_generated_at"
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_users_on_deleted_at"
+    t.index ["telegram_chat_id"], name: "index_users_on_telegram_chat_id", unique: true
+    t.index ["telegram_connection_token_digest"], name: "index_users_on_telegram_connection_token_digest", unique: true
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"

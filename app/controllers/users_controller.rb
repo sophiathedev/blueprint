@@ -20,7 +20,7 @@ class UsersController < ApplicationController
         redirect_to change_password_path, notice: 'Vui lòng đổi mật khẩu ở lần đăng nhập đầu tiên.'
       else
         user.update_column(:last_login_at, Time.current)
-        redirect_to root_path, notice: 'Đăng nhập thành công.'
+        redirect_to post_authentication_path, notice: 'Đăng nhập thành công.'
       end
     else
       flash.now[:alert] = 'Email hoặc mật khẩu không đúng.'
@@ -45,7 +45,7 @@ class UsersController < ApplicationController
       last_login_at: Time.current
     )
       mark_session_authenticated!
-      redirect_to root_path, notice: 'Đổi mật khẩu thành công.'
+      redirect_to post_authentication_path, notice: 'Đổi mật khẩu thành công.'
     else
       flash.now[:alert] = current_user.errors.full_messages
       render :change_password, status: :unprocessable_entity
@@ -68,7 +68,7 @@ class UsersController < ApplicationController
     if current_user.first_login?
       redirect_to change_password_path
     else
-      redirect_to root_path
+      redirect_to post_authentication_path
     end
   end
 

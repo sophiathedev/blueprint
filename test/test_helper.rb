@@ -14,4 +14,18 @@ class ActiveSupport::TestCase
   setup do
     Sidekiq::Worker.clear_all
   end
+
+  def with_stubbed_constructor(klass, fake_instance)
+    original_new = klass.method(:new)
+
+    klass.define_singleton_method(:new) do |*args, **kwargs, &block|
+      fake_instance
+    end
+
+    yield
+  ensure
+    klass.define_singleton_method(:new) do |*args, **kwargs, &block|
+      original_new.call(*args, **kwargs, &block)
+    end
+  end
 end

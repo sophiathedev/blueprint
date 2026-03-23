@@ -112,67 +112,11 @@
 
           <div class="divide-y divide-black/8 bg-white">
           <% @order_tasks.each do |order_task| %>
-            <% highlight_current_task = @highlight_current_user_tasks && order_task.task.member_id == current_user.id %>
-            <div class="<%= [
-              'grid gap-3 px-4 py-3 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)] md:items-center',
-              (highlight_current_task ? 'bg-amber-50/70' : nil)
-            ].compact.join(' ') %>">
-              <div class="flex min-w-0 items-center gap-3">
-                <%= form_with model: [:admin, @order_service, order_task], method: :patch, class: 'shrink-0' do |form| %>
-                  <%= hidden_field_tag :source, params[:source] %>
-                  <%= render CheckboxComponent.new(
-                    form:,
-                    attribute: :is_completed,
-                    checked: order_task.is_completed?,
-                    disabled: order_task.is_completed? && !current_user.admin?,
-                    aria: { label: "Đánh dấu hoàn thành cho task #{order_task.task.name}" },
-                    onchange: 'this.form.requestSubmit()'
-                  ) %>
-                <% end %>
-
-                <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35 md:hidden">Task</p>
-                <p class="truncate text-sm font-semibold text-black"><%= order_task.task.name %></p>
-              </div>
-
-              <div class="min-w-0">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35 md:hidden">PIC</p>
-                <p class="truncate text-sm text-black/65"><%= order_task.task.member&.display_name || 'Chưa có PIC' %></p>
-              </div>
-
-              <div class="min-w-0">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35 md:hidden">Trạng thái</p>
-                <% if order_task.is_completed? %>
-                  <div class="flex flex-wrap items-center gap-2">
-                    <span class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
-                      <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-                      Hoàn thành
-                    </span>
-                    <% if order_task.is_overdue? %>
-                      <span class="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-700">
-                        <span class="h-2 w-2 rounded-full bg-rose-500"></span>
-                        <%= dashboard_order_task_overdue_badge_text(order_task) %>
-                      </span>
-                    <% end %>
-                    <% if order_task.mark_completed_at.present? %>
-                      <span class="text-xs text-black/45"><%= l(order_task.mark_completed_at, format: :long) %></span>
-                    <% end %>
-                  </div>
-                <% else %>
-                  <div class="flex flex-wrap items-center gap-2">
-                    <span class="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
-                      <span class="h-2 w-2 rounded-full bg-amber-500"></span>
-                      Chưa hoàn thành
-                    </span>
-                    <% if order_task.is_overdue? %>
-                      <span class="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-700">
-                        <span class="h-2 w-2 rounded-full bg-rose-500"></span>
-                        <%= dashboard_order_task_overdue_badge_text(order_task) %>
-                      </span>
-                    <% end %>
-                  </div>
-                <% end %>
-              </div>
-            </div>
+            <%= render 'order_task_row',
+              order_task:,
+              order_service: @order_service,
+              source: params[:source],
+              highlight_current_task: (@highlight_current_user_tasks && order_task.task.member_id == current_user.id) %>
           <% end %>
           </div>
         </div>

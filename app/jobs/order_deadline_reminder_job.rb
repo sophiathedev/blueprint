@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class OrderDeadlineMissJob
+class OrderDeadlineReminderJob
   include Sidekiq::Job
   include TelegramOrderNotificationHelpers
 
@@ -15,15 +15,7 @@ class OrderDeadlineMissJob
     pending_order_tasks = order_service.order_tasks.where(is_completed: false).to_a
     return if pending_order_tasks.empty?
 
-    OrderTask.where(id: pending_order_tasks.map(&:id)).update_all(
-      is_overdue: true,
-      updated_at: Time.current
-    )
-
     notify_assigned_members(order_service, pending_order_tasks)
-
-    next_job_id = OrderDeadlineOverdueReminderJob.perform_at(1.day.from_now.change(sec: 0), order_service.id)
-    order_service.add_scheduled_deadline_job_id!(next_job_id)
   end
 
   private
@@ -36,7 +28,7 @@ class OrderDeadlineMissJob
 
       notifier.deliver_to(
         member,
-        text: deadline_missed_message(order_service, member_order_tasks),
+        text: reminder_message(order_service, member_order_tasks),
         parse_mode: 'HTML',
         disable_web_page_preview: true,
         reply_markup: notification_reply_markup(order_service)
@@ -44,14 +36,14 @@ class OrderDeadlineMissJob
     end
   end
 
-  def deadline_missed_message(order_service, member_order_tasks)
+  def reminder_message(order_service, member_order_tasks)
     [
-      '🚨 <b>Task đã trễ hạn</b>',
-      'Deadline của order đã tới và task của bạn vẫn chưa hoàn thành.',
+      '⏰ <b>Nhắc deadline</b>',
+      'Order này sẽ tới hạn sau 1 ngày và bạn vẫn còn task chưa hoàn thành.',
       "📦 <b>Dịch vụ:</b> #{escaped(order_service.service.name)}",
       "🤝 <b>Đối tác:</b> #{escaped(order_service.service.partner.name)}",
       "🕒 <b>Deadline:</b> #{escaped(I18n.l(order_service.completed_at, format: :long))}",
-      "🧩 <b>Task chưa hoàn thành:</b>\n#{task_lines(member_order_tasks)}"
+      "🧩 <b>Task cần xử lý:</b>\n#{task_lines(member_order_tasks)}"
     ].join("\n")
   end
 
