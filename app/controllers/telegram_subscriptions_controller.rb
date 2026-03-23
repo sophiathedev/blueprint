@@ -2,6 +2,7 @@
 
 class TelegramSubscriptionsController < ApplicationController
   before_action :require_authentication
+  skip_forgery_protection only: :create
 
   def create
     connection_token = current_user.issue_telegram_connection_token!
