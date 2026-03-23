@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_22_023000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_22_160000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -51,14 +51,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_22_023000) do
   create_table "order_services", force: :cascade do |t|
     t.datetime "completed_at", null: false
     t.datetime "created_at", null: false
+    t.string "deadline_check_job_id"
     t.datetime "deleted_at"
     t.text "notes"
     t.string "partner_assignee_name"
     t.integer "priority_status"
     t.bigint "service_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["deadline_check_job_id"], name: "index_order_services_on_deadline_check_job_id"
     t.index ["deleted_at"], name: "index_order_services_on_deleted_at"
     t.index ["service_id"], name: "index_order_services_on_service_id"
+  end
+
+  create_table "order_tasks", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.boolean "is_completed", default: false, null: false
+    t.boolean "is_overdue", default: false, null: false
+    t.datetime "mark_completed_at"
+    t.bigint "order_service_id", null: false
+    t.bigint "task_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_order_tasks_on_deleted_at"
+    t.index ["order_service_id", "task_id"], name: "index_order_tasks_on_order_service_id_and_task_id", unique: true
+    t.index ["order_service_id"], name: "index_order_tasks_on_order_service_id"
+    t.index ["task_id"], name: "index_order_tasks_on_task_id"
   end
 
   create_table "partners", force: :cascade do |t|
@@ -107,6 +124,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_22_023000) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "order_services", "services"
+  add_foreign_key "order_tasks", "order_services"
+  add_foreign_key "order_tasks", "tasks"
   add_foreign_key "services", "partners"
   add_foreign_key "tasks", "services"
   add_foreign_key "tasks", "users", column: "member_id"

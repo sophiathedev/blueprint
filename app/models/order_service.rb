@@ -5,6 +5,7 @@ class OrderService < ApplicationParanoia
   enum :priority_status, { low: 0, medium: 1, high: 2, urgent: 3 }
 
   belongs_to :service
+  has_many :order_tasks, dependent: :destroy
 
   normalizes :partner_assignee_name, with: ->(name) { name.to_s.squish }
 
@@ -13,6 +14,9 @@ class OrderService < ApplicationParanoia
   validates :priority_status, presence: { message: 'không được để trống' }
 
   before_validation :normalize_completed_at
+  after_create_commit :create_order_tasks_from_service_tasks
+  after_commit :sync_deadline_check_job, on: %i[create update]
+  after_commit :remove_deadline_check_job, on: :destroy
   validate :completed_at_cannot_be_in_the_past
 
   private
@@ -37,5 +41,43 @@ class OrderService < ApplicationParanoia
     return if completed_at >= Time.current.change(sec: 0)
 
     errors.add(:completed_at, 'phải từ thời điểm hiện tại trở đi')
+  end
+
+  def create_order_tasks_from_service_tasks
+    service.tasks.find_each do |task|
+      order_tasks.find_or_create_by!(task:)
+    end
+  end
+
+  def sync_deadline_check_job
+    return unless previous_changes.key?('id') || previous_changes.key?('completed_at')
+
+    cancel_deadline_check_job
+
+    jid = OrderDeadlineMissJob.perform_at(completed_at, id)
+    update_column(:deadline_check_job_id, jid)
+    self.deadline_check_job_id = jid
+  end
+
+  def remove_deadline_check_job
+    cancel_deadline_check_job
+  end
+
+  def cancel_deadline_check_job
+    return if deadline_check_job_id.blank?
+
+    if defined?(Sidekiq::Testing) && Sidekiq::Testing.fake?
+      OrderDeadlineMissJob.jobs.reject! { |job| job['jid'] == deadline_check_job_id }
+      return
+    end
+
+    require 'sidekiq/api'
+
+    Sidekiq::ScheduledSet.new.each do |job|
+      next unless job.jid == deadline_check_job_id
+
+      job.delete
+      break
+    end
   end
 end

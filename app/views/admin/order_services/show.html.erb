@@ -1,0 +1,189 @@
+<% content_for :title, 'Blueprint | Chi tiết order' %>
+
+<% status = dashboard_order_status(@order_service) %>
+<% priority = dashboard_order_priority(@order_service) %>
+<% remaining_time_card = dashboard_order_remaining_time_card(@order_service) %>
+
+<section class="space-y-5">
+  <div class="rounded-[28px] border border-black/10 bg-white p-5 md:p-6">
+    <div class="border-b border-black/10 pb-5">
+      <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div class="flex items-center gap-3">
+          <%= link_to back_path(root_path),
+            class: 'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-stone-200 bg-stone-100 text-black transition-colors hover:border-stone-300 hover:bg-stone-200 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2',
+            aria: { label: 'Quay lại' } do %>
+            <%= lucide_icon('arrow-left', class: 'h-4 w-4', "aria-hidden": true) %>
+          <% end %>
+
+          <h1 class="text-3xl font-semibold tracking-tight text-black"><%= @service.name %></h1>
+        </div>
+
+        <% if current_user.admin? %>
+          <div class="flex flex-wrap gap-2">
+            <%= render ButtonComponent.new(
+              label: 'Task của dịch vụ',
+              type: :navigate,
+              variant: :secondary,
+              href: admin_partner_service_tasks_path(@partner, @service),
+              icon: 'list-todo'
+            ) %>
+
+            <%= render ButtonComponent.new(
+              label: 'Sửa order',
+              type: :navigate,
+              variant: :secondary,
+              href: edit_admin_order_service_path(@order_service),
+              icon: 'pencil'
+            ) %>
+
+            <%= render ButtonComponent.new(
+              label: 'Đặt dịch vụ',
+              type: :navigate,
+              variant: :primary,
+              href: new_admin_partner_service_task_path(@partner, @service),
+              icon: 'shopping-cart'
+            ) %>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="mt-5 flex flex-wrap items-center gap-2">
+        <span class="<%= ['inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold', status[:container_class]].join(' ') %>">
+          <span class="<%= ['h-2 w-2 rounded-full', status[:dot_class]].join(' ') %>"></span>
+          <%= status[:label] %>
+        </span>
+        <span class="<%= ['inline-flex rounded-full border px-3 py-1 text-xs font-semibold', priority[:container_class]].join(' ') %>">
+          <%= priority[:label] %>
+        </span>
+      </div>
+    </div>
+
+    <div class="mt-5 grid gap-4 md:grid-cols-2">
+      <div class="rounded-[24px] border border-black/10 bg-stone-50 p-5">
+        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-black/45">Đối tác</p>
+        <p class="mt-2 text-xl font-semibold text-black"><%= @partner.name %></p>
+      </div>
+
+      <div class="rounded-[24px] border border-black/10 bg-stone-50 p-5">
+        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-black/45">PIC đối tác</p>
+        <p class="mt-2 text-xl font-semibold text-black"><%= @order_service.partner_assignee_name %></p>
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <div class="<%= ['rounded-[24px] border p-5 transition-colors', remaining_time_card[:card_class]].join(' ') %>">
+        <p class="<%= ['text-xs font-semibold uppercase tracking-[0.18em]', remaining_time_card[:eyebrow_class]].join(' ') %>">Thời gian còn lại</p>
+        <p class="<%= ['mt-2 text-xl font-semibold', remaining_time_card[:value_class]].join(' ') %>"><%= dashboard_order_remaining_time(@order_service) %></p>
+        <p class="<%= ['mt-2 text-sm', remaining_time_card[:meta_class]].join(' ') %>"><%= dashboard_order_datetime(@order_service.completed_at) %></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid gap-5 xl:grid-cols-[1.1fr,0.9fr]">
+    <div class="rounded-[28px] border border-black/10 bg-white p-5 md:p-6">
+      <h2 class="text-2xl font-semibold tracking-tight text-black">Thông tin chi tiết order</h2>
+
+      <% if @order_service.notes.present? %>
+        <div
+          class="markdown-preview mt-5 text-sm text-black"
+          data-controller="markdown-preview"
+          data-markdown-preview-content-value="<%= @order_service.notes %>"
+        ></div>
+      <% else %>
+        <div class="mt-5">
+          <p class="text-sm font-semibold text-black">Chưa có ghi chú</p>
+          <p class="mt-2 text-sm leading-6 text-black/60">
+            Order này chưa có ghi chú bổ sung từ lúc đặt dịch vụ.
+          </p>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="rounded-[28px] border border-black/10 bg-white p-5 md:p-6">
+      <h2 class="text-2xl font-semibold tracking-tight text-black">Trạng thái task</h2>
+
+      <% if @order_tasks.any? %>
+        <div class="mt-3 overflow-hidden rounded-[22px] border border-black/10">
+          <div class="hidden grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)] gap-4 bg-stone-50 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-black/40 md:grid">
+            <span>Task</span>
+            <span>PIC</span>
+            <span>Trạng thái</span>
+          </div>
+
+          <div class="divide-y divide-black/8 bg-white">
+          <% @order_tasks.each do |order_task| %>
+            <% highlight_current_task = @highlight_current_user_tasks && order_task.task.member_id == current_user.id %>
+            <div class="<%= [
+              'grid gap-3 px-4 py-3 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)] md:items-center',
+              (highlight_current_task ? 'bg-amber-50/70' : nil)
+            ].compact.join(' ') %>">
+              <div class="flex min-w-0 items-center gap-3">
+                <%= form_with model: [:admin, @order_service, order_task], method: :patch, class: 'shrink-0' do |form| %>
+                  <%= hidden_field_tag :source, params[:source] %>
+                  <%= render CheckboxComponent.new(
+                    form:,
+                    attribute: :is_completed,
+                    checked: order_task.is_completed?,
+                    disabled: order_task.is_completed? && !current_user.admin?,
+                    aria: { label: "Đánh dấu hoàn thành cho task #{order_task.task.name}" },
+                    onchange: 'this.form.requestSubmit()'
+                  ) %>
+                <% end %>
+
+                <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35 md:hidden">Task</p>
+                <p class="truncate text-sm font-semibold text-black"><%= order_task.task.name %></p>
+              </div>
+
+              <div class="min-w-0">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35 md:hidden">PIC</p>
+                <p class="truncate text-sm text-black/65"><%= order_task.task.member&.display_name || 'Chưa có PIC' %></p>
+              </div>
+
+              <div class="min-w-0">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35 md:hidden">Trạng thái</p>
+                <% if order_task.is_completed? %>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                      <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+                      Hoàn thành
+                    </span>
+                    <% if order_task.is_overdue? %>
+                      <span class="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-700">
+                        <span class="h-2 w-2 rounded-full bg-rose-500"></span>
+                        <%= dashboard_order_task_overdue_badge_text(order_task) %>
+                      </span>
+                    <% end %>
+                    <% if order_task.mark_completed_at.present? %>
+                      <span class="text-xs text-black/45"><%= l(order_task.mark_completed_at, format: :long) %></span>
+                    <% end %>
+                  </div>
+                <% else %>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+                      <span class="h-2 w-2 rounded-full bg-amber-500"></span>
+                      Chưa hoàn thành
+                    </span>
+                    <% if order_task.is_overdue? %>
+                      <span class="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-700">
+                        <span class="h-2 w-2 rounded-full bg-rose-500"></span>
+                        <%= dashboard_order_task_overdue_badge_text(order_task) %>
+                      </span>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+          </div>
+        </div>
+      <% else %>
+        <div class="mt-3 rounded-[24px] border border-dashed border-black/10 bg-stone-50 p-5">
+          <p class="text-sm font-semibold text-black">Chưa có task nào trong order</p>
+          <p class="mt-2 text-sm leading-6 text-black/60">
+            Dịch vụ này chưa có task tại thời điểm order được tạo.
+          </p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</section>

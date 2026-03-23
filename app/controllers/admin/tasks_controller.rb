@@ -120,7 +120,7 @@ module Admin
       @order_service = @service.order_services.build(order_service_attributes)
 
       if @order_service.save
-        redirect_to new_admin_partner_service_task_path(@partner, @service), notice: 'Đặt dịch vụ thành công.'
+        redirect_to root_path, notice: 'Đặt dịch vụ thành công.'
       else
         flash.now[:alert] = order_service_error_messages
         render :new, status: :unprocessable_entity

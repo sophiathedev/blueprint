@@ -90,18 +90,17 @@ test:
 production:
   primary: &primary_production
     <<: *default
-    database: blueprint_production
-    username: blueprint
-    password: <%= ENV["BLUEPRINT_DATABASE_PASSWORD"] %>
+    database: <%= ENV.fetch("POSTGRES_DB", "blueprint_production") %>
+    username: <%= ENV.fetch("POSTGRES_USER", "blueprint") %>
   cache:
     <<: *primary_production
-    database: blueprint_production_cache
+    database: <%= ENV.fetch("POSTGRES_CACHE_DB", "#{ENV.fetch("POSTGRES_DB", "blueprint_production")}_cache") %>
     migrations_paths: db/cache_migrate
   queue:
     <<: *primary_production
-    database: blueprint_production_queue
+    database: <%= ENV.fetch("POSTGRES_QUEUE_DB", "#{ENV.fetch("POSTGRES_DB", "blueprint_production")}_queue") %>
     migrations_paths: db/queue_migrate
   cable:
     <<: *primary_production
-    database: blueprint_production_cable
+    database: <%= ENV.fetch("POSTGRES_CABLE_DB", "#{ENV.fetch("POSTGRES_DB", "blueprint_production")}_cable") %>
     migrations_paths: db/cable_migrate

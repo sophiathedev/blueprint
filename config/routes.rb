@@ -1,6 +1,39 @@
 # frozen_string_literal: true
 
+require 'sidekiq/web'
+
 Rails.application.routes.draw do
+  if Rails.env.development?
+    mount Sidekiq::Web => '/sidekiq'
+  elsif Rails.env.production?
+    sidekiq_username = ENV['SIDEKIQ_USERNAME'].to_s
+    sidekiq_password = ENV['SIDEKIQ_PASSWORD'].to_s
+
+    if sidekiq_username.present? && sidekiq_password.present?
+      Sidekiq::Web.use Rack::Auth::Basic do |username, password|
+        username_match = ActiveSupport::SecurityUtils.secure_compare(
+          ::Digest::SHA256.hexdigest(username),
+          ::Digest::SHA256.hexdigest(sidekiq_username)
+        )
+        password_match = ActiveSupport::SecurityUtils.secure_compare(
+          ::Digest::SHA256.hexdigest(password),
+          ::Digest::SHA256.hexdigest(sidekiq_password)
+        )
+
+        username_match && password_match
+      end
+
+      mount Sidekiq::Web => '/sidekiq'
+    end
+  else
+    constraints lambda { |request|
+      user = User.find_by(id: request.session[:user_id])
+      user&.admin?
+    } do
+      mount Sidekiq::Web => '/sidekiq'
+    end
+  end
+
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
@@ -17,10 +50,15 @@ Rails.application.routes.draw do
   delete 'logout', to: 'users#logout', as: :logout
   get 'change-password', to: 'users#change_password', as: :change_password
   patch 'change-password', to: 'users#perform_password_change'
+  get 'member/order_tasks', to: 'member_order_tasks#index', as: :member_order_tasks
 
   namespace :admin do
     resources :markdown_attachments, only: :create
     resources :markdown_images, only: %i[index create]
+    resources :order_services, only: %i[new create show edit update] do
+      get :service_options, on: :collection
+      resources :order_tasks, only: :update
+    end
 
     resources :members, except: %i[show new edit] do
       patch :reset_password, on: :member

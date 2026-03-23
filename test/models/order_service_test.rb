@@ -58,6 +58,75 @@ class OrderServiceTest < ActiveSupport::TestCase
     assert_includes order_service.errors[:completed_at], 'phải từ thời điểm hiện tại trở đi'
   end
 
+  test 'creates order tasks from existing service tasks when order service is created' do
+    service = build_service
+    member = User.create!(
+      email: "member-#{SecureRandom.hex(4)}@example.com",
+      password: 'Password1!',
+      password_confirmation: 'Password1!',
+      role: :member,
+      name: 'Member Test',
+      last_login_at: Time.current
+    )
+    task = service.tasks.create!(name: 'Task A', member:)
+
+    order_service = OrderService.create!(
+      service:,
+      completed_at: 1.day.from_now.change(hour: 9, min: 0, sec: 0),
+      partner_assignee_name: 'Nguyen Van E',
+      priority_status: :medium
+    )
+
+    assert_equal [ task.id ], order_service.order_tasks.pluck(:task_id)
+    assert_equal false, order_service.order_tasks.first.is_completed
+    assert_nil order_service.order_tasks.first.mark_completed_at
+    assert_equal false, order_service.order_tasks.first.is_overdue
+  end
+
+  test 'schedules a sidekiq deadline job when order service is created' do
+    service = build_service
+    deadline = 1.day.from_now.change(hour: 11, min: 45, sec: 0)
+
+    order_service = OrderService.create!(
+      service:,
+      completed_at: deadline,
+      partner_assignee_name: 'Nguyen Van G',
+      priority_status: :urgent
+    )
+
+    assert_equal 1, OrderDeadlineMissJob.jobs.size
+
+    scheduled_job = OrderDeadlineMissJob.jobs.last
+
+    assert_equal [ order_service.id ], scheduled_job['args']
+    assert_in_delta deadline.to_f, scheduled_job['at'], 1.0
+    assert_equal scheduled_job['jid'], order_service.reload.deadline_check_job_id
+  end
+
+  test 'destroying an order task does not affect its task' do
+    service = build_service
+    member = User.create!(
+      email: "member-#{SecureRandom.hex(4)}@example.com",
+      password: 'Password1!',
+      password_confirmation: 'Password1!',
+      role: :member,
+      name: 'Member Test',
+      last_login_at: Time.current
+    )
+    task = service.tasks.create!(name: 'Task B', member:)
+    order_service = OrderService.create!(
+      service:,
+      completed_at: 1.day.from_now.change(hour: 10, min: 0, sec: 0),
+      partner_assignee_name: 'Nguyen Van F',
+      priority_status: :high
+    )
+
+    order_task = order_service.order_tasks.find_by!(task:)
+    order_task.destroy
+
+    assert Task.exists?(task.id)
+  end
+
   private
 
   def build_service

@@ -1,0 +1,9 @@
+<div class="<%= wrapper_classes %>">
+  <%= form.checkbox attribute, checkbox_options, checked_value, unchecked_value %>
+  <label for="<%= checkbox_id %>" class="<%= visual_label_classes %>">
+    <%= helpers.lucide_icon('check', class: 'checkbox-icon h-3.5 w-3.5 transition-opacity', "aria-hidden": true) %>
+  </label>
+  <% if label.present? %>
+    <span class="<%= label_classes %>"><%= label %></span>
+  <% end %>
+</div>

@@ -102,6 +102,7 @@ export default class extends Controller {
   openCalendar() {
     if (!this.hasCalendarPanelTarget) return
 
+    this.initializeDefaultSelection()
     clearTimeout(this.closeAnimationTimeout)
     this.calendarPanelTarget.classList.remove("hidden")
     requestAnimationFrame(() => {
@@ -216,6 +217,13 @@ export default class extends Controller {
     return this.formatIsoDate(new Date())
   }
 
+  nextDay() {
+    const nextDay = new Date()
+    nextDay.setDate(nextDay.getDate() + 1)
+    nextDay.setHours(0, 0, 0, 0)
+    return this.formatIsoDate(nextDay)
+  }
+
   currentHour() {
     return String(new Date().getHours()).padStart(2, "0")
   }
@@ -228,6 +236,19 @@ export default class extends Controller {
     const now = new Date()
     now.setSeconds(0, 0)
     return now
+  }
+
+  initializeDefaultSelection() {
+    const hasExistingDateSelection = Boolean(this.pickerInputTarget.value || this.valueInputTarget.value)
+    if (hasExistingDateSelection && this.hourInputTarget.value && this.minuteInputTarget.value) return
+
+    const defaultDate = this.nextDay()
+    this.pickerInputTarget.value = hasExistingDateSelection ? (this.pickerInputTarget.value || this.valueInputTarget.value) : defaultDate
+    this.hourSelectTarget.value = hasExistingDateSelection ? (this.hourInputTarget.value || "00") : "00"
+    this.minuteSelectTarget.value = hasExistingDateSelection ? (this.minuteInputTarget.value || "00") : "00"
+    this.apply()
+    this.setVisibleMonthFromValue()
+    this.renderCalendar()
   }
 
   isDateDisabled(value) {

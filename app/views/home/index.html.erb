@@ -29,7 +29,303 @@
 
   <section class="px-3 py-4 md:px-4 md:py-4">
     <% if user_signed_in? %>
-      <div class="min-h-[calc(100vh-5rem)]" data-sidebar-layout-target="content"></div>
+      <div class="min-h-[calc(100vh-5rem)] space-y-4" data-sidebar-layout-target="content">
+        <section class="rounded-[32px] border border-black/10 bg-white p-5 shadow-sm">
+          <div class="flex flex-col gap-4 border-b border-black/10 pb-5 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h1 class="text-3xl font-semibold tracking-tight text-black">Dashboard</h1>
+            </div>
+
+            <% if current_user.admin? %>
+              <%= render ButtonComponent.new(
+                label: 'Tạo order mới',
+                type: :navigate,
+                variant: :primary,
+                href: new_admin_order_service_path,
+                icon: 'shopping-cart',
+                class: 'md:w-auto'
+              ) %>
+            <% end %>
+          </div>
+
+          <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <article class="rounded-[22px] border border-black/10 bg-stone-50 p-4">
+              <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/40">Đang mở</p>
+              <p class="mt-2 text-3xl font-semibold text-black"><%= @current_orders_count %></p>
+              <p class="mt-1 text-sm text-black/55">order đang còn hiệu lực</p>
+            </article>
+
+            <article class="rounded-[22px] border border-black/10 bg-stone-50 p-4">
+              <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/40">Hôm nay</p>
+              <p class="mt-2 text-3xl font-semibold text-black"><%= @orders_due_today_count %></p>
+              <p class="mt-1 text-sm text-black/55">order cần nhìn trong ngày</p>
+            </article>
+
+            <article class="rounded-[22px] border border-black/10 bg-stone-50 p-4">
+              <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/40">Khẩn cấp</p>
+              <p class="mt-2 text-3xl font-semibold text-black"><%= @urgent_orders_count %></p>
+              <p class="mt-1 text-sm text-black/55">order ưu tiên xử lý sớm</p>
+            </article>
+
+            <article class="rounded-[22px] border border-black/10 bg-stone-50 p-4">
+              <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/40">Ngày mai</p>
+              <p class="mt-2 text-3xl font-semibold text-black"><%= @orders_due_tomorrow_count %></p>
+              <p class="mt-1 text-sm text-black/55">order sắp đến vùng chú ý</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="rounded-[32px] border border-black/10 bg-white p-4 shadow-sm md:p-5" data-controller="modal">
+          <div class="flex flex-col gap-3 border-b border-black/10 pb-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h2 class="text-2xl font-semibold tracking-tight text-black">Danh sách order hiện tại</h2>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <%= render ButtonComponent.new(
+                label: 'Mở bộ lọc order',
+                type: :icon,
+                icon: 'sliders-horizontal',
+                class: [
+                  'bg-stone-100 text-black/65 ring-1 ring-black/10 hover:bg-stone-200 hover:text-black',
+                  (@partner_filter.present? || @priority_filter.present? || @deadline_filter.present? || @deadline_days_filter.present? || @deadline_from_days_filter.present? || @deadline_to_days_filter.present? ? 'bg-primary-50 text-primary-700 ring-primary-200 hover:bg-primary-100' : nil)
+                ].compact.join(' '),
+                data: { action: 'click->modal#open' }
+              ) %>
+            </div>
+          </div>
+
+          <%= render ModalComponent.new(title: 'Lọc danh sách order', open: false, panel_class: 'max-w-lg') do |modal| %>
+            <% modal.with_body do %>
+              <%= form_with url: root_path, method: :get, class: 'space-y-4' do %>
+                <div>
+                  <label for="dashboard_partner_filter" class="text-sm font-semibold text-black">Đối tác</label>
+                  <%= select_tag :partner_id,
+                    options_for_select([['Tất cả đối tác', '']] + @partner_filter_options, @partner_filter),
+                    id: 'dashboard_partner_filter',
+                    class: 'mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm text-black outline-none transition focus:border-primary-300 focus:ring-2 focus:ring-primary-200' %>
+                </div>
+
+                <div>
+                  <label for="dashboard_priority_filter" class="text-sm font-semibold text-black">Mức độ ưu tiên</label>
+                  <%= select_tag :priority,
+                    options_for_select(dashboard_priority_filter_options, @priority_filter),
+                    id: 'dashboard_priority_filter',
+                    class: 'mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm text-black outline-none transition focus:border-primary-300 focus:ring-2 focus:ring-primary-200' %>
+                </div>
+
+                <div>
+                  <label for="dashboard_deadline_filter" class="text-sm font-semibold text-black">Deadline</label>
+                  <%= select_tag :deadline,
+                    options_for_select(dashboard_deadline_filter_options, @deadline_filter),
+                    id: 'dashboard_deadline_filter',
+                    class: 'mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm text-black outline-none transition focus:border-primary-300 focus:ring-2 focus:ring-primary-200' %>
+                  <div class="mt-3">
+                    <p class="text-xs font-semibold uppercase tracking-[0.16em] text-black/45">Tinh chỉnh thời gian</p>
+
+                    <div class="mt-3">
+                      <label for="dashboard_deadline_days_filter" class="text-sm font-semibold text-black">Trong mấy ngày tới</label>
+                      <%= number_field_tag :deadline_days,
+                        @deadline_days_filter,
+                        id: 'dashboard_deadline_days_filter',
+                        min: 1,
+                        max: 365,
+                        placeholder: 'Ví dụ: 7',
+                        class: 'mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm text-black outline-none transition focus:border-primary-300 focus:ring-2 focus:ring-primary-200' %>
+                      <p class="mt-2 text-xs text-black/45">
+                        Dùng cùng lựa chọn "Trong số ngày tới" để lọc mọi order từ bây giờ đến hết ngày thứ N.
+                      </p>
+                    </div>
+
+                    <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <label for="dashboard_deadline_from_days_filter" class="text-sm font-semibold text-black">Từ ngày thứ</label>
+                        <%= number_field_tag :deadline_from_days,
+                          @deadline_from_days_filter,
+                          id: 'dashboard_deadline_from_days_filter',
+                          min: 0,
+                          max: 365,
+                          placeholder: '0 = hôm nay',
+                          class: 'mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm text-black outline-none transition focus:border-primary-300 focus:ring-2 focus:ring-primary-200' %>
+                      </div>
+
+                      <div>
+                        <label for="dashboard_deadline_to_days_filter" class="text-sm font-semibold text-black">Đến ngày thứ</label>
+                        <%= number_field_tag :deadline_to_days,
+                          @deadline_to_days_filter,
+                          id: 'dashboard_deadline_to_days_filter',
+                          min: 0,
+                          max: 365,
+                          placeholder: 'Ví dụ: 14',
+                          class: 'mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm text-black outline-none transition focus:border-primary-300 focus:ring-2 focus:ring-primary-200' %>
+                      </div>
+                    </div>
+
+                    <p class="mt-2 text-xs text-black/45">
+                      Dùng cùng lựa chọn "Khoảng ngày chi tiết". Ví dụ `0 -> 2` là từ hôm nay đến hết 2 ngày nữa, `5 -> 10` là chỉ lấy các order nằm trong khoảng 5 đến 10 ngày tới.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-2">
+                  <%= link_to root_path,
+                    class: 'inline-flex items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-stone-100 px-3 py-2 text-sm font-semibold text-black transition-colors hover:border-stone-300 hover:bg-stone-200' do %>
+                    Xóa lọc
+                  <% end %>
+
+                  <%= render ButtonComponent.new(
+                    label: 'Áp dụng',
+                    type: :submit,
+                    variant: :primary,
+                    icon: 'funnel'
+                  ) %>
+                </div>
+              <% end %>
+            <% end %>
+          <% end %>
+
+          <% if @current_orders.any? %>
+            <div class="mt-4 overflow-hidden rounded-[24px] border border-black/10">
+              <div class="hidden md:block">
+                <table class="min-w-full table-fixed border-collapse bg-white">
+                  <colgroup>
+                    <col class="w-[22%]">
+                    <col class="w-[15%]">
+                    <col class="w-[14%]">
+                    <col class="w-[16%]">
+                    <col class="w-[14%]">
+                    <col class="w-[14%]">
+                    <col class="w-[5%]">
+                  </colgroup>
+                  <thead>
+                    <tr class="bg-stone-50 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/40">
+                      <th class="px-5 py-3 text-left">Dịch vụ</th>
+                      <th class="px-5 py-3 text-left">Đối tác</th>
+                      <th class="px-5 py-3 text-left">PIC</th>
+                      <th class="px-5 py-3 text-left">Deadline</th>
+                      <th class="px-5 py-3 text-left">Thời gian còn lại</th>
+                      <th class="px-5 py-3 text-left">Mức độ ưu tiên</th>
+                      <th class="px-5 py-3 text-right"></th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-black/8">
+                    <% @current_orders.each do |order| %>
+                      <% status = dashboard_order_status(order) %>
+                      <% priority = dashboard_order_priority(order) %>
+                      <tr class="group transition hover:bg-stone-50">
+                        <td class="px-5 py-4 align-middle">
+                          <%= link_to admin_order_service_path(order, source: :dashboard), class: 'block min-w-0' do %>
+                            <h3 class="truncate text-base font-semibold text-black transition group-hover:text-primary-700">
+                              <%= order.service.name %>
+                            </h3>
+                          <% end %>
+                        </td>
+                        <td class="px-5 py-4 align-middle">
+                          <p class="truncate text-sm font-medium text-black/70"><%= order.service.partner.name %></p>
+                        </td>
+                        <td class="px-5 py-4 align-middle">
+                          <p class="truncate text-sm font-medium text-black/70"><%= order.partner_assignee_name %></p>
+                        </td>
+                        <td class="px-5 py-4 align-middle">
+                          <p class="text-sm font-medium text-black/75"><%= l(order.completed_at, format: :long) %></p>
+                        </td>
+                        <td class="px-5 py-4 align-middle">
+                          <p class="text-sm font-semibold text-black/80"><%= dashboard_order_remaining_time(order) %></p>
+                        </td>
+                        <td class="px-5 py-4 align-middle">
+                          <div class="flex flex-wrap items-center gap-2">
+                            <span
+                              class="<%= ['inline-flex h-8 w-8 items-center justify-center rounded-2xl', priority[:icon_container_class]].join(' ') %>"
+                              title="<%= priority[:tooltip] %>"
+                              aria-label="<%= priority[:tooltip] %>"
+                            >
+                              <%= lucide_icon(priority[:icon], class: 'h-4 w-4', "aria-hidden": true) %>
+                            </span>
+                          </div>
+                        </td>
+                        <td class="px-5 py-4 text-right align-middle">
+                          <%= link_to admin_order_service_path(order, source: :dashboard),
+                            class: 'inline-flex items-center gap-2 text-sm font-semibold text-primary-700' do %>
+                            <span>Xem</span>
+                            <%= lucide_icon('arrow-right', class: 'h-4 w-4 transition group-hover:translate-x-1', "aria-hidden": true) %>
+                          <% end %>
+                        </td>
+                      </tr>
+                    <% end %>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="divide-y divide-black/8 bg-white md:hidden">
+                <% @current_orders.each do |order| %>
+                  <% status = dashboard_order_status(order) %>
+                  <% priority = dashboard_order_priority(order) %>
+                  <%= link_to admin_order_service_path(order, source: :dashboard),
+                    class: 'group block px-4 py-4 transition hover:bg-stone-50' do %>
+                    <div class="grid gap-4">
+                      <div class="min-w-0">
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35">Dịch vụ</p>
+                        <h3 class="truncate text-base font-semibold text-black transition group-hover:text-primary-700">
+                          <%= order.service.name %>
+                        </h3>
+                      </div>
+
+                      <div class="min-w-0">
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35">Đối tác</p>
+                        <p class="truncate text-sm font-medium text-black/70"><%= order.service.partner.name %></p>
+                      </div>
+
+                      <div class="min-w-0">
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35">PIC</p>
+                        <p class="truncate text-sm font-medium text-black/70"><%= order.partner_assignee_name %></p>
+                      </div>
+
+                      <div class="min-w-0">
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35">Deadline</p>
+                        <p class="text-sm font-medium text-black/75"><%= l(order.completed_at, format: :long) %></p>
+                      </div>
+
+                      <div class="min-w-0">
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35">Thời gian còn lại</p>
+                        <p class="text-sm font-semibold text-black/80"><%= dashboard_order_remaining_time(order) %></p>
+                      </div>
+
+                      <div class="min-w-0">
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35">Mức độ ưu tiên</p>
+                        <div class="flex flex-wrap items-center gap-2">
+                          <span
+                            class="<%= ['inline-flex h-8 w-8 items-center justify-center rounded-2xl', priority[:icon_container_class]].join(' ') %>"
+                            title="<%= priority[:tooltip] %>"
+                            aria-label="<%= priority[:tooltip] %>"
+                          >
+                            <%= lucide_icon(priority[:icon], class: 'h-4 w-4', "aria-hidden": true) %>
+                          </span>
+                        </div>
+                        <p class="mt-1 text-sm text-black/50"><%= priority[:label] %></p>
+                      </div>
+
+                      <div class="flex items-center gap-2 text-sm font-semibold text-primary-700">
+                        <span>Xem</span>
+                        <%= lucide_icon('arrow-right', class: 'h-4 w-4 transition group-hover:translate-x-1', "aria-hidden": true) %>
+                      </div>
+                    </div>
+                  <% end %>
+                <% end %>
+              </div>
+            </div>
+          <% else %>
+            <div class="mt-4 rounded-[24px] border border-dashed border-black/10 bg-stone-50 px-4 py-10 text-center">
+              <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-[20px] bg-white text-primary-600 shadow-sm ring-1 ring-black/5">
+                <%= lucide_icon('package-open', class: 'h-6 w-6', "aria-hidden": true) %>
+              </div>
+              <h3 class="mt-4 text-lg font-semibold text-black">Chưa có order hiện tại</h3>
+              <p class="mt-2 text-sm leading-6 text-black/60">
+                Khi có order mới được tạo, danh sách này sẽ tự cập nhật để bạn theo dõi ngay trên dashboard.
+              </p>
+            </div>
+          <% end %>
+        </section>
+      </div>
     <% else %>
       <div
         class="grid min-h-[calc(100vh-5rem)] gap-4 xl:grid-cols-[1.45fr,0.95fr]"

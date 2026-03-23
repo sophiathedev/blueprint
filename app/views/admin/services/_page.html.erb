@@ -2,7 +2,7 @@
   <div class="rounded-[28px] border border-black/10 bg-white p-5 md:p-6">
     <div class="flex flex-col gap-4 border-b border-black/10 pb-5 md:flex-row md:items-end md:justify-between">
       <div class="flex items-center gap-3">
-        <%= link_to admin_partners_path,
+        <%= link_to back_path(admin_partners_path),
           class: 'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-stone-200 bg-stone-100 text-black transition-colors hover:border-stone-300 hover:bg-stone-200 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2',
           aria: { label: 'Quay lại danh sách đối tác' } do %>
           <%= lucide_icon('arrow-left', class: 'h-4 w-4', "aria-hidden": true) %>

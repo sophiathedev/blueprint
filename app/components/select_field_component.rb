@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class SelectFieldComponent < ViewComponent::Base
-  def initialize(form:, field:, label:, choices:, selected: nil, selected_label: nil, prompt: nil, searchable: false, search_placeholder: 'Tìm kiếm...', submit_on_choose: false, show_label: true, full_width: true, trigger_icon: nil, trigger_icon_only_when_selected: false, selected_trigger_class: nil, unselected_trigger_class: nil, options_height_class: nil, **options)
+  def initialize(form:, field:, label:, choices:, selected: nil, selected_label: nil, prompt: nil, searchable: false, search_placeholder: 'Tìm kiếm...', submit_on_choose: false, show_label: true, full_width: true, trigger_icon: nil, trigger_icon_only_when_selected: false, selected_trigger_class: nil, unselected_trigger_class: nil, options_height_class: nil, remote_search_url: nil, **options)
     @form = form
     @field = field
     @label = label
@@ -19,6 +19,7 @@ class SelectFieldComponent < ViewComponent::Base
     @selected_trigger_class = selected_trigger_class
     @unselected_trigger_class = unselected_trigger_class
     @options_height_class = options_height_class
+    @remote_search_url = remote_search_url
     @options = options
   end
 
@@ -28,11 +29,23 @@ class SelectFieldComponent < ViewComponent::Base
 
   def normalized_choices
     @normalized_choices ||= begin
-      base_choices = choices.map do |label, value|
+      base_choices = choices.map do |choice|
+        if choice.is_a?(Hash)
+          choice_label = choice[:label].to_s
+          choice_value = choice[:value].to_s
+          choice_data = choice[:data] || {}
+        else
+          label, value = choice
+          choice_label = label
+          choice_value = value.to_s
+          choice_data = {}
+        end
+
         {
-          label: label,
-          value: value.to_s,
-          selected: selected_value == value.to_s
+          label: choice_label,
+          value: choice_value,
+          data: choice_data,
+          selected: selected_value == choice_value
         }
       end
 
@@ -40,6 +53,7 @@ class SelectFieldComponent < ViewComponent::Base
         base_choices.unshift({
           label: @selected_label,
           value: selected_value,
+          data: {},
           selected: true
         })
       end
@@ -49,7 +63,20 @@ class SelectFieldComponent < ViewComponent::Base
   end
 
   def selected_value
-    @selected_value ||= selected.presence&.to_s || form.object&.public_send(field).to_s
+    @selected_value ||= begin
+      explicit_value = selected.presence&.to_s
+      if explicit_value.present?
+        explicit_value
+      else
+        form_object = form.object
+
+        if form_object.respond_to?(field)
+          form_object.public_send(field).to_s
+        else
+          ''
+        end
+      end
+    end
   end
 
   def selected_label
@@ -82,6 +109,14 @@ class SelectFieldComponent < ViewComponent::Base
 
   def searchable?
     @searchable
+  end
+
+  def remote_search_url
+    @remote_search_url
+  end
+
+  def remote_search?
+    remote_search_url.present?
   end
 
   def submit_on_choose?

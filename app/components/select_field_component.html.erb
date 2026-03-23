@@ -8,6 +8,7 @@
     data-controller="select-field"
     data-action="keydown.esc@window->select-field#close click@window->select-field#closeOnOutside"
     data-select-field-submit-on-choose-value="<%= submit_on_choose? %>"
+    data-select-field-remote-search-url-value="<%= remote_search_url %>"
   >
     <%= form.hidden_field field, value: selected_value, data: { select_field_target: 'input' } %>
 
@@ -67,21 +68,21 @@
 
         <div class="<%= options_wrapper_classes %>" data-select-field-target="optionsWrapper">
           <% normalized_choices.each do |choice| %>
-            <button
-              type="button"
-              class="<%= option_classes(choice) %>"
-              data-action="click->select-field#choose"
-              data-value="<%= choice[:value] %>"
-              data-label="<%= choice[:label] %>"
-              data-select-field-target="option"
-              role="option"
-              aria-selected="<%= choice[:selected] %>"
-            >
+            <%= button_tag type: 'button',
+              class: option_classes(choice),
+              data: choice[:data].merge(
+                action: 'click->select-field#choose',
+                value: choice[:value],
+                label: choice[:label],
+                select_field_target: 'option'
+              ),
+              role: 'option',
+              aria: { selected: choice[:selected] } do %>
               <span class="truncate"><%= choice[:label] %></span>
               <span class="<%= choice[:selected] ? 'text-primary-700' : 'invisible' %>" data-select-field-check>
                 <%= helpers.lucide_icon('check', class: 'h-4 w-4', "aria-hidden": true) %>
               </span>
-            </button>
+            <% end %>
           <% end %>
 
           <% if searchable? %>

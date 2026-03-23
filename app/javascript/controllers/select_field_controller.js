@@ -4,7 +4,8 @@ export default class extends Controller {
   static targets = ["input", "label", "menu", "panel", "trigger", "search", "searchWrapper", "option", "optionsWrapper", "emptyState"]
   static values = {
     submitOnChoose: { type: Boolean, default: false },
-    searchDelay: { type: Number, default: 500 }
+    searchDelay: { type: Number, default: 500 },
+    remoteSearchUrl: String
   }
 
   connect() {
@@ -16,6 +17,7 @@ export default class extends Controller {
     window.addEventListener("resize", this.handleViewportChange)
     window.addEventListener("scroll", this.handleViewportChange, true)
     this.filterTimeout = null
+    this.abortController = null
   }
 
   disconnect() {
@@ -23,6 +25,7 @@ export default class extends Controller {
     window.removeEventListener("resize", this.handleViewportChange)
     window.removeEventListener("scroll", this.handleViewportChange, true)
     this.clearFilterTimeout()
+    this.abortController?.abort()
   }
 
   toggle(event) {
@@ -42,7 +45,11 @@ export default class extends Controller {
     this.menuTarget.classList.remove("pointer-events-none", "opacity-0")
     if (this.hasSearchTarget) {
       this.searchTarget.value = ""
-      this.filter()
+      if (this.hasRemoteSearchUrlValue) {
+        this.fetchOptions("")
+      } else {
+        this.filter()
+      }
       requestAnimationFrame(() => this.searchTarget.focus())
     }
   }
@@ -83,6 +90,11 @@ export default class extends Controller {
       if (icon) icon.classList.toggle("invisible", !active)
     })
 
+    this.element.dispatchEvent(new CustomEvent("select-field:change", {
+      bubbles: true,
+      detail: { value, label, dataset: { ...button.dataset } }
+    }))
+
     this.close()
     if (this.submitOnChooseValue) {
       this.inputTarget.form?.requestSubmit()
@@ -91,7 +103,13 @@ export default class extends Controller {
 
   filterWithDebounce() {
     this.clearFilterTimeout()
-    this.filterTimeout = window.setTimeout(() => this.filter(), this.searchDelayValue)
+    this.filterTimeout = window.setTimeout(() => {
+      if (this.hasRemoteSearchUrlValue) {
+        this.fetchOptions(this.searchTarget?.value || "")
+      } else {
+        this.filter()
+      }
+    }, this.searchDelayValue)
   }
 
   filter() {
@@ -166,5 +184,83 @@ export default class extends Controller {
 
     window.clearTimeout(this.filterTimeout)
     this.filterTimeout = null
+  }
+
+  async fetchOptions(query) {
+    if (!this.hasRemoteSearchUrlValue || !this.hasOptionsWrapperTarget) return
+
+    this.abortController?.abort()
+    this.abortController = new AbortController()
+
+    const url = new URL(this.remoteSearchUrlValue, window.location.origin)
+    if (query.trim() !== "") url.searchParams.set("q", query.trim())
+
+    try {
+      const response = await fetch(url.toString(), {
+        headers: { Accept: "application/json" },
+        signal: this.abortController.signal
+      })
+      if (!response.ok) return
+
+      const options = await response.json()
+      this.renderRemoteOptions(options)
+    } catch (error) {
+      if (error.name !== "AbortError") console.error(error)
+    }
+  }
+
+  renderRemoteOptions(options) {
+    this.optionTargets.forEach((option) => option.remove())
+
+    const selectedValue = this.hasInputTarget ? this.inputTarget.value : ""
+    const emptyAnchor = this.hasEmptyStateTarget ? this.emptyStateTarget : null
+
+    options.forEach((option) => {
+      const button = document.createElement("button")
+      button.type = "button"
+      button.className = this.optionClasses(option.value === selectedValue)
+      button.dataset.action = "click->select-field#choose"
+      button.dataset.value = option.value
+      button.dataset.label = option.label
+      button.dataset.selectFieldTarget = "option"
+      button.setAttribute("role", "option")
+      button.setAttribute("aria-selected", option.value === selectedValue ? "true" : "false")
+
+      Object.entries(option.data || {}).forEach(([key, value]) => {
+        button.dataset[this.datasetKey(key)] = value
+      })
+
+      const label = document.createElement("span")
+      label.className = "truncate"
+      label.textContent = option.label
+
+      const check = document.createElement("span")
+      check.dataset.selectFieldCheck = ""
+      check.className = option.value === selectedValue ? "text-primary-700" : "invisible"
+      check.textContent = "✓"
+
+      button.append(label, check)
+
+      if (emptyAnchor) {
+        this.optionsWrapperTarget.insertBefore(button, emptyAnchor)
+      } else {
+        this.optionsWrapperTarget.append(button)
+      }
+    })
+
+    if (this.hasEmptyStateTarget) {
+      this.emptyStateTarget.classList.toggle("hidden", options.length > 0)
+    }
+  }
+
+  optionClasses(selected) {
+    return [
+      "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm transition-colors",
+      selected ? "bg-primary-50 font-semibold text-primary-800" : "text-black hover:bg-stone-100"
+    ].join(" ")
+  }
+
+  datasetKey(key) {
+    return key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
   }
 }

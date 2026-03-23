@@ -1,0 +1,351 @@
+<%
+  order_request_data = @order_request_data || {}
+  selected_priority_status = order_request_data[:priority_status].presence || 'medium'
+  required_badge_classes = 'ml-1 text-rose-600'
+  priority_options = [
+    {
+      value: 'low',
+      label: 'Thấp',
+      icon: 'arrow-down',
+      tone: 'low',
+      wrapper_class: 'border-stone-200 bg-stone-50 text-stone-500',
+      icon_class: 'bg-stone-200 text-stone-500',
+      checked_class: 'peer-checked:border-sky-400 peer-checked:bg-sky-100 peer-checked:text-sky-700 peer-checked:ring-4 peer-checked:ring-sky-100'
+    },
+    {
+      value: 'medium',
+      label: 'Trung Bình',
+      icon: 'arrow-right',
+      tone: 'medium',
+      wrapper_class: 'border-stone-200 bg-stone-50 text-stone-500',
+      icon_class: 'bg-stone-200 text-stone-500',
+      checked_class: 'peer-checked:border-amber-400 peer-checked:bg-amber-100 peer-checked:text-amber-700 peer-checked:ring-4 peer-checked:ring-amber-100'
+    },
+    {
+      value: 'high',
+      label: 'Cao',
+      icon: 'arrow-up',
+      tone: 'high',
+      wrapper_class: 'border-stone-200 bg-stone-50 text-stone-500',
+      icon_class: 'bg-stone-200 text-stone-500',
+      checked_class: 'peer-checked:border-emerald-400 peer-checked:bg-emerald-100 peer-checked:text-emerald-700 peer-checked:ring-4 peer-checked:ring-emerald-100'
+    },
+    {
+      value: 'urgent',
+      label: 'Khẩn cấp',
+      icon: 'triangle-alert',
+      tone: 'urgent',
+      wrapper_class: 'border-stone-200 bg-stone-50 text-stone-500',
+      icon_class: 'bg-stone-200 text-stone-500',
+      checked_class: 'peer-checked:border-rose-400 peer-checked:bg-rose-100 peer-checked:text-rose-700 peer-checked:ring-4 peer-checked:ring-rose-100'
+    }
+  ]
+%>
+
+<% content_for :head do %>
+  <style>
+    .priority-option:has(.priority-option__input:checked) .priority-option__icon {
+      color: inherit;
+    }
+
+    .priority-option[data-priority-tone="low"]:has(.priority-option__input:checked) .priority-option__icon {
+      background-color: rgb(186 230 253);
+      color: rgb(3 105 161);
+    }
+
+    .priority-option[data-priority-tone="medium"]:has(.priority-option__input:checked) .priority-option__icon {
+      background-color: rgb(253 224 71);
+      color: rgb(180 83 9);
+    }
+
+    .priority-option[data-priority-tone="high"]:has(.priority-option__input:checked) .priority-option__icon {
+      background-color: rgb(110 231 183);
+      color: rgb(4 120 87);
+    }
+
+    .priority-option[data-priority-tone="urgent"]:has(.priority-option__input:checked) .priority-option__icon {
+      background-color: rgb(254 205 211);
+      color: rgb(190 24 93);
+    }
+
+    .completion-date-picker__day {
+      background-color: transparent;
+      color: rgb(0 0 0);
+    }
+
+    .completion-date-picker__day:hover {
+      background-color: var(--color-primary-100);
+      color: var(--color-primary-700);
+    }
+
+    .completion-date-picker__day--outside {
+      color: rgb(0 0 0 / 0.3);
+    }
+
+    .completion-date-picker__day:hover {
+      background-color: var(--color-primary-100);
+      color: var(--color-primary-700);
+    }
+
+    .completion-date-picker__day--outside:hover {
+      background-color: var(--color-primary-50);
+      color: var(--color-primary-500);
+    }
+
+    .completion-date-picker__day--today:not(.completion-date-picker__day--selected) {
+      color: var(--color-primary-700);
+    }
+
+    .completion-date-picker__day--selected,
+    .completion-date-picker__day--selected:hover {
+      background-color: var(--color-primary-500);
+      color: rgb(255 255 255);
+    }
+
+    .completion-date-picker__day--disabled,
+    .completion-date-picker__day--disabled:hover {
+      background-color: transparent;
+      color: rgb(0 0 0 / 0.18);
+      cursor: not-allowed;
+    }
+
+    .completion-date-picker__panel {
+      opacity: 0;
+      transform: translateY(10px) scale(0.98);
+      transform-origin: top left;
+      pointer-events: none;
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .completion-date-picker__panel.is-open {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+  </style>
+<% end %>
+
+<section
+  class="rounded-[32px] bg-white px-5 py-6 md:px-8 md:pt-8 md:pb-6"
+  data-controller="completion-date-picker order-service-builder"
+  data-action="click@window->completion-date-picker#closeCalendarOnOutside select-field:change->order-service-builder#serviceChanged"
+>
+  <div class="border-b border-black/10 pb-6">
+    <div class="flex items-center gap-3">
+      <%= link_to back_path(root_path),
+        class: 'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-stone-200 bg-stone-100 text-black transition-colors hover:border-stone-300 hover:bg-stone-200 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2',
+        aria: { label: 'Quay lại dashboard' } do %>
+        <%= lucide_icon('arrow-left', class: 'h-4 w-4', "aria-hidden": true) %>
+      <% end %>
+
+      <h1 class="text-3xl font-semibold tracking-tight text-black md:text-4xl">
+        Đặt dịch vụ mới
+      </h1>
+    </div>
+  </div>
+
+  <%= form_with url: admin_order_services_path, scope: :order_service, class: 'mt-6' do |form| %>
+    <div class="px-1 pb-6">
+      <div class="grid gap-5 md:grid-cols-2">
+        <div class="space-y-2">
+          <%= render SelectFieldComponent.new(
+            form: form,
+            field: :service_id,
+            label: 'Tên dịch vụ',
+            choices: @service_options,
+            selected: order_request_data[:service_id],
+            selected_label: @selected_service.present? ? "#{@selected_service.name} • #{@selected_service.partner.name}" : nil,
+            searchable: true,
+            search_placeholder: 'Tìm tên dịch vụ hoặc đối tác...',
+            trigger_icon: 'briefcase-business',
+            remote_search_url: service_options_admin_order_services_path
+          ) %>
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-sm font-semibold text-black/80">Tên đối tác</label>
+          <input
+            type="text"
+            value="<%= order_request_data[:partner_name] %>"
+            class="w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm font-medium text-black outline-none"
+            readonly
+            data-order-service-builder-target="partnerName"
+          >
+        </div>
+      </div>
+    </div>
+
+    <div class="border-t border-black/10 px-1 pt-6">
+      <div class="grid gap-5 md:grid-cols-2">
+        <div class="space-y-2">
+          <%= form.label :completion_date, class: 'text-sm font-semibold text-black/80' do %>
+            Thời gian hoàn thành
+            <span class="<%= required_badge_classes %>">*</span>
+          <% end %>
+          <%= form.hidden_field :completion_date, value: order_request_data[:completion_date], data: { completion_date_picker_target: 'valueInput' } %>
+          <%= form.hidden_field :completion_date_enabled, value: order_request_data.fetch(:completion_date_enabled, '1'), data: { completion_date_picker_target: 'dayEnabledInput' } %>
+          <%= form.hidden_field :completion_time_enabled, value: '1', data: { completion_date_picker_target: 'timeEnabledInput' } %>
+          <%= form.hidden_field :completion_hour, value: order_request_data[:completion_hour], data: { completion_date_picker_target: 'hourInput' } %>
+          <%= form.hidden_field :completion_minute, value: order_request_data[:completion_minute], data: { completion_date_picker_target: 'minuteInput' } %>
+          <div class="relative" data-completion-date-picker-target="dateSection" data-action="click->completion-date-picker#keepOpen">
+            <input id="global-completion-date-inline-input" type="hidden" data-completion-date-picker-target="pickerInput">
+
+            <button
+              type="button"
+              class="flex w-full items-center justify-between gap-3 rounded-2xl border border-stone-200 bg-stone-50 px-4 py-2 text-left text-sm text-black outline-none transition hover:border-stone-300 focus:border-primary-400 focus:bg-white focus:ring-4 focus:ring-primary-100"
+              data-action="click->completion-date-picker#toggleCalendar"
+              aria-haspopup="dialog"
+              aria-expanded="false"
+            >
+              <span class="flex min-w-0 items-center gap-3">
+                <span class="flex shrink-0 items-center justify-center text-black/55">
+                  <%= lucide_icon('calendar-days', class: 'h-4 w-4', "aria-hidden": true) %>
+                </span>
+                <span class="min-w-0 text-sm text-black/70" data-completion-date-picker-target="display">
+                  Chọn thời gian hoàn thành
+                </span>
+              </span>
+              <%= lucide_icon('chevron-right', class: 'h-4 w-4 shrink-0 text-black/35', "aria-hidden": true) %>
+            </button>
+
+            <div
+              class="completion-date-picker__panel absolute left-0 top-full z-20 mt-2 hidden w-full min-w-[300px] rounded-[24px] border border-black/10 bg-white p-4 shadow-[0_18px_48px_rgba(15,23,42,0.14)] md:w-[360px]"
+              data-completion-date-picker-target="calendarPanel"
+            >
+              <div class="space-y-4">
+                <div class="flex items-center justify-between gap-3">
+                  <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-black/45">Giờ</p>
+                  <%= render TimeSelectComponent.new(
+                    hour_id: 'global-completion-hour-select',
+                    minute_id: 'global-completion-minute-select',
+                    hour_target: 'hourSelect',
+                    minute_target: 'minuteSelect',
+                    hidden: false
+                  ) %>
+                </div>
+
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-stone-100 text-black/70 transition hover:bg-stone-200 hover:text-black"
+                      data-action="click->completion-date-picker#showPreviousMonth"
+                      aria-label="Tháng trước"
+                    >
+                      <%= lucide_icon('chevron-left', class: 'h-4 w-4', "aria-hidden": true) %>
+                    </button>
+
+                    <div class="text-sm font-semibold text-black" data-completion-date-picker-target="calendarMonthLabel"></div>
+
+                    <button
+                      type="button"
+                      class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-stone-100 text-black/70 transition hover:bg-stone-200 hover:text-black"
+                      data-action="click->completion-date-picker#showNextMonth"
+                      aria-label="Tháng sau"
+                    >
+                      <%= lucide_icon('chevron-right', class: 'h-4 w-4', "aria-hidden": true) %>
+                    </button>
+                  </div>
+
+                  <div class="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-black/40">
+                    <% %w[T2 T3 T4 T5 T6 T7 CN].each do |weekday| %>
+                      <span class="py-1"><%= weekday %></span>
+                    <% end %>
+                  </div>
+
+                  <div class="grid grid-cols-7 gap-1" data-completion-date-picker-target="calendarDays"></div>
+                </div>
+
+                <div class="flex justify-end">
+                  <button
+                    type="button"
+                    class="inline-flex items-center justify-center rounded-xl bg-primary-500 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2"
+                    data-action="click->completion-date-picker#closeCalendar"
+                  >
+                    OK
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <%= form.label :partner_assignee_name, class: 'text-sm font-semibold text-black/80' do %>
+            Tên nhân sự của đối tác
+            <span class="<%= required_badge_classes %>">*</span>
+          <% end %>
+          <%= form.text_field :partner_assignee_name,
+            value: order_request_data[:partner_assignee_name],
+            placeholder: 'Nhập tên người phụ trách',
+            required: true,
+            class: 'w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-black outline-none transition focus:border-primary-400 focus:bg-white focus:ring-4 focus:ring-primary-100' %>
+        </div>
+
+        <div class="space-y-2 md:col-span-2">
+          <%= form.label :priority_status, class: 'text-sm font-semibold text-black/80' do %>
+            Trạng thái ưu tiên
+            <span class="<%= required_badge_classes %>">*</span>
+          <% end %>
+
+          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <% priority_options.each_with_index do |option, index| %>
+              <label class="priority-option block cursor-pointer" data-priority-tone="<%= option[:tone] %>">
+                <%= form.radio_button :priority_status,
+                  option[:value],
+                  checked: selected_priority_status == option[:value] || (selected_priority_status.blank? && index == 1),
+                  required: true,
+                  class: 'priority-option__input peer sr-only' %>
+
+                <span class="<%= [
+                  'flex items-center gap-3 rounded-[24px] border px-4 py-3 transition duration-200',
+                  option[:wrapper_class],
+                  option[:checked_class]
+                ].join(' ') %>">
+                  <span class="<%= ['priority-option__icon flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl transition duration-200', option[:icon_class]].join(' ') %>">
+                    <%= lucide_icon(option[:icon], class: 'h-5 w-5', "aria-hidden": true) %>
+                  </span>
+
+                  <span class="min-w-0">
+                    <span class="block text-sm font-semibold"><%= option[:label] %></span>
+                    <span class="block text-xs text-current/80">
+                      <%= option[:label] == 'Khẩn cấp' ? 'Cần xử lý ngay' : "Mức ưu tiên #{option[:label].downcase}" %>
+                    </span>
+                  </span>
+                </span>
+              </label>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="space-y-2 md:col-span-2">
+          <%= render MarkdownEditorComponent.new(
+            form: form,
+            field: :detailed_notes,
+            label: 'Ghi chú chi tiết',
+            rows: 7,
+            value: order_request_data[:detailed_notes],
+            placeholder: 'Mô tả brief, yêu cầu đặc biệt, deadline hoặc các lưu ý quan trọng...',
+            hint: 'Hỗ trợ markdown để trình bày nội dung rõ ràng hơn.',
+            class: 'md:h-[clamp(240px,34vh,360px)]'
+          ) %>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4 flex items-center justify-end gap-2 border-t border-black/10 px-1 pt-4">
+      <%= link_to root_path,
+        class: 'inline-flex items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-stone-100 px-3 py-2 text-sm font-semibold text-black transition-colors hover:border-stone-300 hover:bg-stone-200' do %>
+        Hủy
+      <% end %>
+
+      <button
+        type="submit"
+        class="inline-flex items-center justify-center gap-2 rounded-2xl border border-primary-500 bg-primary-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-primary-600 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2"
+      >
+        <%= lucide_icon('shopping-cart', class: 'h-4 w-4 shrink-0', "aria-hidden": true) %>
+        <span>Đặt dịch vụ</span>
+      </button>
+    </div>
+  <% end %>
+</section>

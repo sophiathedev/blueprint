@@ -1,4 +1,15 @@
 vi:
+  date:
+    formats:
+      default: "%d/%m/%Y"
+      long: "%d/%m/%Y"
+
+  time:
+    formats:
+      default: "%d/%m/%Y %H:%M"
+      time: "%H:%M"
+      long: "%d/%m/%Y lúc %H:%M"
+
   support:
     array:
       words_connector: ", "

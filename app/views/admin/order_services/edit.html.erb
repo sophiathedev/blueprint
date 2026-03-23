@@ -42,6 +42,8 @@
   ]
 %>
 
+<% content_for :title, 'Blueprint | Chỉnh sửa order' %>
+
 <% content_for :head do %>
   <style>
     .priority-option:has(.priority-option__input:checked) .priority-option__icon {
@@ -120,23 +122,23 @@
   </style>
 <% end %>
 
-<section id="admin_task_order_page" data-controller="completion-date-picker" data-action="click@window->completion-date-picker#closeCalendarOnOutside">
-    <div class="rounded-[32px] bg-white px-5 py-6 md:px-8 md:pt-8 md:pb-6">
-      <div class="border-b border-black/10 pb-6">
-        <div class="flex items-center gap-3">
-          <%= link_to back_path(admin_partner_services_path(@partner)),
-            class: 'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-stone-200 bg-stone-100 text-black transition-colors hover:border-stone-300 hover:bg-stone-200 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2',
-            aria: { label: 'Quay lại danh sách gói dịch vụ' } do %>
-            <%= lucide_icon('arrow-left', class: 'h-4 w-4', "aria-hidden": true) %>
-          <% end %>
+<section id="admin_order_service_edit_page" data-controller="completion-date-picker" data-action="click@window->completion-date-picker#closeCalendarOnOutside">
+  <div class="rounded-[32px] bg-white px-5 py-6 md:px-8 md:pt-8 md:pb-6">
+    <div class="border-b border-black/10 pb-6">
+      <div class="flex items-center gap-3">
+        <%= link_to back_path(admin_order_service_path(@order_service)),
+          class: 'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-stone-200 bg-stone-100 text-black transition-colors hover:border-stone-300 hover:bg-stone-200 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2',
+          aria: { label: 'Quay lại chi tiết order' } do %>
+          <%= lucide_icon('arrow-left', class: 'h-4 w-4', "aria-hidden": true) %>
+        <% end %>
 
-          <h1 class="text-3xl font-semibold tracking-tight text-black md:text-4xl">
-            Đặt dịch vụ <span class="text-primary-600"><%= @service.name %></span>
-          </h1>
-        </div>
+        <h1 class="text-3xl font-semibold tracking-tight text-black md:text-4xl">
+          Chỉnh sửa order <span class="text-primary-600"><%= @service.name %></span>
+        </h1>
       </div>
+    </div>
 
-    <%= form_with url: admin_partner_service_tasks_path(@partner, @service), scope: :order_request, class: 'mt-6' do |form| %>
+    <%= form_with model: @order_service, url: admin_order_service_path(@order_service), method: :patch, class: 'mt-6' do |form| %>
       <div class="px-1 pb-6">
         <div class="grid gap-5 md:grid-cols-2">
           <div class="space-y-2">
@@ -161,8 +163,8 @@
         </div>
       </div>
 
-        <div class="border-t border-black/10 px-1 pt-6">
-          <div class="grid gap-5 md:grid-cols-2">
+      <div class="border-t border-black/10 px-1 pt-6">
+        <div class="grid gap-5 md:grid-cols-2">
           <div class="space-y-2">
             <%= form.label :completion_date, class: 'text-sm font-semibold text-black/80' do %>
               Thời gian hoàn thành
@@ -174,7 +176,7 @@
             <%= form.hidden_field :completion_hour, value: order_request_data[:completion_hour], data: { completion_date_picker_target: 'hourInput' } %>
             <%= form.hidden_field :completion_minute, value: order_request_data[:completion_minute], data: { completion_date_picker_target: 'minuteInput' } %>
             <div class="relative" data-completion-date-picker-target="dateSection" data-action="click->completion-date-picker#keepOpen">
-              <input id="completion-date-inline-input" type="hidden" data-completion-date-picker-target="pickerInput">
+              <input id="order-service-edit-date-input" type="hidden" data-completion-date-picker-target="pickerInput">
 
               <button
                 type="button"
@@ -202,8 +204,8 @@
                   <div class="flex items-center justify-between gap-3">
                     <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-black/45">Giờ</p>
                     <%= render TimeSelectComponent.new(
-                      hour_id: 'completion-hour-select',
-                      minute_id: 'completion-minute-select',
+                      hour_id: 'order-service-edit-hour-select',
+                      minute_id: 'order-service-edit-minute-select',
                       hour_target: 'hourSelect',
                       minute_target: 'minuteSelect',
                       hidden: false
@@ -315,24 +317,24 @@
               hint: 'Hỗ trợ markdown để trình bày nội dung rõ ràng hơn.',
               class: 'md:h-[clamp(240px,34vh,360px)]'
             ) %>
-            </div>
           </div>
         </div>
+      </div>
 
-        <div class="mt-4 flex items-center justify-end gap-2 border-t border-black/10 px-1 pt-4">
-          <%= link_to admin_partner_services_path(@partner),
-            class: 'inline-flex items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-stone-100 px-3 py-2 text-sm font-semibold text-black transition-colors hover:border-stone-300 hover:bg-stone-200' do %>
-            Hủy
-          <% end %>
+      <div class="mt-4 flex items-center justify-end gap-2 border-t border-black/10 px-1 pt-4">
+        <%= link_to back_path(admin_order_service_path(@order_service)),
+          class: 'inline-flex items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-stone-100 px-3 py-2 text-sm font-semibold text-black transition-colors hover:border-stone-300 hover:bg-stone-200' do %>
+          Hủy
+        <% end %>
 
-          <button
-            type="submit"
-            class="inline-flex items-center justify-center gap-2 rounded-2xl border border-primary-500 bg-primary-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-primary-600 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2"
-          >
-            <%= lucide_icon('shopping-cart', class: 'h-4 w-4 shrink-0', "aria-hidden": true) %>
-            <span>Đặt dịch vụ</span>
-          </button>
-        </div>
-      <% end %>
-    </div>
+        <button
+          type="submit"
+          class="inline-flex items-center justify-center gap-2 rounded-2xl border border-primary-500 bg-primary-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-primary-600 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2"
+        >
+          <%= lucide_icon('save', class: 'h-4 w-4 shrink-0', "aria-hidden": true) %>
+          <span>Lưu thay đổi</span>
+        </button>
+      </div>
+    <% end %>
+  </div>
 </section>

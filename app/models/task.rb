@@ -3,6 +3,7 @@
 class Task < ApplicationParanoia
   belongs_to :service
   belongs_to :member, class_name: 'User', optional: true
+  has_many :order_tasks
 
   normalizes :name, with: ->(name) { name.to_s.squish }
 

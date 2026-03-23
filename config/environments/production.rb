@@ -23,15 +23,16 @@ Rails.application.configure do
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
   # config.asset_host = "http://assets.example.com"
 
-  # Store uploaded files on the local file system (see config/storage.yml for options).
-  config.active_storage.service = :local
+  # Allow switching storage backend via environment variables in containerized deploys.
+  config.active_storage.service = ENV.fetch('ACTIVE_STORAGE_SERVICE', 'local').to_sym
   config.active_storage.routes_prefix = '/media'
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
-  # config.assume_ssl = true
+  assume_ssl = ENV.fetch('RAILS_ASSUME_SSL', 'false') == 'true'
+  config.assume_ssl = assume_ssl
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  # config.force_ssl = true
+  config.force_ssl = ENV.fetch('RAILS_FORCE_SSL', assume_ssl.to_s) == 'true'
 
   # Skip http-to-https redirect for the default health check endpoint.
   # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
@@ -52,16 +53,24 @@ Rails.application.configure do
   # Replace the default in-process memory cache store with a durable alternative.
   config.cache_store = :solid_cache_store
 
-  # Replace the default in-process and non-durable queuing backend for Active Job.
-  config.active_job.queue_adapter = :solid_queue
-  config.solid_queue.connects_to = { database: { writing: :queue } }
+  # Sidekiq is the default production worker; keep Solid Queue as an opt-in fallback.
+  active_job_queue_adapter = ENV.fetch('ACTIVE_JOB_QUEUE_ADAPTER', 'sidekiq').to_sym
+  config.active_job.queue_adapter = active_job_queue_adapter
+  config.solid_queue.connects_to = { database: { writing: :queue } } if active_job_queue_adapter == :solid_queue
 
   # Ignore bad email addresses and do not raise email delivery errors.
   # Set this to true and configure the email server for immediate delivery to raise delivery errors.
   # config.action_mailer.raise_delivery_errors = false
 
-  # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: 'example.com' }
+  # Set host/protocol once so mailers and URL helpers match the deployed domain.
+  app_domain = ENV.fetch('APP_DOMAIN', 'example.com')
+  app_protocol = ENV.fetch('APP_PROTOCOL', config.force_ssl ? 'https' : 'http')
+  default_url_options = { host: app_domain, protocol: app_protocol }
+
+  config.action_mailer.default_url_options = default_url_options
+  config.action_mailer.asset_host = "#{app_protocol}://#{app_domain}"
+  Rails.application.routes.default_url_options[:host] = app_domain
+  Rails.application.routes.default_url_options[:protocol] = app_protocol
 
   # Specify outgoing SMTP server. Remember to add smtp/* credentials via bin/rails credentials:edit.
   # config.action_mailer.smtp_settings = {
