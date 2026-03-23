@@ -88,11 +88,26 @@ Bạn cần:
 - `RAILS_MASTER_KEY`
 - `SECRET_KEY_BASE`
 
+Lưu ý rất quan trọng:
+
+- `RAILS_MASTER_KEY` phải là đúng nội dung file `config/master.key` trên máy local của bạn
+- key này thường là chuỗi hex dài `32` ký tự
+- không tự generate bừa một chuỗi khác cho `RAILS_MASTER_KEY`
+- `RAILS_MASTER_KEY` và `SECRET_KEY_BASE` là 2 giá trị khác nhau
+
 Tạo `SECRET_KEY_BASE` bằng:
 
 ```bash
 openssl rand -hex 64
 ```
+
+Nếu lúc chạy `rails db:prepare` bạn gặp lỗi:
+
+```text
+ArgumentError: key must be 16 bytes
+```
+
+thì gần như chắc chắn `RAILS_MASTER_KEY` đang sai hoặc không đúng file `config/credentials.yml.enc`.
 
 ### 3.3 Postgres
 
@@ -207,6 +222,8 @@ Tạo bucket MinIO một lần:
 ```bash
 docker compose --env-file .env.production -f compose.prod.yml --profile setup run --rm minio-setup
 ```
+
+Nếu lệnh trên in ra help của `mc` thay vì tạo bucket, hãy đảm bảo bạn đang dùng bản mới của [`deploy/compose.prod.yml`](/Users/thangnguyen/Desktop/ruby/blueprint/deploy/compose.prod.yml), vì service `minio-setup` đã được chỉnh để chạy qua shell rõ ràng hơn.
 
 Chạy prepare database:
 
