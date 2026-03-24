@@ -67,6 +67,9 @@ Rails.application.routes.draw do
     end
 
     resource :settings, only: %i[show update]
+    post 'settings/sync_google_sheets', to: 'settings#sync_google_sheets', as: :settings_sync_google_sheets
+    post 'settings/cancel_google_sheets_sync', to: 'settings#cancel_google_sheets_sync', as: :settings_cancel_google_sheets_sync
+    get 'settings/google_sheets_sync_status', to: 'settings#google_sheets_sync_status', as: :settings_google_sheets_sync_status
 
     resources :services, controller: 'all_services', only: %i[index create update destroy] do
       get :tasks_panel, on: :member

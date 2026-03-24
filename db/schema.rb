@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_23_070947) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_24_133000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -44,6 +44,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_23_070947) do
 
   create_table "app_settings", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.boolean "google_sheets_cancel_requested", default: false, null: false
+    t.string "google_sheets_current_job_id"
+    t.boolean "google_sheets_enabled", default: false, null: false
+    t.text "google_sheets_last_sync_error"
+    t.string "google_sheets_last_sync_status"
+    t.datetime "google_sheets_last_synced_at"
+    t.datetime "google_sheets_next_sync_at"
+    t.string "google_sheets_next_sync_job_id"
+    t.string "google_sheets_spreadsheet_id"
+    t.integer "google_sheets_sync_interval_unit"
+    t.integer "google_sheets_sync_interval_value"
+    t.integer "google_sheets_sync_progress", default: 0, null: false
+    t.string "google_sheets_tab_prefix"
     t.string "telegram_api_key"
     t.datetime "updated_at", null: false
   end

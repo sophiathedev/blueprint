@@ -28,4 +28,19 @@ class ActiveSupport::TestCase
       original_new.call(*args, **kwargs, &block)
     end
   end
+
+  def with_env(overrides)
+    previous = {}
+
+    overrides.each do |key, value|
+      previous[key] = ENV[key]
+      ENV[key] = value
+    end
+
+    yield
+  ensure
+    previous.each do |key, value|
+      ENV[key] = value
+    end
+  end
 end

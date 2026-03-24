@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class InputFieldComponent < ViewComponent::Base
-  TYPES = %i[email password text].freeze
+  TYPES = %i[email number password text].freeze
 
   def initialize(form:, field:, label:, type: :text, value: nil, **options)
     @form = form
