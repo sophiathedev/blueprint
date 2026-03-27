@@ -3,7 +3,7 @@
 module Admin
   class OrderServicesController < BaseController
     skip_before_action :require_admin, only: :show
-    before_action :set_order_service, only: %i[show edit update]
+    before_action :set_order_service, only: %i[show edit update destroy]
     before_action :set_order_tasks, only: :show
     before_action :load_service_selection_options, only: %i[new create]
 
@@ -61,6 +61,11 @@ module Admin
         flash.now[:alert] = order_service_error_messages
         render :edit, status: :unprocessable_entity
       end
+    end
+
+    def destroy
+      @order_service.destroy
+      redirect_to root_path, notice: 'Xóa order thành công.'
     end
 
     private

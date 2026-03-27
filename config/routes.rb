@@ -57,7 +57,7 @@ Rails.application.routes.draw do
   namespace :admin do
     resources :markdown_attachments, only: :create
     resources :markdown_images, only: %i[index create]
-    resources :order_services, only: %i[new create show edit update] do
+    resources :order_services, only: %i[new create show edit update destroy] do
       get :service_options, on: :collection
       resources :order_tasks, only: :update
     end
