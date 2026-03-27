@@ -115,11 +115,11 @@ export default class extends Controller {
   filter() {
     if (!this.hasSearchTarget) return
 
-    const query = this.searchTarget.value.trim().toLowerCase()
+    const query = this.normalizeSearchText(this.searchTarget.value)
     let visibleCount = 0
 
     this.optionTargets.forEach((option) => {
-      const label = option.dataset.label.toLowerCase()
+      const label = this.normalizeSearchText(option.dataset.label)
       const matches = query === "" || label.includes(query)
       option.classList.toggle("hidden", !matches)
       if (matches) visibleCount += 1
@@ -262,5 +262,16 @@ export default class extends Controller {
 
   datasetKey(key) {
     return key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
+  }
+
+  normalizeSearchText(value) {
+    return (value || "")
+      .toString()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d")
+      .replace(/Đ/g, "D")
+      .toLowerCase()
+      .trim()
   }
 }
