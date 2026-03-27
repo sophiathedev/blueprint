@@ -1,11 +1,13 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["statusLabel", "progressWrapper", "progressRing", "progressValue", "lastSyncedAt", "nextSyncAt", "errorBox", "errorText", "cancelButton"]
+  static targets = ["statusLabel", "progressWrapper", "progressRing", "progressValue", "lastSyncedAt", "nextSyncAt", "errorBox", "errorText", "cancelButton", "spreadsheetLinkInput", "spreadsheetLinkAction"]
   static values = {
     url: String,
     interval: { type: Number, default: 2000 }
   }
+
+  static PLACEHOLDER_LINK_TEXT = "Chưa có link. Hãy bấm Sync ngay để hệ thống tự tạo."
 
   connect() {
     this.poll()
@@ -52,6 +54,7 @@ export default class extends Controller {
     if (this.hasStatusLabelTarget) this.statusLabelTarget.textContent = data.status_label
     if (this.hasLastSyncedAtTarget) this.lastSyncedAtTarget.textContent = data.last_synced_at || "Chưa có"
     if (this.hasNextSyncAtTarget) this.nextSyncAtTarget.textContent = data.next_sync_at || "Chưa lên lịch"
+    this.renderSpreadsheetLink(data.spreadsheet_link)
 
     if (this.hasErrorBoxTarget && this.hasErrorTextTarget) {
       if (data.error) {
@@ -78,6 +81,34 @@ export default class extends Controller {
     }
 
     this.renderProgress(data.progress || 0)
+  }
+
+  renderSpreadsheetLink(spreadsheetLink) {
+    const normalizedLink = spreadsheetLink || this.constructor.PLACEHOLDER_LINK_TEXT
+
+    if (this.hasSpreadsheetLinkInputTarget) {
+      this.spreadsheetLinkInputTarget.value = normalizedLink
+    }
+
+    if (!this.hasSpreadsheetLinkActionTarget) return
+
+    const action = this.spreadsheetLinkActionTarget
+    const hasLink = Boolean(spreadsheetLink)
+
+    if (hasLink) {
+      action.href = spreadsheetLink
+      action.removeAttribute("aria-disabled")
+      action.removeAttribute("tabindex")
+      action.classList.remove("pointer-events-none", "text-black/45")
+      action.classList.add("text-black", "hover:bg-stone-100")
+      return
+    }
+
+    action.removeAttribute("href")
+    action.setAttribute("aria-disabled", "true")
+    action.setAttribute("tabindex", "-1")
+    action.classList.add("pointer-events-none", "text-black/45")
+    action.classList.remove("text-black", "hover:bg-stone-100")
   }
 
   renderProgress(progress) {

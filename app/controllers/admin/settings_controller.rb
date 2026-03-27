@@ -72,6 +72,7 @@ module Admin
         progress: @setting.google_sheets_sync_progress.to_i,
         last_synced_at: @setting.google_sheets_display_time(@setting.google_sheets_last_synced_at),
         next_sync_at: @setting.google_sheets_display_time(@setting.google_sheets_next_sync_at),
+        spreadsheet_link: @setting.google_sheets_spreadsheet_link,
         error: @setting.google_sheets_last_sync_error,
         cancellable: @setting.google_sheets_cancellable?
       }

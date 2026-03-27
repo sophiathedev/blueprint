@@ -13,6 +13,7 @@ module GoogleSheets
 
     OAUTH_TOKEN_URL = 'https://oauth2.googleapis.com/token'
     SHEETS_API_BASE_URL = 'https://sheets.googleapis.com/v4/spreadsheets'
+    DRIVE_API_BASE_URL = 'https://www.googleapis.com/drive/v3/files'
     OPEN_TIMEOUT = 10
     READ_TIMEOUT = 45
     WRITE_TIMEOUT = 45
@@ -40,6 +41,10 @@ module GoogleSheets
 
     def spreadsheet_metadata(spreadsheet_id)
       get_json("#{SHEETS_API_BASE_URL}/#{spreadsheet_id}?fields=sheets.properties(sheetId,title,gridProperties.rowCount,gridProperties.columnCount)")
+    end
+
+    def file_metadata(file_id)
+      get_json("#{DRIVE_API_BASE_URL}/#{file_id}?fields=id,trashed&supportsAllDrives=true")
     end
 
     def create_spreadsheet(title:)
@@ -73,6 +78,27 @@ module GoogleSheets
       put_json(
         "#{SHEETS_API_BASE_URL}/#{spreadsheet_id}/values/#{escape_range(range)}?valueInputOption=RAW",
         { range: range, majorDimension: 'ROWS', values: values }
+      )
+    end
+
+    def ensure_anyone_with_link_can_edit(spreadsheet_id)
+      permissions = file_permissions(spreadsheet_id).fetch('permissions', [])
+      anyone_permission = permissions.find { |permission| permission['type'] == 'anyone' }
+
+      if anyone_permission.present?
+        return if anyone_permission['role'] == 'writer' && anyone_permission['allowFileDiscovery'] == false
+
+        update_file_permission(
+          spreadsheet_id,
+          anyone_permission.fetch('id'),
+          { role: 'writer', allowFileDiscovery: false }
+        )
+        return
+      end
+
+      create_file_permission(
+        spreadsheet_id,
+        { type: 'anyone', role: 'writer', allowFileDiscovery: false }
       )
     end
 
@@ -118,11 +144,37 @@ module GoogleSheets
       request_json(uri, request)
     end
 
+    def patch_json(url, payload)
+      uri = URI(url)
+      request = Net::HTTP::Patch.new(uri)
+      request['Content-Type'] = 'application/json'
+      request.body = JSON.generate(payload)
+      request_json(uri, request)
+    end
+
     def post_form(url, payload)
       uri = URI(url)
       request = Net::HTTP::Post.new(uri)
       request.set_form_data(payload)
       perform_http_request(uri, request)
+    end
+
+    def file_permissions(spreadsheet_id)
+      get_json(
+        "#{DRIVE_API_BASE_URL}/#{spreadsheet_id}/permissions" \
+        '?fields=permissions(id,type,role,allowFileDiscovery)&supportsAllDrives=true'
+      )
+    end
+
+    def create_file_permission(spreadsheet_id, payload)
+      post_json("#{DRIVE_API_BASE_URL}/#{spreadsheet_id}/permissions?supportsAllDrives=true", payload)
+    end
+
+    def update_file_permission(spreadsheet_id, permission_id, payload)
+      patch_json(
+        "#{DRIVE_API_BASE_URL}/#{spreadsheet_id}/permissions/#{permission_id}?supportsAllDrives=true",
+        payload
+      )
     end
 
     def request_json(uri, request)

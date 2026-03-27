@@ -16,6 +16,7 @@ module GoogleSheets
 
     def call
       spreadsheet_id = ensure_accessible_spreadsheet_id!
+      ensure_spreadsheet_sharing!(spreadsheet_id)
       sync_spreadsheet_title!(spreadsheet_id)
       metadata = client.spreadsheet_metadata(spreadsheet_id)
       existing_sheets = metadata.fetch('sheets', []).to_h do |sheet|
@@ -134,6 +135,9 @@ module GoogleSheets
 
     def ensure_accessible_spreadsheet_id!
       spreadsheet_id = ensure_spreadsheet_id!
+      file_metadata = client.file_metadata(spreadsheet_id)
+      raise GoogleSheets::Client::NotFoundError, 'Spreadsheet hiện đang ở trong thùng rác trên Google Drive.' if file_metadata['trashed']
+
       client.spreadsheet_metadata(spreadsheet_id)
       spreadsheet_id
     rescue GoogleSheets::Client::NotFoundError
@@ -209,6 +213,11 @@ module GoogleSheets
     def sync_spreadsheet_title!(spreadsheet_id)
       abort_if_cancel_requested!
       client.update_spreadsheet_title(spreadsheet_id, title: default_spreadsheet_title)
+    end
+
+    def ensure_spreadsheet_sharing!(spreadsheet_id)
+      abort_if_cancel_requested!
+      client.ensure_anyone_with_link_can_edit(spreadsheet_id)
     end
 
     def recreate_spreadsheet!

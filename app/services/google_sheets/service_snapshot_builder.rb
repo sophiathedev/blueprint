@@ -53,13 +53,15 @@ module GoogleSheets
     attr_reader :service
 
     def order_tasks
-      @order_tasks ||= service.order_services.flat_map(&:order_tasks).sort_by do |order_task|
-        [
-          order_task.order_service_id,
-          order_task.task.name.to_s,
-          order_task.id
-        ]
-      end
+      @order_tasks ||= OrderTask
+        .joins(:task)
+        .includes(task: :member, order_service: :service)
+        .where(
+          order_service_id: service.order_services.select(:id),
+          task_id: service.tasks.select(:id)
+        )
+        .order(:order_service_id, 'tasks.name ASC', :id)
+        .to_a
     end
 
     def format_time(time)

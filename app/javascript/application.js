@@ -36,6 +36,7 @@ const openPendingDialogs = () => {
 }
 
 const googleSheetsStatusPollers = new WeakMap()
+const GOOGLE_SHEETS_LINK_PLACEHOLDER = "Chưa có link. Hãy bấm Sync ngay để hệ thống tự tạo."
 
 const renderGoogleSheetsSyncStatus = (element, data) => {
   const statusLabel = element.querySelector('[data-google-sheets-sync-status-target="statusLabel"]')
@@ -47,10 +48,29 @@ const renderGoogleSheetsSyncStatus = (element, data) => {
   const errorBox = element.querySelector('[data-google-sheets-sync-status-target="errorBox"]')
   const errorText = element.querySelector('[data-google-sheets-sync-status-target="errorText"]')
   const cancelButton = element.querySelector('[data-google-sheets-sync-status-target="cancelButton"]')
+  const spreadsheetLinkInput = element.querySelector('[data-google-sheets-sync-status-target="spreadsheetLinkInput"]')
+  const spreadsheetLinkAction = element.querySelector('[data-google-sheets-sync-status-target="spreadsheetLinkAction"]')
 
   if (statusLabel) statusLabel.textContent = data.status_label
   if (lastSyncedAt) lastSyncedAt.textContent = data.last_synced_at || "Chưa có"
   if (nextSyncAt) nextSyncAt.textContent = data.next_sync_at || "Chưa lên lịch"
+  if (spreadsheetLinkInput) spreadsheetLinkInput.value = data.spreadsheet_link || GOOGLE_SHEETS_LINK_PLACEHOLDER
+
+  if (spreadsheetLinkAction) {
+    if (data.spreadsheet_link) {
+      spreadsheetLinkAction.href = data.spreadsheet_link
+      spreadsheetLinkAction.removeAttribute("aria-disabled")
+      spreadsheetLinkAction.removeAttribute("tabindex")
+      spreadsheetLinkAction.classList.remove("pointer-events-none", "text-black/45")
+      spreadsheetLinkAction.classList.add("text-black", "hover:bg-stone-100")
+    } else {
+      spreadsheetLinkAction.removeAttribute("href")
+      spreadsheetLinkAction.setAttribute("aria-disabled", "true")
+      spreadsheetLinkAction.setAttribute("tabindex", "-1")
+      spreadsheetLinkAction.classList.add("pointer-events-none", "text-black/45")
+      spreadsheetLinkAction.classList.remove("text-black", "hover:bg-stone-100")
+    }
+  }
 
   if (errorBox && errorText) {
     if (data.error) {

@@ -111,21 +111,21 @@
               value="<%= @setting.google_sheets_spreadsheet_link.presence || 'Chưa có link. Hãy bấm Sync ngay để hệ thống tự tạo.' %>"
               readonly
               class="min-w-0 flex-1 border-0 bg-transparent px-4 py-2 text-sm text-black outline-none focus:ring-0"
+              data-google-sheets-sync-status-target="spreadsheetLinkInput"
             >
 
-            <% if @setting.google_sheets_spreadsheet_link.present? %>
-              <%= link_to @setting.google_sheets_spreadsheet_link,
-                target: '_blank',
-                rel: 'noopener noreferrer',
-                class: 'inline-flex w-[110px] shrink-0 items-center justify-center gap-2 border-l border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-stone-100' do %>
-                <%= lucide_icon('external-link', class: 'h-4 w-4', "aria-hidden": true) %>
-                Mở
-              <% end %>
-            <% else %>
-              <span class="inline-flex w-[110px] shrink-0 items-center justify-center gap-2 border-l border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-black/45">
-                <%= lucide_icon('external-link', class: 'h-4 w-4', "aria-hidden": true) %>
-                Mở
-              </span>
+            <%= link_to (@setting.google_sheets_spreadsheet_link.presence || '#'),
+              target: '_blank',
+              rel: 'noopener noreferrer',
+              aria: (@setting.google_sheets_spreadsheet_link.present? ? {} : { disabled: true }),
+              tabindex: (@setting.google_sheets_spreadsheet_link.present? ? nil : -1),
+              class: [
+                'inline-flex w-[110px] shrink-0 items-center justify-center gap-2 border-l border-stone-200 bg-white px-4 py-2 text-sm font-semibold transition-colors',
+                (@setting.google_sheets_spreadsheet_link.present? ? 'text-black hover:bg-stone-100' : 'pointer-events-none text-black/45')
+              ].join(' '),
+              data: { google_sheets_sync_status_target: 'spreadsheetLinkAction' } do %>
+              <%= lucide_icon('external-link', class: 'h-4 w-4', "aria-hidden": true) %>
+              Mở
             <% end %>
           </div>
         </div>
