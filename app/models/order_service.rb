@@ -10,9 +10,13 @@ class OrderService < ApplicationParanoia
   has_many :order_tasks, dependent: :destroy
 
   normalizes :partner_assignee_name, with: ->(name) { name.to_s.squish }
+  normalizes :google_sheet_link, with: ->(value) { value.to_s.strip }
+  normalizes :customer_domain, with: ->(value) { value.to_s.strip }
 
   validates :completed_at, presence: { message: 'không được để trống' }
   validates :partner_assignee_name, presence: { message: 'không được để trống' }
+  validates :google_sheet_link, presence: { message: 'không được để trống' }
+  validates :customer_domain, presence: { message: 'không được để trống' }
   validates :priority_status, presence: { message: 'không được để trống' }
 
   before_validation :normalize_completed_at

@@ -145,8 +145,8 @@
   </div>
 
   <%= form_with url: admin_order_services_path, scope: :order_service, class: 'mt-6' do |form| %>
-    <div class="px-1 pb-6">
-      <div class="grid gap-5 md:grid-cols-2">
+    <div class="px-1 pb-4">
+      <div class="grid gap-4 md:grid-cols-2">
         <div class="space-y-2">
           <%= render SelectFieldComponent.new(
             form: form,
@@ -175,8 +175,8 @@
       </div>
     </div>
 
-    <div class="border-t border-black/10 px-1 pt-6">
-      <div class="grid gap-5 md:grid-cols-2">
+    <div class="border-t border-black/10 px-1 pt-4">
+      <div class="grid gap-4 md:grid-cols-2">
         <div class="space-y-2">
           <%= form.label :completion_date, class: 'text-sm font-semibold text-black/80' do %>
             Thời gian hoàn thành
@@ -282,6 +282,30 @@
             class: 'w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-black outline-none transition focus:border-primary-400 focus:bg-white focus:ring-4 focus:ring-primary-100' %>
         </div>
 
+        <div class="space-y-2">
+          <%= form.label :google_sheet_link, class: 'text-sm font-semibold text-black/80' do %>
+            Link Google Sheet
+            <span class="<%= required_badge_classes %>">*</span>
+          <% end %>
+          <%= form.text_field :google_sheet_link,
+            value: order_request_data[:google_sheet_link],
+            placeholder: 'Dán link Google Sheet',
+            required: true,
+            class: 'w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-black outline-none transition focus:border-primary-400 focus:bg-white focus:ring-4 focus:ring-primary-100' %>
+        </div>
+
+        <div class="space-y-2">
+          <%= form.label :customer_domain, class: 'text-sm font-semibold text-black/80' do %>
+            Domain Khách Hàng
+            <span class="<%= required_badge_classes %>">*</span>
+          <% end %>
+          <%= form.text_field :customer_domain,
+            value: order_request_data[:customer_domain],
+            placeholder: 'Nhập domain khách hàng',
+            required: true,
+            class: 'w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-black outline-none transition focus:border-primary-400 focus:bg-white focus:ring-4 focus:ring-primary-100' %>
+        </div>
+
         <div class="space-y-2 md:col-span-2">
           <%= form.label :priority_status, class: 'text-sm font-semibold text-black/80' do %>
             Trạng thái ưu tiên
@@ -327,13 +351,13 @@
             value: order_request_data[:detailed_notes],
             placeholder: 'Mô tả brief, yêu cầu đặc biệt, deadline hoặc các lưu ý quan trọng...',
             hint: 'Hỗ trợ markdown để trình bày nội dung rõ ràng hơn.',
-            class: 'md:h-[clamp(240px,34vh,360px)]'
+            class: 'md:h-[clamp(220px,30vh,320px)]'
           ) %>
         </div>
       </div>
     </div>
 
-    <div class="mt-4 flex items-center justify-end gap-2 border-t border-black/10 px-1 pt-4">
+    <div class="mt-2 flex items-center justify-end gap-2 border-t border-black/10 px-1 pt-3">
       <%= link_to root_path,
         class: 'inline-flex items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-stone-100 px-3 py-2 text-sm font-semibold text-black transition-colors hover:border-stone-300 hover:bg-stone-200' do %>
         Hủy

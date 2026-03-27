@@ -138,6 +138,8 @@ module Admin
       {
         completed_at: build_completed_at(@order_request_data),
         partner_assignee_name: @order_request_data[:partner_assignee_name],
+        google_sheet_link: @order_request_data[:google_sheet_link],
+        customer_domain: @order_request_data[:customer_domain],
         priority_status: @order_request_data[:priority_status],
         notes: @order_request_data[:detailed_notes]
       }
@@ -151,6 +153,8 @@ module Admin
         completion_hour
         completion_minute
         partner_assignee_name
+        google_sheet_link
+        customer_domain
         priority_status
         detailed_notes
       ])
@@ -168,6 +172,8 @@ module Admin
         completion_hour: completion_time_enabled ? normalized_time_part(request_params[:completion_hour]) : '',
         completion_minute: completion_time_enabled ? normalized_time_part(request_params[:completion_minute]) : '',
         partner_assignee_name: request_params[:partner_assignee_name].to_s,
+        google_sheet_link: request_params[:google_sheet_link].to_s,
+        customer_domain: request_params[:customer_domain].to_s,
         priority_status: request_params[:priority_status].to_s,
         detailed_notes: request_params[:detailed_notes].to_s
       )
@@ -194,6 +200,8 @@ module Admin
         completion_hour: '',
         completion_minute: '',
         partner_assignee_name: '',
+        google_sheet_link: '',
+        customer_domain: '',
         priority_status: 'medium',
         detailed_notes: ''
       }
@@ -213,6 +221,10 @@ module Admin
       case attribute.to_sym
       when :partner_assignee_name
         'Tên nhân sự của đối tác'
+      when :google_sheet_link
+        'Link Google Sheet'
+      when :customer_domain
+        'Domain Khách Hàng'
       when :priority_status
         'Trạng thái ưu tiên'
       when :completed_at

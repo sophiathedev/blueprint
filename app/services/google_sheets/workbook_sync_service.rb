@@ -1,11 +1,13 @@
 # frozen_string_literal: true
 
+require 'securerandom'
+
 module GoogleSheets
   class WorkbookSyncService
     class CancelledError < StandardError; end
 
-    MANAGED_KINDS = %w[TPL ORD].freeze
     BATCH_UPDATE_CHUNK_SIZE = 25
+    EMPTY_STATE_CELL_VALUE = 'Chưa có dữ liệu order để sync.'.freeze
 
     def initialize(setting: AppSetting.current, client: Client.new)
       @setting = setting
@@ -25,14 +27,15 @@ module GoogleSheets
       end
 
       desired_tabs = build_desired_tabs
-      initialize_progress!(existing_sheets, desired_tabs)
+      sync_tabs = normalized_tabs_for_sync(desired_tabs)
+      initialize_progress!(existing_sheets, sync_tabs)
       advance_progress!
 
-      ensure_sheets_exist!(spreadsheet_id, existing_sheets, desired_tabs)
-      cleanup_stale_managed_sheets!(existing_sheets, desired_tabs.keys)
-      resize_existing_sheets!(spreadsheet_id, existing_sheets, desired_tabs)
+      temporary_sheet_title = create_temporary_sheet!(spreadsheet_id)
+      delete_sheets!(spreadsheet_id, existing_sheets.values)
+      create_sheets!(spreadsheet_id, sync_tabs)
 
-      desired_tabs.each do |title, values|
+      sync_tabs.each do |title, values|
         abort_if_cancel_requested!
         client.clear_values(spreadsheet_id, "#{quoted_title(title)}!A:Z")
         advance_progress!
@@ -40,6 +43,9 @@ module GoogleSheets
         client.update_values(spreadsheet_id, "#{quoted_title(title)}!A1", values)
         advance_progress!
       end
+
+      temporary_sheet = sheet_properties_for(spreadsheet_id, temporary_sheet_title)
+      delete_sheets!(spreadsheet_id, [temporary_sheet]) if temporary_sheet.present?
     end
 
     private
@@ -61,12 +67,28 @@ module GoogleSheets
                            .to_a
     end
 
-    def ensure_sheets_exist!(spreadsheet_id, existing_sheets, desired_tabs)
-      new_titles = desired_tabs.keys - existing_sheets.keys
-      return if new_titles.empty?
+    def normalized_tabs_for_sync(desired_tabs)
+      return desired_tabs if desired_tabs.present?
 
-      requests = new_titles.map do |title|
-        values = desired_tabs.fetch(title)
+      { empty_state_tab_title => [[EMPTY_STATE_CELL_VALUE]] }
+    end
+
+    def empty_state_tab_title
+      [setting.google_sheets_tab_prefix.presence || 'Blueprint', 'Không có dữ liệu']
+        .join(' | ')
+        .first(TabNameBuilder::MAX_SHEET_NAME_LENGTH)
+    end
+
+    def create_temporary_sheet!(spreadsheet_id)
+      title = "__BLUEPRINT_SYNC_TMP__#{SecureRandom.hex(4)}"
+      create_sheets!(spreadsheet_id, { title => [[nil]] })
+      title
+    end
+
+    def create_sheets!(spreadsheet_id, tabs)
+      return if tabs.empty?
+
+      requests = tabs.map do |title, values|
         {
           addSheet: {
             properties: {
@@ -80,43 +102,22 @@ module GoogleSheets
       batch_update_in_chunks(spreadsheet_id, requests)
     end
 
-    def cleanup_stale_managed_sheets!(existing_sheets, desired_titles)
-      stale_titles = existing_sheets.keys.select do |title|
-        managed_title?(title) && !desired_titles.include?(title)
+    def delete_sheets!(spreadsheet_id, sheets)
+      valid_sheets = Array(sheets).compact
+      return if valid_sheets.empty?
+
+      requests = valid_sheets.map do |properties|
+        { deleteSheet: { sheetId: properties.fetch('sheetId') } }
       end
-      return if stale_titles.empty?
-
-      requests = stale_titles.map do |title|
-        { deleteSheet: { sheetId: existing_sheets.fetch(title).fetch('sheetId') } }
-      end
-
-      batch_update_in_chunks(setting.google_sheets_spreadsheet_id, requests)
-    end
-
-    def resize_existing_sheets!(spreadsheet_id, existing_sheets, desired_tabs)
-      requests = desired_tabs.filter_map do |title, values|
-        properties = existing_sheets[title]
-        next if properties.blank?
-
-        grid_properties = grid_properties_for(values)
-        current_grid = properties.fetch('gridProperties', {})
-        next if current_grid['rowCount'] == grid_properties[:rowCount] &&
-                current_grid['columnCount'] == grid_properties[:columnCount]
-
-        {
-          updateSheetProperties: {
-            properties: {
-              sheetId: properties.fetch('sheetId'),
-              gridProperties: grid_properties
-            },
-            fields: 'gridProperties.rowCount,gridProperties.columnCount'
-          }
-        }
-      end
-
-      return if requests.empty?
 
       batch_update_in_chunks(spreadsheet_id, requests)
+    end
+
+    def sheet_properties_for(spreadsheet_id, title)
+      client.spreadsheet_metadata(spreadsheet_id)
+            .fetch('sheets', [])
+            .map { |sheet| sheet.fetch('properties', {}) }
+            .find { |properties| properties['title'] == title }
     end
 
     def ensure_spreadsheet_id!
@@ -158,12 +159,6 @@ module GoogleSheets
       }
     end
 
-    def managed_title?(title)
-      MANAGED_KINDS.any? do |kind|
-        title.start_with?("#{kind} -") || title.include?(" | #{kind} -")
-      end
-    end
-
     def batch_update_in_chunks(spreadsheet_id, requests)
       requests.each_slice(BATCH_UPDATE_CHUNK_SIZE) do |request_chunk|
         abort_if_cancel_requested!
@@ -172,21 +167,13 @@ module GoogleSheets
       end
     end
 
-    def initialize_progress!(existing_sheets, desired_tabs)
-      add_chunks = chunk_count(desired_tabs.keys - existing_sheets.keys)
-      stale_titles = existing_sheets.keys.select { |title| managed_title?(title) && !desired_tabs.keys.include?(title) }
-      delete_chunks = chunk_count(stale_titles)
-      resize_requests = desired_tabs.count do |title, values|
-        properties = existing_sheets[title]
-        next false if properties.blank?
-
-        grid_properties = grid_properties_for(values)
-        current_grid = properties.fetch('gridProperties', {})
-        current_grid['rowCount'] != grid_properties[:rowCount] || current_grid['columnCount'] != grid_properties[:columnCount]
-      end
-
+    def initialize_progress!(existing_sheets, sync_tabs)
+      temp_add_chunks = 1
+      delete_chunks = chunk_count(existing_sheets.values)
+      add_chunks = chunk_count(sync_tabs.keys)
+      temp_delete_chunks = 1
       @total_steps = [
-        1 + add_chunks + delete_chunks + chunk_count(Array.new(resize_requests)) + (desired_tabs.size * 2),
+        1 + temp_add_chunks + delete_chunks + add_chunks + (sync_tabs.size * 2) + temp_delete_chunks,
         1
       ].max
       setting.update_google_sheets_progress!(0)

@@ -86,7 +86,7 @@
       </div>
     </div>
 
-    <div class="mt-5 grid gap-4 md:grid-cols-2">
+    <div class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       <div class="rounded-[24px] border border-black/10 bg-stone-50 p-5">
         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-black/45">Đối tác</p>
         <p class="mt-2 text-xl font-semibold text-black"><%= @partner.name %></p>
@@ -95,6 +95,27 @@
       <div class="rounded-[24px] border border-black/10 bg-stone-50 p-5">
         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-black/45">PIC đối tác</p>
         <p class="mt-2 text-xl font-semibold text-black"><%= @order_service.partner_assignee_name %></p>
+      </div>
+
+      <div class="rounded-[24px] border border-black/10 bg-stone-50 p-5">
+        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-black/45">Google Sheet</p>
+        <% if @order_service.google_sheet_link.present? %>
+          <% google_sheet_href = @order_service.google_sheet_link[%r{\Ahttps?://}] ? @order_service.google_sheet_link : "https://#{@order_service.google_sheet_link}" %>
+          <%= link_to @order_service.google_sheet_link,
+            google_sheet_href,
+            target: '_blank',
+            rel: 'noreferrer',
+            class: 'mt-2 block break-all text-sm font-semibold text-primary-600 hover:text-primary-700 hover:underline' %>
+        <% else %>
+          <p class="mt-2 text-sm font-medium text-black/55">Chưa cập nhật</p>
+        <% end %>
+      </div>
+
+      <div class="rounded-[24px] border border-black/10 bg-stone-50 p-5">
+        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-black/45">Domain khách hàng</p>
+        <p class="mt-2 text-xl font-semibold text-black">
+          <%= @order_service.customer_domain.presence || 'Chưa cập nhật' %>
+        </p>
       </div>
     </div>
 
