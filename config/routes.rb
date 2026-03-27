@@ -51,6 +51,9 @@ Rails.application.routes.draw do
   get 'change-password', to: 'users#change_password', as: :change_password
   patch 'change-password', to: 'users#perform_password_change'
   get 'member/order_tasks', to: 'member_order_tasks#index', as: :member_order_tasks
+  resource :telegram_connection, only: :show do
+    get :status, on: :collection
+  end
   resource :telegram_subscription, only: :create
   post 'telegram/webhook', to: 'telegram_webhooks#create', as: :telegram_webhook
 

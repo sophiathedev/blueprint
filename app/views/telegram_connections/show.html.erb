@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Blueprint | Liên kết Telegram</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Blueprint">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+    <link rel="preconnect" href="https://rsms.me/">
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.16),_transparent_42%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_100%)] text-slate-900 antialiased">
+    <div id="flash_container">
+      <%= render 'shared/flash', flash: flash %>
+    </div>
+
+    <div class="pointer-events-none fixed inset-x-0 top-0 z-10 px-4 py-4 sm:px-6">
+      <div class="flex items-start justify-between gap-4">
+        <div class="pointer-events-auto flex min-w-0 items-center gap-3">
+          <div class="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-primary-200 bg-primary-50">
+            <div class="relative h-6 w-6">
+              <span class="absolute inset-x-0 top-0 h-[2px] rounded-full bg-primary-300"></span>
+              <span class="absolute inset-y-0 left-0 w-[2px] rounded-full bg-primary-300"></span>
+              <span class="absolute bottom-0 right-0 h-4 w-4 rounded-[5px] border-2 border-primary-500 bg-white"></span>
+              <span class="absolute left-[3px] top-[3px] h-2.5 w-2.5 rounded-[4px] bg-primary-500"></span>
+            </div>
+            <span class="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-primary-500"></span>
+          </div>
+
+          <div class="min-w-0 leading-none">
+            <p class="truncate text-[16px] font-black uppercase tracking-wider text-black">BLUE</p>
+            <p class="truncate text-[16px] font-black uppercase tracking-wider text-primary-600">PRINT</p>
+          </div>
+        </div>
+
+        <% if current_user.admin? %>
+          <%= link_to 'Bỏ qua',
+                      root_path,
+                      class: 'pointer-events-auto inline-flex min-h-10 items-center justify-center rounded-2xl border border-black/10 bg-white/70 px-4 py-2 text-sm font-semibold text-black/70 transition hover:border-black/20 hover:bg-white hover:text-black' %>
+        <% end %>
+      </div>
+    </div>
+
+    <main class="mx-auto flex min-h-screen w-full max-w-5xl items-center px-4 py-16 sm:px-6">
+      <section class="grid w-full gap-12 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-16">
+        <div class="max-w-2xl">
+          <p class="text-sm font-semibold uppercase tracking-[0.22em] text-primary-600">Telegram</p>
+
+          <h1 class="mt-3 text-3xl font-semibold tracking-tight text-black sm:text-5xl">
+            Liên kết Telegram
+          </h1>
+
+          <p class="mt-4 text-sm leading-7 text-black/60 sm:text-lg">
+            Tài khoản <span class="font-semibold text-black"><%= current_user.display_name %></span> chưa được liên kết Telegram.
+            Bạn cần hoàn tất bước này để tiếp tục nhận thông báo công việc.
+          </p>
+
+          <ol class="mt-8 space-y-4 border-l border-black/10 pl-5 text-sm leading-7 text-black/70 sm:text-base">
+            <li><span class="font-semibold text-black">1.</span> Bấm <span class="font-semibold">Liên kết với Telegram</span>.</li>
+            <li><span class="font-semibold text-black">2.</span> Telegram sẽ mở bot với link liên kết của bạn.</li>
+            <li><span class="font-semibold text-black">3.</span> Bấm <span class="font-semibold">Start</span> trong chat.</li>
+            <li><span class="font-semibold text-black">4.</span> Quay lại đây và bấm <span class="font-semibold">Tôi đã liên kết xong</span>.</li>
+          </ol>
+        </div>
+
+        <div class="flex flex-col justify-center gap-3 lg:items-stretch"
+             data-controller="telegram-connection"
+             data-telegram-connection-countdown-seconds-value="60"
+             data-telegram-connection-storage-key-value="telegram-connection-countdown-user-<%= current_user.id %>"
+             data-telegram-connection-status-url-value="<%= status_telegram_connection_path %>">
+          <%= button_to telegram_subscription_path,
+                        method: :post,
+                        form: {
+                          target: '_blank',
+                          rel: 'noopener',
+                          data: { turbo: false, action: 'submit->telegram-connection#startCountdown' }
+                        },
+                        class: 'inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-2xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:pointer-events-none',
+                        data: { telegram_connection_target: 'connectButton' } do %>
+            <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0">
+              <path d="M22 2 11 13"></path>
+              <path d="M22 2 15 22l-4-9-9-4Z"></path>
+            </svg>
+            <span data-telegram-connection-target="connectLabel">Liên kết với Telegram</span>
+          <% end %>
+
+          <%= link_to telegram_connection_path(check_status: true),
+                      class: 'inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-2xl border border-black/10 bg-white/70 px-4 py-2.5 text-sm font-semibold text-black transition hover:border-black/20 hover:bg-white' do %>
+            <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0">
+              <path d="M20 6 9 17l-5-5"></path>
+            </svg>
+            <span>Tôi đã liên kết xong</span>
+          <% end %>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

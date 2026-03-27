@@ -3,6 +3,7 @@
 class ApplicationController < ActionController::Base
   SESSION_TIMEOUT = 10.hours
   RETURN_TO_SESSION_KEY = :return_to_after_authentication
+  TELEGRAM_CONNECTION_PROMPT_SEEN_SESSION_KEY = :telegram_connection_prompt_seen
 
   # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
   allow_browser versions: :modern
@@ -11,6 +12,7 @@ class ApplicationController < ActionController::Base
   stale_when_importmap_changes
   before_action :expire_session_if_needed
   before_action :enforce_password_change_if_needed
+  before_action :enforce_telegram_connection_if_needed
 
   helper_method :current_user, :user_signed_in?
 
@@ -33,6 +35,7 @@ class ApplicationController < ActionController::Base
 
   def mark_session_authenticated!
     session[:authenticated_at] = Time.current.to_i
+    session.delete(TELEGRAM_CONNECTION_PROMPT_SEEN_SESSION_KEY)
   end
 
   def enforce_password_change_if_needed
@@ -71,6 +74,39 @@ class ApplicationController < ActionController::Base
   end
 
   def post_authentication_path
+    return telegram_connection_path if should_prompt_for_telegram_connection?
+
     consume_return_to_location || root_path
+  end
+
+  def enforce_telegram_connection_if_needed
+    return unless user_signed_in?
+    return if current_user.telegram_connected?
+    return if controller_name == 'users' && action_name.in?(%w[change_password perform_password_change logout])
+    return if controller_path.in?(%w[telegram_connections telegram_subscriptions])
+    return if current_user.admin? && telegram_connection_prompt_seen?
+
+    session[RETURN_TO_SESSION_KEY] = request.fullpath if storable_location_for_post_auth_redirect?
+    redirect_to telegram_connection_path
+  end
+
+  def should_prompt_for_telegram_connection?
+    return false unless user_signed_in?
+    return false if current_user.telegram_connected?
+    return false if current_user.admin? && telegram_connection_prompt_seen?
+
+    true
+  end
+
+  def telegram_connection_prompt_seen?
+    session[TELEGRAM_CONNECTION_PROMPT_SEEN_SESSION_KEY].present?
+  end
+
+  def mark_telegram_connection_prompt_seen!
+    session[TELEGRAM_CONNECTION_PROMPT_SEEN_SESSION_KEY] = true
+  end
+
+  def storable_location_for_post_auth_redirect?
+    request.get? && !request.xhr? && request.format.html?
   end
 end
