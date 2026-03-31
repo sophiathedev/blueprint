@@ -60,7 +60,9 @@ Rails.application.routes.draw do
   namespace :admin do
     resources :markdown_attachments, only: :create
     resources :markdown_images, only: %i[index create]
+    get 'work_tracking', to: 'work_tracking#index', as: :work_tracking
     resources :order_services, only: %i[new create show edit update destroy] do
+      delete :bulk_destroy, on: :collection
       get :service_options, on: :collection
       resources :order_tasks, only: :update
     end

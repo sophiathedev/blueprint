@@ -50,9 +50,9 @@
 
           <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <article class="rounded-[22px] border border-black/10 bg-stone-50 p-4">
-              <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/40">Đang mở</p>
+              <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/40">Đang quản lý</p>
               <p class="mt-2 text-3xl font-semibold text-black"><%= @current_orders_count %></p>
-              <p class="mt-1 text-sm text-black/55">order đang còn hiệu lực</p>
+              <p class="mt-1 text-sm text-black/55">order còn hiển thị để theo dõi</p>
             </article>
 
             <article class="rounded-[22px] border border-black/10 bg-stone-50 p-4">
@@ -68,20 +68,68 @@
             </article>
 
             <article class="rounded-[22px] border border-black/10 bg-stone-50 p-4">
-              <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/40">Ngày mai</p>
-              <p class="mt-2 text-3xl font-semibold text-black"><%= @orders_due_tomorrow_count %></p>
-              <p class="mt-1 text-sm text-black/55">order sắp đến vùng chú ý</p>
+              <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-black/40">Quá hạn</p>
+              <p class="mt-2 text-3xl font-semibold text-black"><%= @overdue_orders_count %></p>
+              <p class="mt-1 text-sm text-black/55">order vẫn phải tiếp tục quản lý</p>
             </article>
           </div>
         </section>
 
-        <section class="rounded-[32px] border border-black/10 bg-white p-4 shadow-sm md:p-5" data-controller="modal">
+        <section
+          class="rounded-[32px] border border-black/10 bg-white p-4 shadow-sm md:p-5"
+          data-controller="modal search-form"
+          data-search-form-mode-value="server"
+          data-search-form-delay-value="500"
+        >
+          <% deadline_quick_filter_params = lambda do |deadline_value| %>
+            <% params = {} %>
+            <% params[:q] = @query.presence if @query.present? %>
+            <% params[:partner_id] = @partner_filter.presence if @partner_filter.present? %>
+            <% params[:priority] = @priority_filter.presence if @priority_filter.present? %>
+            <% params[:deadline] = deadline_value.presence if deadline_value.present? %>
+            <% params %>
+          <% end %>
+          <% quick_deadline_values = dashboard_deadline_quick_filter_options.map(&:last) %>
+          <% advanced_deadline_filter_active = @deadline_filter.present? && !quick_deadline_values.include?(@deadline_filter) %>
+
           <div class="flex flex-col gap-3 border-b border-black/10 pb-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <h2 class="text-2xl font-semibold tracking-tight text-black">Danh sách order hiện tại</h2>
+              <h2 class="text-2xl font-semibold tracking-tight text-black">Danh sách order đang quản lý</h2>
+              <p class="mt-1 text-sm leading-6 text-black/55">
+                Order quá hạn vẫn được giữ trên dashboard để tiếp tục theo dõi, và danh sách luôn ưu tiên deadline gần nhất lên trước.
+                <% if current_user.admin? %>
+                  Chỉ admin mới có thể xóa order cùng các task đi kèm.
+                <% end %>
+              </p>
             </div>
 
-            <div class="flex items-center gap-2">
+            <div class="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center">
+              <div class="relative w-full md:w-[320px]" data-controller="clearable-input">
+                <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-black/35">
+                  <%= lucide_icon('search', class: 'h-4 w-4', "aria-hidden": true) %>
+                </span>
+                <input
+                  type="text"
+                  name="q"
+                  value="<%= @query %>"
+                  placeholder="Tìm theo dịch vụ, đối tác hoặc domain"
+                  class="w-full rounded-2xl border border-stone-200 bg-stone-50 py-2 pl-10 pr-10 text-sm text-black outline-none transition focus:border-primary-400 focus:bg-white focus:ring-4 focus:ring-primary-100"
+                  data-search-form-target="input"
+                  data-clearable-input-target="input"
+                  data-action="input->search-form#submitWithDebounce input->clearable-input#sync"
+                >
+                <button
+                  type="button"
+                  class="absolute inset-y-0 right-0 hidden items-center pr-3 text-black/35 transition hover:text-black"
+                  data-clearable-input-target="clear"
+                  data-action="click->clearable-input#clear click->search-form#submitWithDebounce"
+                  aria-label="Xóa nội dung tìm kiếm"
+                >
+                  <%= lucide_icon('x', class: 'h-4 w-4', "aria-hidden": true) %>
+                </button>
+              </div>
+
+              <div class="flex items-center gap-2">
               <%= render ButtonComponent.new(
                 label: 'Mở bộ lọc order',
                 type: :icon,
@@ -92,12 +140,34 @@
                 ].compact.join(' '),
                 data: { action: 'click->modal#open' }
               ) %>
+              </div>
             </div>
+          </div>
+
+          <div class="mt-4 flex flex-wrap items-center gap-2 border-b border-black/10 pb-4">
+            <p class="mr-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/40">Lọc nhanh theo hạn hoàn thành</p>
+            <% dashboard_deadline_quick_filter_options.each do |label, value| %>
+              <% active = (value.blank? && @deadline_filter.blank?) || @deadline_filter == value %>
+              <%= link_to label,
+                root_path(deadline_quick_filter_params.call(value)),
+                class: [
+                  'inline-flex items-center rounded-full px-3 py-1.5 text-sm font-semibold transition-colors',
+                  (active ? 'bg-primary-100 text-primary-700 ring-1 ring-primary-200' : 'bg-stone-100 text-black/65 ring-1 ring-black/10 hover:bg-stone-200 hover:text-black')
+                ].join(' ') %>
+            <% end %>
+
+            <% if advanced_deadline_filter_active %>
+              <span class="inline-flex items-center rounded-full bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-700 ring-1 ring-amber-200">
+                Đang dùng bộ lọc deadline chi tiết
+              </span>
+            <% end %>
           </div>
 
           <%= render ModalComponent.new(title: 'Lọc danh sách order', open: false, panel_class: 'max-w-lg') do |modal| %>
             <% modal.with_body do %>
               <%= form_with url: root_path, method: :get, class: 'space-y-4' do %>
+                <%= hidden_field_tag :q, @query %>
+
                 <div>
                   <label for="dashboard_partner_filter" class="text-sm font-semibold text-black">Đối tác</label>
                   <%= select_tag :partner_id,
@@ -168,7 +238,7 @@
                 </div>
 
                 <div class="flex items-center justify-end gap-2">
-                  <%= link_to root_path,
+                  <%= link_to root_path(q: @query.presence),
                     class: 'inline-flex items-center justify-center gap-2 rounded-2xl border border-stone-200 bg-stone-100 px-3 py-2 text-sm font-semibold text-black transition-colors hover:border-stone-300 hover:bg-stone-200' do %>
                     Xóa lọc
                   <% end %>
@@ -185,54 +255,367 @@
           <% end %>
 
           <% if @current_orders.any? %>
-            <div class="mt-4 overflow-hidden rounded-[24px] border border-black/10">
-              <div class="hidden md:block">
-                <table class="min-w-full table-fixed border-collapse bg-white">
-                  <colgroup>
-                    <col class="w-[22%]">
-                    <col class="w-[15%]">
-                    <col class="w-[14%]">
-                    <col class="w-[16%]">
-                    <col class="w-[14%]">
-                    <col class="w-[14%]">
-                    <col class="w-[5%]">
-                  </colgroup>
-                  <thead>
-                    <tr class="bg-stone-50 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/40">
-                      <th class="px-5 py-3 text-left">Dịch vụ</th>
-                      <th class="px-5 py-3 text-left">Đối tác</th>
-                      <th class="px-5 py-3 text-left">PIC</th>
-                      <th class="px-5 py-3 text-left">Deadline</th>
-                      <th class="px-5 py-3 text-left">Thời gian còn lại</th>
-                      <th class="px-5 py-3 text-left">Mức độ ưu tiên</th>
-                      <th class="px-5 py-3 text-right"></th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-black/8">
+            <% if current_user.admin? %>
+              <%= form_with url: bulk_destroy_admin_order_services_path,
+                method: :delete,
+                local: true,
+                class: 'mt-4',
+                data: {
+                  controller: 'confirm-submit order-selection',
+                  action: 'click@window->confirm-submit#closeOnOutside keydown.esc@window->confirm-submit#reset',
+                  confirm_submit_default_label_value: 'Xóa order đã chọn',
+                  confirm_submit_confirm_label_value: 'Xác nhận xóa order và task'
+                } do %>
+                <div class="flex flex-col gap-3 rounded-[24px] border border-black/10 bg-stone-50 p-4 md:flex-row md:items-center md:justify-between">
+                  <div class="space-y-2">
+                    <label class="inline-flex items-center gap-2 text-sm font-semibold text-black md:hidden">
+                      <input
+                        type="checkbox"
+                        class="h-4 w-4 rounded border-black/15 text-rose-600 focus:ring-rose-200"
+                        data-action="change->order-selection#toggleAll"
+                        data-order-selection-target="master"
+                      >
+                      <span>Chọn tất cả order</span>
+                    </label>
+
+                    <p class="text-sm font-semibold text-black">
+                      Đã chọn <span data-order-selection-target="count">0</span> order
+                    </p>
+                    <p class="text-sm leading-6 text-black/55">
+                      Khi admin xóa, order sẽ biến mất khỏi dashboard và toàn bộ task thuộc order đó cũng bị xóa theo.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    class="inline-flex items-center justify-center gap-2 rounded-2xl border border-dashed border-rose-300 bg-white px-3 py-2 text-sm font-semibold text-rose-600 transition-colors hover:border-rose-400 hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-200 focus:ring-offset-2"
+                    data-action="click->confirm-submit#submit"
+                    data-confirm-submit-target="button"
+                    data-order-selection-target="submitButton"
+                    disabled
+                  >
+                    <span class="flex h-4 w-4 shrink-0 items-center justify-center">
+                      <span data-confirm-submit-target="defaultIcon">
+                        <%= lucide_icon('trash-2', class: 'h-4 w-4', "aria-hidden": true) %>
+                      </span>
+                      <span class="hidden" data-confirm-submit-target="confirmIcon">
+                        <%= lucide_icon('check', class: 'h-4 w-4', "aria-hidden": true) %>
+                      </span>
+                    </span>
+                    <span data-confirm-submit-target="text">Xóa order đã chọn</span>
+                  </button>
+                </div>
+
+                <div class="mt-4 overflow-hidden rounded-[24px] border border-black/10">
+                  <div class="hidden md:block">
+                    <table class="min-w-full table-fixed border-collapse bg-white">
+                      <colgroup>
+                        <col class="w-[3.5rem]">
+                        <col class="w-[18%]">
+                        <col class="w-[16%]">
+                        <col class="w-[15%]">
+                        <col class="w-[16%]">
+                        <col class="w-[15%]">
+                        <col class="w-[11%]">
+                        <col class="w-[5%]">
+                      </colgroup>
+                      <thead>
+                        <tr class="bg-stone-50 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/40">
+                          <th class="px-2 py-3 text-center">
+                            <label class="inline-flex items-center justify-center">
+                              <input
+                                type="checkbox"
+                                class="h-3.5 w-3.5 rounded border-black/15 text-rose-600 focus:ring-rose-200"
+                                data-action="change->order-selection#toggleAll"
+                                data-order-selection-target="master"
+                              >
+                              <span class="sr-only">Chọn tất cả order</span>
+                            </label>
+                          </th>
+                          <th class="px-5 py-3 text-left">Dịch vụ</th>
+                          <th class="px-5 py-3 text-left">Đối tác</th>
+                          <th class="px-5 py-3 text-left">PIC</th>
+                          <th class="px-5 py-3 text-left">Domain</th>
+                          <th class="px-5 py-3 text-left">Deadline</th>
+                          <th class="px-5 py-3 text-left">Mức độ ưu tiên</th>
+                          <th class="px-5 py-3 text-right"></th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-black/8">
+                        <% @current_orders.each do |order| %>
+                          <% status = dashboard_order_status(order) %>
+                          <% priority = dashboard_order_priority(order) %>
+                          <tr class="group transition hover:bg-stone-50">
+                            <td class="px-2 py-4 text-center align-middle">
+                              <label class="inline-flex items-center justify-center">
+                                <%= check_box_tag 'order_service_ids[]',
+                                  order.id,
+                                  false,
+                                  class: 'h-3.5 w-3.5 rounded border-black/15 text-rose-600 focus:ring-rose-200',
+                                  data: {
+                                    action: 'change->order-selection#toggleOne',
+                                    order_selection_target: 'checkbox'
+                                  } %>
+                                <span class="sr-only">Chọn order <%= order.service.name %></span>
+                              </label>
+                            </td>
+                            <td class="px-5 py-4 align-middle">
+                              <%= link_to admin_order_service_path(order, source: :dashboard), class: 'block min-w-0' do %>
+                                <h3 class="truncate text-base font-semibold text-black transition group-hover:text-primary-700">
+                                  <%= order.service.name %>
+                                </h3>
+                              <% end %>
+                            </td>
+                            <td class="px-5 py-4 align-middle">
+                              <p class="truncate text-sm font-medium text-black/70"><%= order.service.partner.name %></p>
+                            </td>
+                            <td class="px-5 py-4 align-middle">
+                              <p class="truncate text-sm font-medium text-black/70"><%= order.partner_assignee_name.presence || 'Chưa cập nhật' %></p>
+                            </td>
+                            <td class="px-5 py-4 align-middle">
+                              <p class="truncate text-sm font-medium text-black/70"><%= order.customer_domain %></p>
+                            </td>
+                            <td class="px-5 py-4 align-middle">
+                              <div class="<%= ['inline-flex max-w-full items-center gap-2.5 rounded-2xl border px-2.5 py-1.5', status[:container_class]].join(' ') %>">
+                                <span class="<%= ['inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-xl', status[:icon_container_class]].join(' ') %>">
+                                  <%= lucide_icon(status[:icon], class: 'h-3.5 w-3.5', "aria-hidden": true) %>
+                                </span>
+                                <span class="min-w-0">
+                                  <span class="block text-[10px] font-semibold uppercase tracking-[0.14em]"><%= status[:label] %></span>
+                                  <span class="mt-0.5 block truncate text-[13px] font-semibold"><%= l(order.completed_at, format: :long) %></span>
+                                </span>
+                              </div>
+                            </td>
+                            <td class="px-5 py-4 align-middle">
+                              <div class="flex flex-wrap items-center gap-2">
+                                <span
+                                  class="<%= ['inline-flex h-8 w-8 items-center justify-center rounded-2xl', priority[:icon_container_class]].join(' ') %>"
+                                  title="<%= priority[:tooltip] %>"
+                                  aria-label="<%= priority[:tooltip] %>"
+                                >
+                                  <%= lucide_icon(priority[:icon], class: 'h-4 w-4', "aria-hidden": true) %>
+                                </span>
+                                <span class="text-sm font-medium text-black/60"><%= priority[:label] %></span>
+                              </div>
+                            </td>
+                            <td class="px-5 py-4 text-right align-middle">
+                              <%= link_to admin_order_service_path(order, source: :dashboard),
+                                class: 'inline-flex items-center gap-2 text-sm font-semibold text-primary-700' do %>
+                                <span>Xem</span>
+                                <%= lucide_icon('arrow-right', class: 'h-4 w-4 transition group-hover:translate-x-1', "aria-hidden": true) %>
+                              <% end %>
+                            </td>
+                          </tr>
+                        <% end %>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div class="divide-y divide-black/8 bg-white md:hidden">
                     <% @current_orders.each do |order| %>
                       <% status = dashboard_order_status(order) %>
                       <% priority = dashboard_order_priority(order) %>
-                      <tr class="group transition hover:bg-stone-50">
-                        <td class="px-5 py-4 align-middle">
-                          <%= link_to admin_order_service_path(order, source: :dashboard), class: 'block min-w-0' do %>
-                            <h3 class="truncate text-base font-semibold text-black transition group-hover:text-primary-700">
-                              <%= order.service.name %>
-                            </h3>
+                      <div class="px-4 py-4">
+                        <div class="flex items-center justify-between gap-3">
+                          <label class="inline-flex items-center gap-3 text-sm font-semibold text-black">
+                            <%= check_box_tag 'order_service_ids[]',
+                              order.id,
+                              false,
+                              class: 'h-4 w-4 rounded border-black/15 text-rose-600 focus:ring-rose-200',
+                              data: {
+                                action: 'change->order-selection#toggleOne',
+                                order_selection_target: 'checkbox'
+                              } %>
+                            <span>Chọn order</span>
+                          </label>
+                        </div>
+
+                        <div class="mt-4 grid gap-4">
+                          <div class="min-w-0">
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35">Dịch vụ</p>
+                            <h3 class="truncate text-base font-semibold text-black"><%= order.service.name %></h3>
+                          </div>
+
+                          <div class="min-w-0">
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35">Đối tác</p>
+                            <p class="truncate text-sm font-medium text-black/70"><%= order.service.partner.name %></p>
+                          </div>
+
+                          <div class="min-w-0">
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35">PIC</p>
+                            <p class="truncate text-sm font-medium text-black/70"><%= order.partner_assignee_name.presence || 'Chưa cập nhật' %></p>
+                          </div>
+
+                          <div class="min-w-0">
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35">Domain</p>
+                            <p class="truncate text-sm font-medium text-black/70"><%= order.customer_domain %></p>
+                          </div>
+
+                          <div class="min-w-0">
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35">Deadline</p>
+                            <div class="<%= ['mt-1 inline-flex max-w-full items-center gap-2.5 rounded-2xl border px-2.5 py-1.5', status[:container_class]].join(' ') %>">
+                              <span class="<%= ['inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-xl', status[:icon_container_class]].join(' ') %>">
+                                <%= lucide_icon(status[:icon], class: 'h-3.5 w-3.5', "aria-hidden": true) %>
+                              </span>
+                              <span class="min-w-0">
+                                <span class="block text-[10px] font-semibold uppercase tracking-[0.14em]"><%= status[:label] %></span>
+                                <span class="mt-0.5 block truncate text-[13px] font-semibold"><%= l(order.completed_at, format: :long) %></span>
+                              </span>
+                            </div>
+                          </div>
+
+                          <div class="min-w-0">
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35">Mức độ ưu tiên</p>
+                            <div class="mt-1 flex flex-wrap items-center gap-2">
+                              <span
+                                class="<%= ['inline-flex h-8 w-8 items-center justify-center rounded-2xl', priority[:icon_container_class]].join(' ') %>"
+                                title="<%= priority[:tooltip] %>"
+                                aria-label="<%= priority[:tooltip] %>"
+                              >
+                                <%= lucide_icon(priority[:icon], class: 'h-4 w-4', "aria-hidden": true) %>
+                              </span>
+                              <p class="text-sm text-black/50"><%= priority[:label] %></p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="mt-4 flex items-center justify-end">
+                          <%= link_to admin_order_service_path(order, source: :dashboard),
+                            class: 'inline-flex items-center gap-2 text-sm font-semibold text-primary-700' do %>
+                            <span>Xem chi tiết</span>
+                            <%= lucide_icon('arrow-right', class: 'h-4 w-4', "aria-hidden": true) %>
                           <% end %>
-                        </td>
-                        <td class="px-5 py-4 align-middle">
+                        </div>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+            <% else %>
+              <div class="mt-4 overflow-hidden rounded-[24px] border border-black/10">
+                <div class="hidden md:block">
+                  <table class="min-w-full table-fixed border-collapse bg-white">
+                    <colgroup>
+                      <col class="w-[20%]">
+                      <col class="w-[16%]">
+                      <col class="w-[15%]">
+                      <col class="w-[16%]">
+                      <col class="w-[16%]">
+                      <col class="w-[13%]">
+                      <col class="w-[4%]">
+                    </colgroup>
+                    <thead>
+                      <tr class="bg-stone-50 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/40">
+                        <th class="px-5 py-3 text-left">Dịch vụ</th>
+                        <th class="px-5 py-3 text-left">Đối tác</th>
+                        <th class="px-5 py-3 text-left">PIC</th>
+                        <th class="px-5 py-3 text-left">Domain</th>
+                        <th class="px-5 py-3 text-left">Deadline</th>
+                        <th class="px-5 py-3 text-left">Mức độ ưu tiên</th>
+                        <th class="px-5 py-3 text-right"></th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-black/8">
+                      <% @current_orders.each do |order| %>
+                        <% status = dashboard_order_status(order) %>
+                        <% priority = dashboard_order_priority(order) %>
+                        <tr class="group transition hover:bg-stone-50">
+                          <td class="px-5 py-4 align-middle">
+                            <%= link_to admin_order_service_path(order, source: :dashboard), class: 'block min-w-0' do %>
+                              <h3 class="truncate text-base font-semibold text-black transition group-hover:text-primary-700">
+                                <%= order.service.name %>
+                              </h3>
+                            <% end %>
+                          </td>
+                          <td class="px-5 py-4 align-middle">
+                            <p class="truncate text-sm font-medium text-black/70"><%= order.service.partner.name %></p>
+                          </td>
+                          <td class="px-5 py-4 align-middle">
+                            <p class="truncate text-sm font-medium text-black/70"><%= order.partner_assignee_name.presence || 'Chưa cập nhật' %></p>
+                          </td>
+                          <td class="px-5 py-4 align-middle">
+                            <p class="truncate text-sm font-medium text-black/70"><%= order.customer_domain %></p>
+                          </td>
+                          <td class="px-5 py-4 align-middle">
+                            <div class="<%= ['inline-flex max-w-full items-center gap-2.5 rounded-2xl border px-2.5 py-1.5', status[:container_class]].join(' ') %>">
+                              <span class="<%= ['inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-xl', status[:icon_container_class]].join(' ') %>">
+                                <%= lucide_icon(status[:icon], class: 'h-3.5 w-3.5', "aria-hidden": true) %>
+                              </span>
+                              <span class="min-w-0">
+                                <span class="block text-[10px] font-semibold uppercase tracking-[0.14em]"><%= status[:label] %></span>
+                                <span class="mt-0.5 block truncate text-[13px] font-semibold"><%= l(order.completed_at, format: :long) %></span>
+                              </span>
+                            </div>
+                          </td>
+                          <td class="px-5 py-4 align-middle">
+                            <div class="flex flex-wrap items-center gap-2">
+                              <span
+                                class="<%= ['inline-flex h-8 w-8 items-center justify-center rounded-2xl', priority[:icon_container_class]].join(' ') %>"
+                                title="<%= priority[:tooltip] %>"
+                                aria-label="<%= priority[:tooltip] %>"
+                              >
+                                <%= lucide_icon(priority[:icon], class: 'h-4 w-4', "aria-hidden": true) %>
+                              </span>
+                              <span class="text-sm font-medium text-black/60"><%= priority[:label] %></span>
+                            </div>
+                          </td>
+                          <td class="px-5 py-4 text-right align-middle">
+                            <%= link_to admin_order_service_path(order, source: :dashboard),
+                              class: 'inline-flex items-center gap-2 text-sm font-semibold text-primary-700' do %>
+                              <span>Xem</span>
+                              <%= lucide_icon('arrow-right', class: 'h-4 w-4 transition group-hover:translate-x-1', "aria-hidden": true) %>
+                            <% end %>
+                          </td>
+                        </tr>
+                      <% end %>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="divide-y divide-black/8 bg-white md:hidden">
+                  <% @current_orders.each do |order| %>
+                    <% status = dashboard_order_status(order) %>
+                    <% priority = dashboard_order_priority(order) %>
+                    <%= link_to admin_order_service_path(order, source: :dashboard),
+                      class: 'group block px-4 py-4 transition hover:bg-stone-50' do %>
+                      <div class="grid gap-4">
+                        <div class="min-w-0">
+                          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35">Dịch vụ</p>
+                          <h3 class="truncate text-base font-semibold text-black transition group-hover:text-primary-700">
+                            <%= order.service.name %>
+                          </h3>
+                        </div>
+
+                        <div class="min-w-0">
+                          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35">Đối tác</p>
                           <p class="truncate text-sm font-medium text-black/70"><%= order.service.partner.name %></p>
-                        </td>
-                        <td class="px-5 py-4 align-middle">
-                          <p class="truncate text-sm font-medium text-black/70"><%= order.partner_assignee_name %></p>
-                        </td>
-                        <td class="px-5 py-4 align-middle">
-                          <p class="text-sm font-medium text-black/75"><%= l(order.completed_at, format: :long) %></p>
-                        </td>
-                        <td class="px-5 py-4 align-middle">
-                          <p class="text-sm font-semibold text-black/80"><%= dashboard_order_remaining_time(order) %></p>
-                        </td>
-                        <td class="px-5 py-4 align-middle">
+                        </div>
+
+                        <div class="min-w-0">
+                          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35">PIC</p>
+                          <p class="truncate text-sm font-medium text-black/70"><%= order.partner_assignee_name.presence || 'Chưa cập nhật' %></p>
+                        </div>
+
+                        <div class="min-w-0">
+                          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35">Domain</p>
+                          <p class="truncate text-sm font-medium text-black/70"><%= order.customer_domain %></p>
+                        </div>
+
+                        <div class="min-w-0">
+                          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35">Deadline</p>
+                          <div class="<%= ['mt-1 inline-flex max-w-full items-center gap-2.5 rounded-2xl border px-2.5 py-1.5', status[:container_class]].join(' ') %>">
+                            <span class="<%= ['inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-xl', status[:icon_container_class]].join(' ') %>">
+                              <%= lucide_icon(status[:icon], class: 'h-3.5 w-3.5', "aria-hidden": true) %>
+                            </span>
+                            <span class="min-w-0">
+                              <span class="block text-[10px] font-semibold uppercase tracking-[0.14em]"><%= status[:label] %></span>
+                              <span class="mt-0.5 block truncate text-[13px] font-semibold"><%= l(order.completed_at, format: :long) %></span>
+                            </span>
+                          </div>
+                        </div>
+
+                        <div class="min-w-0">
+                          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35">Mức độ ưu tiên</p>
                           <div class="flex flex-wrap items-center gap-2">
                             <span
                               class="<%= ['inline-flex h-8 w-8 items-center justify-center rounded-2xl', priority[:icon_container_class]].join(' ') %>"
@@ -242,85 +625,33 @@
                               <%= lucide_icon(priority[:icon], class: 'h-4 w-4', "aria-hidden": true) %>
                             </span>
                           </div>
-                        </td>
-                        <td class="px-5 py-4 text-right align-middle">
-                          <%= link_to admin_order_service_path(order, source: :dashboard),
-                            class: 'inline-flex items-center gap-2 text-sm font-semibold text-primary-700' do %>
-                            <span>Xem</span>
-                            <%= lucide_icon('arrow-right', class: 'h-4 w-4 transition group-hover:translate-x-1', "aria-hidden": true) %>
-                          <% end %>
-                        </td>
-                      </tr>
-                    <% end %>
-                  </tbody>
-                </table>
-              </div>
-
-              <div class="divide-y divide-black/8 bg-white md:hidden">
-                <% @current_orders.each do |order| %>
-                  <% status = dashboard_order_status(order) %>
-                  <% priority = dashboard_order_priority(order) %>
-                  <%= link_to admin_order_service_path(order, source: :dashboard),
-                    class: 'group block px-4 py-4 transition hover:bg-stone-50' do %>
-                    <div class="grid gap-4">
-                      <div class="min-w-0">
-                        <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35">Dịch vụ</p>
-                        <h3 class="truncate text-base font-semibold text-black transition group-hover:text-primary-700">
-                          <%= order.service.name %>
-                        </h3>
-                      </div>
-
-                      <div class="min-w-0">
-                        <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35">Đối tác</p>
-                        <p class="truncate text-sm font-medium text-black/70"><%= order.service.partner.name %></p>
-                      </div>
-
-                      <div class="min-w-0">
-                        <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35">PIC</p>
-                        <p class="truncate text-sm font-medium text-black/70"><%= order.partner_assignee_name %></p>
-                      </div>
-
-                      <div class="min-w-0">
-                        <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35">Deadline</p>
-                        <p class="text-sm font-medium text-black/75"><%= l(order.completed_at, format: :long) %></p>
-                      </div>
-
-                      <div class="min-w-0">
-                        <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35">Thời gian còn lại</p>
-                        <p class="text-sm font-semibold text-black/80"><%= dashboard_order_remaining_time(order) %></p>
-                      </div>
-
-                      <div class="min-w-0">
-                        <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-black/35">Mức độ ưu tiên</p>
-                        <div class="flex flex-wrap items-center gap-2">
-                          <span
-                            class="<%= ['inline-flex h-8 w-8 items-center justify-center rounded-2xl', priority[:icon_container_class]].join(' ') %>"
-                            title="<%= priority[:tooltip] %>"
-                            aria-label="<%= priority[:tooltip] %>"
-                          >
-                            <%= lucide_icon(priority[:icon], class: 'h-4 w-4', "aria-hidden": true) %>
-                          </span>
+                          <p class="mt-1 text-sm text-black/50"><%= priority[:label] %></p>
                         </div>
-                        <p class="mt-1 text-sm text-black/50"><%= priority[:label] %></p>
-                      </div>
 
-                      <div class="flex items-center gap-2 text-sm font-semibold text-primary-700">
-                        <span>Xem</span>
-                        <%= lucide_icon('arrow-right', class: 'h-4 w-4 transition group-hover:translate-x-1', "aria-hidden": true) %>
+                        <div class="flex items-center gap-2 text-sm font-semibold text-primary-700">
+                          <span>Xem</span>
+                          <%= lucide_icon('arrow-right', class: 'h-4 w-4 transition group-hover:translate-x-1', "aria-hidden": true) %>
+                        </div>
                       </div>
-                    </div>
+                    <% end %>
                   <% end %>
-                <% end %>
+                </div>
               </div>
-            </div>
+            <% end %>
           <% else %>
             <div class="mt-4 rounded-[24px] border border-dashed border-black/10 bg-stone-50 px-4 py-10 text-center">
               <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-[20px] bg-white text-primary-600 shadow-sm ring-1 ring-black/5">
                 <%= lucide_icon('package-open', class: 'h-6 w-6', "aria-hidden": true) %>
               </div>
-              <h3 class="mt-4 text-lg font-semibold text-black">Chưa có order hiện tại</h3>
+              <h3 class="mt-4 text-lg font-semibold text-black">
+                <%= @query.present? ? 'Không tìm thấy order theo từ khóa' : 'Chưa có order đang quản lý' %>
+              </h3>
               <p class="mt-2 text-sm leading-6 text-black/60">
-                Khi có order mới được tạo, danh sách này sẽ tự cập nhật để bạn theo dõi ngay trên dashboard.
+                <% if @query.present? %>
+                  Thử tìm theo tên dịch vụ, tên đối tác hoặc domain khác để xem lại danh sách order đang được quản lý.
+                <% else %>
+                  Khi có order mới được tạo, danh sách này sẽ tự cập nhật để bạn theo dõi ngay trên dashboard cho tới khi admin xóa.
+                <% end %>
               </p>
             </div>
           <% end %>

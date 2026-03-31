@@ -14,8 +14,6 @@ class OrderService < ApplicationParanoia
   normalizes :customer_domain, with: ->(value) { value.to_s.strip }
 
   validates :completed_at, presence: { message: 'không được để trống' }
-  validates :partner_assignee_name, presence: { message: 'không được để trống' }
-  validates :google_sheet_link, presence: { message: 'không được để trống' }
   validates :customer_domain, presence: { message: 'không được để trống' }
   validates :priority_status, presence: { message: 'không được để trống' }
 

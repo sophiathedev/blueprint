@@ -4,6 +4,8 @@ class HomeController < ApplicationController
   def index
     return unless user_signed_in?
 
+    reference_time = Time.current.change(sec: 0)
+    @query = params[:q].to_s.strip
     @partner_filter = params[:partner_id].to_s
     @priority_filter = params[:priority].to_s
     @deadline_filter = params[:deadline].to_s
@@ -13,7 +15,6 @@ class HomeController < ApplicationController
 
     current_orders_scope = OrderService
       .joins(service: :partner)
-      .where(completed_at: Time.current.change(sec: 0)..)
     current_orders_scope = current_orders_scope.where(
       id: OrderTask.for_user_order_services(current_user)
     ) unless current_user.admin?
@@ -21,21 +22,26 @@ class HomeController < ApplicationController
       .distinct
       .reorder('partners.name ASC')
       .pluck('partners.name', 'partners.id')
-    current_orders_scope = apply_dashboard_filters(current_orders_scope)
+    current_orders_scope = apply_dashboard_filters(current_orders_scope, reference_time)
+    current_orders_scope = apply_dashboard_search(current_orders_scope)
     @current_orders = current_orders_scope
       .includes(service: :partner)
-      .order(priority_status: :desc, completed_at: :asc, created_at: :desc)
-      .limit(12)
+      .order(
+        dashboard_order_sort_clause(reference_time),
+        completed_at: :asc,
+        priority_status: :desc,
+        created_at: :desc
+      )
 
     @current_orders_count = current_orders_scope.count
+    @overdue_orders_count = current_orders_scope.where('order_services.completed_at < ?', reference_time).count
     @urgent_orders_count = current_orders_scope.urgent.count
     @orders_due_today_count = current_orders_scope.where(completed_at: Time.zone.today.all_day).count
-    @orders_due_tomorrow_count = current_orders_scope.where(completed_at: Time.zone.tomorrow.all_day).count
   end
 
   private
 
-  def apply_dashboard_filters(scope)
+  def apply_dashboard_filters(scope, reference_time)
     filtered_scope = scope
 
     if @partner_filter.present?
@@ -47,24 +53,26 @@ class HomeController < ApplicationController
     end
 
     case @deadline_filter
+    when 'overdue'
+      filtered_scope.where('order_services.completed_at < ?', reference_time)
     when 'hours_4'
-      filtered_scope.where(completed_at: Time.current.change(sec: 0)..4.hours.from_now)
+      filtered_scope.where(completed_at: reference_time..4.hours.from_now)
     when 'today'
       filtered_scope.where(completed_at: Time.zone.today.all_day)
     when 'tomorrow'
       filtered_scope.where(completed_at: Time.zone.tomorrow.all_day)
     when 'next_3_days'
-      filtered_scope.where(completed_at: Time.current.change(sec: 0)..3.days.from_now.end_of_day)
+      filtered_scope.where(completed_at: reference_time..3.days.from_now.end_of_day)
     when 'next_7_days'
-      filtered_scope.where(completed_at: Time.current.change(sec: 0)..7.days.from_now.end_of_day)
+      filtered_scope.where(completed_at: reference_time..7.days.from_now.end_of_day)
     when 'next_14_days'
-      filtered_scope.where(completed_at: Time.current.change(sec: 0)..14.days.from_now.end_of_day)
+      filtered_scope.where(completed_at: reference_time..14.days.from_now.end_of_day)
     when 'next_30_days'
-      filtered_scope.where(completed_at: Time.current.change(sec: 0)..30.days.from_now.end_of_day)
+      filtered_scope.where(completed_at: reference_time..30.days.from_now.end_of_day)
     when 'within_days'
       return filtered_scope unless @deadline_days_filter.positive?
 
-      filtered_scope.where(completed_at: Time.current.change(sec: 0)..@deadline_days_filter.days.from_now.end_of_day)
+      filtered_scope.where(completed_at: reference_time..@deadline_days_filter.days.from_now.end_of_day)
     when 'custom_range'
       return filtered_scope unless @deadline_from_days_filter.is_a?(Integer) && @deadline_to_days_filter.is_a?(Integer)
 
@@ -73,7 +81,7 @@ class HomeController < ApplicationController
 
       range_start =
         if from_days.zero?
-          Time.current.change(sec: 0)
+          reference_time
         else
           from_days.days.from_now.beginning_of_day
         end
@@ -82,6 +90,16 @@ class HomeController < ApplicationController
     else
       filtered_scope
     end
+  end
+
+  def apply_dashboard_search(scope)
+    return scope if @query.blank?
+
+    sanitized_query = "%#{ActiveRecord::Base.sanitize_sql_like(@query)}%"
+    scope.where(
+      'services.name ILIKE :query OR partners.name ILIKE :query OR order_services.customer_domain ILIKE :query',
+      query: sanitized_query
+    )
   end
 
   def normalized_deadline_days_filter
@@ -98,5 +116,11 @@ class HomeController < ApplicationController
     return 0 if days.negative?
 
     [days, 365].min
+  end
+
+  def dashboard_order_sort_clause(reference_time)
+    quoted_time = ActiveRecord::Base.connection.quote(reference_time)
+
+    Arel.sql("CASE WHEN order_services.completed_at < #{quoted_time} THEN 0 ELSE 1 END ASC")
   end
 end

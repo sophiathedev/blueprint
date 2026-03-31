@@ -55,6 +55,8 @@ module ApplicationHelper
 
     return items unless user_signed_in? && current_user.admin?
 
+    overdue_order_tasks_count = OrderTask.where(is_overdue: true, is_completed: false).count
+
     items + [
       {
         label: 'Đối tác',
@@ -73,6 +75,13 @@ module ApplicationHelper
         href: admin_members_path,
         active: controller_path == 'admin/members',
         icon: 'users-round'
+      },
+      {
+        label: 'Theo dõi công việc',
+        href: admin_work_tracking_path,
+        active: controller_path == 'admin/work_tracking',
+        icon: 'list-checks',
+        badge: overdue_order_tasks_count.positive? ? overdue_order_tasks_count : nil
       },
       {
         label: 'Settings',

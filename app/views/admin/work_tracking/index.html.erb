@@ -1,0 +1,231 @@
+<% content_for :title, 'Blueprint | Theo dõi công việc' %>
+<% selected_member_param = @selected_member_id.presence %>
+<% selected_filter_param = (@task_filter unless @task_filter == 'all') %>
+
+<section class="space-y-5" data-controller="search-form" data-search-form-mode-value="server" data-search-form-delay-value="500">
+  <section class="rounded-[32px] border border-black/10 bg-white p-5 shadow-sm md:p-6">
+    <div class="border-b border-black/10 pb-5">
+      <h1 class="text-3xl font-semibold tracking-tight text-black">Theo dõi công việc</h1>
+      <p class="mt-2 text-sm text-black/55">
+        Theo dõi tiến độ task của toàn bộ nhân sự, biết ngay ai đang hoàn thành tốt và ai đang bị trễ deadline.
+      </p>
+    </div>
+
+    <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <%= link_to admin_work_tracking_path(member_id: selected_member_param, q: @query.presence), class: [
+        'block rounded-[22px] border p-4 transition hover:-translate-y-0.5 hover:shadow-sm',
+        (@task_filter == 'all' ? 'border-primary-300 bg-primary-50 ring-2 ring-primary-100' : 'border-black/10 bg-stone-50 hover:border-black/15')
+      ].join(' ') do %>
+        <p class="<%= ['text-[11px] font-semibold uppercase tracking-[0.18em]', (@task_filter == 'all' ? 'text-primary-600' : 'text-black/40')].join(' ') %>">Tổng task</p>
+        <p class="<%= ['mt-2 text-3xl font-semibold', (@task_filter == 'all' ? 'text-primary-700' : 'text-black')].join(' ') %>"><%= @total_order_tasks_count %></p>
+        <p class="<%= ['mt-1 text-sm', (@task_filter == 'all' ? 'text-primary-700/80' : 'text-black/55')].join(' ') %>">task của toàn bộ nhân sự</p>
+      <% end %>
+
+      <%= link_to admin_work_tracking_path(filter: :pending, member_id: selected_member_param, q: @query.presence), class: [
+        'block rounded-[22px] border p-4 transition hover:-translate-y-0.5 hover:shadow-sm',
+        (@task_filter == 'pending' ? 'border-amber-300 bg-amber-50 ring-2 ring-amber-100' : 'border-black/10 bg-stone-50 hover:border-black/15')
+      ].join(' ') do %>
+        <p class="<%= ['text-[11px] font-semibold uppercase tracking-[0.18em]', (@task_filter == 'pending' ? 'text-amber-600' : 'text-black/40')].join(' ') %>">Cần xử lý</p>
+        <p class="<%= ['mt-2 text-3xl font-semibold', (@task_filter == 'pending' ? 'text-amber-700' : 'text-black')].join(' ') %>"><%= @pending_order_tasks_count %></p>
+        <p class="<%= ['mt-1 text-sm', (@task_filter == 'pending' ? 'text-amber-700/80' : 'text-black/55')].join(' ') %>">task chưa hoàn thành</p>
+      <% end %>
+
+      <%= link_to admin_work_tracking_path(filter: :overdue, member_id: selected_member_param, q: @query.presence), class: [
+        'block rounded-[22px] border p-4 transition hover:-translate-y-0.5 hover:shadow-sm',
+        (@task_filter == 'overdue' ? 'border-rose-300 bg-rose-100 ring-2 ring-rose-100' : 'border-rose-200 bg-rose-50 hover:border-rose-300')
+      ].join(' ') do %>
+        <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-rose-500">Trễ hạn</p>
+        <p class="mt-2 text-3xl font-semibold text-rose-700"><%= @overdue_order_tasks_count %></p>
+        <p class="mt-1 text-sm text-rose-700/75">task đã vượt deadline</p>
+      <% end %>
+
+      <%= link_to admin_work_tracking_path(filter: :completed, member_id: selected_member_param, q: @query.presence), class: [
+        'block rounded-[22px] border p-4 transition hover:-translate-y-0.5 hover:shadow-sm',
+        (@task_filter == 'completed' ? 'border-emerald-300 bg-emerald-100 ring-2 ring-emerald-100' : 'border-emerald-200 bg-emerald-50 hover:border-emerald-300')
+      ].join(' ') do %>
+        <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-500">Hoàn thành</p>
+        <p class="mt-2 text-3xl font-semibold text-emerald-700"><%= @completed_order_tasks_count %></p>
+        <p class="mt-1 text-sm text-emerald-700/75">task đã xử lý xong</p>
+      <% end %>
+    </div>
+  </section>
+
+  <section class="rounded-[32px] border border-black/10 bg-white p-4 shadow-sm md:p-5">
+    <div class="flex flex-col gap-3 border-b border-black/10 pb-4 md:flex-row md:items-end md:justify-between">
+      <div>
+        <h2 class="text-2xl font-semibold tracking-tight text-black">Theo nhân sự</h2>
+        <p class="mt-1 text-sm text-black/55">
+          Chọn một nhân sự để lọc nhanh danh sách task và xem người đó còn bao nhiêu việc chưa xong hoặc đang bị trễ.
+        </p>
+      </div>
+
+      <% if @selected_member.present? %>
+        <%= link_to admin_work_tracking_path(filter: selected_filter_param, q: @query.presence),
+          class: 'inline-flex items-center gap-2 rounded-2xl border border-stone-200 bg-stone-100 px-3 py-2 text-sm font-semibold text-black transition-colors hover:border-stone-300 hover:bg-stone-200' do %>
+          <%= lucide_icon('x', class: 'h-4 w-4', "aria-hidden": true) %>
+          Bỏ lọc nhân sự
+        <% end %>
+      <% end %>
+    </div>
+
+    <div class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <%= link_to admin_work_tracking_path(filter: selected_filter_param, q: @query.presence), class: [
+        'block rounded-[24px] border p-4 transition hover:-translate-y-0.5 hover:shadow-sm',
+        (@selected_member.blank? ? 'border-primary-300 bg-primary-50 ring-2 ring-primary-100' : 'border-black/10 bg-stone-50 hover:border-black/15')
+      ].join(' ') do %>
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <p class="<%= ['text-[11px] font-semibold uppercase tracking-[0.18em]', (@selected_member.blank? ? 'text-primary-600' : 'text-black/40')].join(' ') %>">Tất cả nhân sự</p>
+            <p class="<%= ['mt-2 text-lg font-semibold', (@selected_member.blank? ? 'text-primary-700' : 'text-black')].join(' ') %>">Toàn team</p>
+          </div>
+          <span class="<%= ['rounded-full px-2.5 py-1 text-[11px] font-semibold', (@selected_member.blank? ? 'bg-primary-100 text-primary-700' : 'bg-white text-black/50 ring-1 ring-black/10')].join(' ') %>">
+            <%= @member_summaries.size %> người
+          </span>
+        </div>
+        <div class="mt-4 grid grid-cols-3 gap-2 text-sm">
+          <div class="rounded-2xl bg-white/80 px-3 py-2 ring-1 ring-black/5">
+            <p class="text-black/45">Cần xử lý</p>
+            <p class="mt-1 font-semibold text-black"><%= @pending_order_tasks_count %></p>
+          </div>
+          <div class="rounded-2xl bg-white/80 px-3 py-2 ring-1 ring-black/5">
+            <p class="text-black/45">Trễ hạn</p>
+            <p class="mt-1 font-semibold text-rose-700"><%= @overdue_order_tasks_count %></p>
+          </div>
+          <div class="rounded-2xl bg-white/80 px-3 py-2 ring-1 ring-black/5">
+            <p class="text-black/45">Hoàn thành</p>
+            <p class="mt-1 font-semibold text-emerald-700"><%= @completed_order_tasks_count %></p>
+          </div>
+        </div>
+      <% end %>
+
+      <% @member_summaries.each do |summary| %>
+        <% member = summary[:member] %>
+        <% active = @selected_member_id == member.id %>
+        <%= link_to admin_work_tracking_path(member_id: member.id, filter: selected_filter_param, q: @query.presence), class: [
+          'block rounded-[24px] border p-4 transition hover:-translate-y-0.5 hover:shadow-sm',
+          (active ? 'border-primary-300 bg-primary-50 ring-2 ring-primary-100' : 'border-black/10 bg-stone-50 hover:border-black/15')
+        ].join(' ') do %>
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <p class="<%= ['text-[11px] font-semibold uppercase tracking-[0.18em]', (active ? 'text-primary-600' : 'text-black/40')].join(' ') %>">Nhân sự</p>
+              <h3 class="<%= ['mt-2 truncate text-lg font-semibold', (active ? 'text-primary-700' : 'text-black')].join(' ') %>"><%= member.display_name %></h3>
+              <p class="mt-1 truncate text-sm text-black/55"><%= member.email %></p>
+            </div>
+
+            <span class="<%= ['rounded-full px-2.5 py-1 text-[11px] font-semibold', (active ? 'bg-primary-100 text-primary-700' : 'bg-white text-black/50 ring-1 ring-black/10')].join(' ') %>">
+              <%= summary[:total_count] %> task
+            </span>
+          </div>
+
+          <div class="mt-4 grid grid-cols-3 gap-2 text-sm">
+            <div class="rounded-2xl bg-white/80 px-3 py-2 ring-1 ring-black/5">
+              <p class="text-black/45">Cần xử lý</p>
+              <p class="mt-1 font-semibold text-black"><%= summary[:pending_count] %></p>
+            </div>
+            <div class="rounded-2xl bg-white/80 px-3 py-2 ring-1 ring-black/5">
+              <p class="text-black/45">Trễ hạn</p>
+              <p class="mt-1 font-semibold text-rose-700"><%= summary[:overdue_count] %></p>
+            </div>
+            <div class="rounded-2xl bg-white/80 px-3 py-2 ring-1 ring-black/5">
+              <p class="text-black/45">Hoàn thành</p>
+              <p class="mt-1 font-semibold text-emerald-700"><%= summary[:completed_count] %></p>
+            </div>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  </section>
+
+  <section class="rounded-[32px] border border-black/10 bg-white p-4 shadow-sm md:p-5">
+    <div class="flex flex-col gap-2 border-b border-black/10 pb-4 md:flex-row md:items-end md:justify-between">
+      <div>
+        <h2 class="text-2xl font-semibold tracking-tight text-black">Danh sách task theo nhân sự</h2>
+        <p class="mt-1 text-sm text-black/55">
+          <% if @selected_member.present? %>
+            Đang lọc task của <span class="font-semibold text-black"><%= @selected_member.display_name %></span>.
+          <% else %>
+            Hiển thị toàn bộ task đang được gán cho nhân sự trong các order.
+          <% end %>
+        </p>
+      </div>
+
+      <div class="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center">
+        <div class="relative w-full md:w-[340px]" data-controller="clearable-input">
+          <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-black/35">
+            <%= lucide_icon('search', class: 'h-4 w-4', "aria-hidden": true) %>
+          </span>
+          <input
+            type="text"
+            name="q"
+            value="<%= @query %>"
+            placeholder="Tìm theo task, nhân sự hoặc đối tác"
+            class="w-full rounded-2xl border border-stone-200 bg-stone-50 py-2 pl-10 pr-10 text-sm text-black outline-none transition focus:border-primary-400 focus:bg-white focus:ring-4 focus:ring-primary-100"
+            data-search-form-target="input"
+            data-clearable-input-target="input"
+            data-action="input->search-form#submitWithDebounce input->clearable-input#sync"
+          >
+          <button
+            type="button"
+            class="absolute inset-y-0 right-0 hidden items-center pr-3 text-black/35 transition hover:text-black"
+            data-clearable-input-target="clear"
+            data-action="click->clearable-input#clear click->search-form#submitWithDebounce"
+            aria-label="Xóa nội dung"
+          >
+            <%= lucide_icon('x', class: 'h-4 w-4', "aria-hidden": true) %>
+          </button>
+        </div>
+
+        <% if @task_filter != 'all' || @query.present? || @selected_member.present? %>
+          <%= link_to admin_work_tracking_path,
+            class: 'inline-flex items-center gap-2 rounded-2xl border border-stone-200 bg-stone-100 px-3 py-2 text-sm font-semibold text-black transition-colors hover:border-stone-300 hover:bg-stone-200' do %>
+            <%= lucide_icon('x', class: 'h-4 w-4', "aria-hidden": true) %>
+            Bỏ lọc
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+
+    <% if @order_tasks.any? %>
+      <div class="mt-4 overflow-hidden rounded-[24px] border border-black/10">
+        <div class="hidden md:block">
+          <table class="min-w-full table-fixed border-collapse bg-white">
+            <colgroup>
+              <col class="w-[30%]">
+              <col class="w-[16%]">
+              <col class="w-[18%]">
+              <col class="w-[20%]">
+              <col class="w-[16%]">
+            </colgroup>
+            <thead>
+              <tr class="bg-stone-50 text-[11px] font-semibold uppercase tracking-[0.18em] text-black/40">
+                <th class="px-5 py-3 text-left">Task</th>
+                <th class="px-5 py-3 text-left">Nhân sự</th>
+                <th class="px-5 py-3 text-left">Đối tác</th>
+                <th class="px-5 py-3 text-left">Deadline</th>
+                <th class="px-5 py-3 text-left">Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-black/8">
+              <% @order_tasks.each do |order_task| %>
+                <%= render 'order_task_row', order_task: %>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="divide-y divide-black/8 bg-white md:hidden">
+          <% @order_tasks.each do |order_task| %>
+            <%= render 'order_task_card', order_task: %>
+          <% end %>
+        </div>
+      </div>
+    <% else %>
+      <div class="mt-4 rounded-[24px] border border-dashed border-black/10 bg-stone-50 p-5">
+        <p class="text-sm font-semibold text-black">Chưa có task nào khớp bộ lọc</p>
+        <p class="mt-2 text-sm leading-6 text-black/60">
+          Hãy thử đổi nhân sự, trạng thái hoặc từ khóa tìm kiếm để xem thêm task.
+        </p>
+      </div>
+    <% end %>
+  </section>
+</section>

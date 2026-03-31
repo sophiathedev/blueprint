@@ -1,6 +1,10 @@
 <% order_service = order_task.order_service %>
 <% service = order_task.task.service %>
 <% partner = service.partner %>
+<% customer_domain = order_service.customer_domain.to_s %>
+<% customer_domain_href = customer_domain[%r{\Ahttps?://}] ? customer_domain : "https://#{customer_domain}" if customer_domain.present? %>
+<% google_sheet_link = order_service.google_sheet_link.to_s %>
+<% google_sheet_href = google_sheet_link[%r{\Ahttps?://}] ? google_sheet_link : "https://#{google_sheet_link}" if google_sheet_link.present? %>
 <article
   id="<%= dom_id(order_task, :member_card) %>"
   class="space-y-3 cursor-pointer p-4 transition hover:bg-stone-100"
@@ -49,6 +53,32 @@
   </div>
 
   <div class="grid gap-2 rounded-[22px] border border-black/10 bg-stone-50 p-3">
+    <p class="text-sm text-black/70">
+      <span class="font-semibold text-black">Domain:</span>
+      <% if customer_domain.present? %>
+        <%= link_to customer_domain,
+          customer_domain_href,
+          target: '_blank',
+          rel: 'noreferrer',
+          class: 'text-primary-700 transition hover:text-primary-800 hover:underline',
+          onclick: 'event.stopPropagation()' %>
+      <% else %>
+        Chưa cập nhật
+      <% end %>
+    </p>
+    <p class="text-sm text-black/70">
+      <span class="font-semibold text-black">Google Sheet:</span>
+      <% if google_sheet_link.present? %>
+        <%= link_to 'Mở Google Sheet',
+          google_sheet_href,
+          target: '_blank',
+          rel: 'noreferrer',
+          class: 'text-primary-700 transition hover:text-primary-800 hover:underline',
+          onclick: 'event.stopPropagation()' %>
+      <% else %>
+        Chưa cập nhật
+      <% end %>
+    </p>
     <p class="text-sm text-black/70"><span class="font-semibold text-black">Deadline:</span> <%= order_service.completed_at.strftime('%H:%M %d/%m/%Y') %></p>
     <% if order_task.mark_completed_at.present? %>
       <p class="text-sm text-black/70"><span class="font-semibold text-black">Hoàn thành:</span> <%= order_task.mark_completed_at.strftime('%H:%M %d/%m/%Y') %></p>

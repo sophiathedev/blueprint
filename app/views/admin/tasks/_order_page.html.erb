@@ -259,24 +259,22 @@
           <div class="space-y-2">
             <%= form.label :partner_assignee_name, class: 'text-sm font-semibold text-black/80' do %>
               Tên nhân sự của đối tác
-              <span class="<%= required_badge_classes %>">*</span>
+              <span class="text-xs font-medium text-black/45">(không bắt buộc)</span>
             <% end %>
             <%= form.text_field :partner_assignee_name,
               value: order_request_data[:partner_assignee_name],
-              placeholder: 'Nhập tên người phụ trách',
-              required: true,
+              placeholder: 'Nhập tên người phụ trách nếu có',
               class: 'w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-black outline-none transition focus:border-primary-400 focus:bg-white focus:ring-4 focus:ring-primary-100' %>
           </div>
 
           <div class="space-y-2">
             <%= form.label :google_sheet_link, class: 'text-sm font-semibold text-black/80' do %>
               Link Google Sheet
-              <span class="<%= required_badge_classes %>">*</span>
+              <span class="text-xs font-medium text-black/45">(không bắt buộc)</span>
             <% end %>
             <%= form.text_field :google_sheet_link,
               value: order_request_data[:google_sheet_link],
-              placeholder: 'Dán link Google Sheet',
-              required: true,
+              placeholder: 'Dán link Google Sheet nếu có',
               class: 'w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-black outline-none transition focus:border-primary-400 focus:bg-white focus:ring-4 focus:ring-primary-100' %>
           </div>
 

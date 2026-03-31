@@ -43,8 +43,8 @@
               data: {
                 controller: 'confirm-submit',
                 action: 'click@window->confirm-submit#closeOnOutside keydown.esc@window->confirm-submit#reset',
-                confirm_submit_default_label_value: 'Xóa order',
-                confirm_submit_confirm_label_value: 'Xác nhận xóa order'
+                confirm_submit_default_label_value: 'Xóa order và task',
+                confirm_submit_confirm_label_value: 'Xác nhận xóa order và task'
               } do %>
               <button
                 type="button"
@@ -60,7 +60,7 @@
                     <%= lucide_icon('check', class: 'h-4 w-4', "aria-hidden": true) %>
                   </span>
                 </span>
-                <span data-confirm-submit-target="text">Xóa order</span>
+                <span data-confirm-submit-target="text">Xóa order và task</span>
               </button>
             <% end %>
 
@@ -94,7 +94,7 @@
 
       <div class="rounded-[24px] border border-black/10 bg-stone-50 p-5">
         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-black/45">PIC đối tác</p>
-        <p class="mt-2 text-xl font-semibold text-black"><%= @order_service.partner_assignee_name %></p>
+        <p class="mt-2 text-xl font-semibold text-black"><%= @order_service.partner_assignee_name.presence || 'Chưa cập nhật' %></p>
       </div>
 
       <% if @order_service.google_sheet_link.present? %>
@@ -138,7 +138,7 @@
 
     <div class="mt-4">
       <div class="<%= ['rounded-[24px] border p-5 transition-colors', remaining_time_card[:card_class]].join(' ') %>">
-        <p class="<%= ['text-xs font-semibold uppercase tracking-[0.18em]', remaining_time_card[:eyebrow_class]].join(' ') %>">Thời gian còn lại</p>
+        <p class="<%= ['text-xs font-semibold uppercase tracking-[0.18em]', remaining_time_card[:eyebrow_class]].join(' ') %>"><%= dashboard_order_remaining_time_label(@order_service) %></p>
         <p class="<%= ['mt-2 text-xl font-semibold', remaining_time_card[:value_class]].join(' ') %>"><%= dashboard_order_remaining_time(@order_service) %></p>
         <p class="<%= ['mt-2 text-sm', remaining_time_card[:meta_class]].join(' ') %>"><%= dashboard_order_datetime(@order_service.completed_at) %></p>
       </div>

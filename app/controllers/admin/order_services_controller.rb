@@ -65,7 +65,27 @@ module Admin
 
     def destroy
       @order_service.destroy
-      redirect_to root_path, notice: 'Xóa order thành công.'
+      redirect_to root_path, notice: 'Đã xóa order cùng các task đi kèm.'
+    end
+
+    def bulk_destroy
+      order_service_ids = selected_order_service_ids
+      return redirect_to(root_path, alert: 'Vui lòng chọn ít nhất một order để xóa.') if order_service_ids.empty?
+
+      deleted_count = 0
+
+      OrderService.transaction do
+        OrderService.where(id: order_service_ids).find_each do |order_service|
+          order_service.destroy
+          deleted_count += 1
+        end
+      end
+
+      if deleted_count.zero?
+        redirect_to root_path, alert: 'Không tìm thấy order để xóa.'
+      else
+        redirect_to root_path, notice: bulk_destroy_notice(deleted_count)
+      end
     end
 
     private
@@ -233,6 +253,19 @@ module Admin
         value: service.id.to_s,
         data: { partner_name: service.partner.name }
       }
+    end
+
+    def selected_order_service_ids
+      Array(params[:order_service_ids]).filter_map do |id|
+        normalized_id = id.to_i
+        normalized_id if normalized_id.positive?
+      end.uniq
+    end
+
+    def bulk_destroy_notice(count)
+      return 'Đã xóa 1 order cùng các task đi kèm.' if count == 1
+
+      "Đã xóa #{count} order cùng các task đi kèm."
     end
   end
 end

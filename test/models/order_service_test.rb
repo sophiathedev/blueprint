@@ -10,6 +10,7 @@ class OrderServiceTest < ActiveSupport::TestCase
       service:,
       completed_at: '2026-03-22',
       partner_assignee_name: 'Nguyen Van A',
+      customer_domain: 'casts-date.example.com',
       priority_status: :urgent,
       notes: 'Ghi chú rất dài'
     )
@@ -23,6 +24,7 @@ class OrderServiceTest < ActiveSupport::TestCase
       service:,
       completed_at: Time.zone.local(2026, 3, 22, 9, 30, 0),
       partner_assignee_name: 'Nguyen Van B',
+      customer_domain: 'destroy-service.example.com',
       priority_status: :high
     )
 
@@ -32,16 +34,62 @@ class OrderServiceTest < ActiveSupport::TestCase
     assert_equal service.id, service.reload.id
   end
 
-  test 'requires completed_at partner_assignee_name and priority_status but allows blank notes' do
+  test 'destroying an order service soft deletes its order tasks' do
+    service = build_service
+    member = User.create!(
+      email: "member-#{SecureRandom.hex(4)}@example.com",
+      password: 'Password1!',
+      password_confirmation: 'Password1!',
+      role: :member,
+      name: 'Member Cascade',
+      last_login_at: Time.current
+    )
+    task = service.tasks.create!(name: 'Task Cascade', member:)
+    order_service = OrderService.create!(
+      service:,
+      completed_at: 1.day.from_now.change(hour: 9, min: 0, sec: 0),
+      partner_assignee_name: 'Nguyen Van Cascade',
+      customer_domain: 'cascade.example.com',
+      priority_status: :high
+    )
+    order_task = order_service.order_tasks.find_by!(task:)
+
+    assert_difference('OrderTask.count', -1) do
+      order_service.destroy
+    end
+
+    assert Task.exists?(task.id)
+    assert_not OrderTask.exists?(order_task.id)
+    assert_not_nil OrderTask.with_deleted.find(order_task.id).deleted_at
+  end
+
+  test 'requires completed_at customer_domain and priority_status but allows blank optional fields' do
     service = build_service
 
     order_service = OrderService.new(service:, notes: '')
 
     assert_not order_service.valid?
     assert_includes order_service.errors[:completed_at], 'không được để trống'
-    assert_includes order_service.errors[:partner_assignee_name], 'không được để trống'
+    assert_includes order_service.errors[:customer_domain], 'không được để trống'
     assert_includes order_service.errors[:priority_status], 'không được để trống'
     assert_empty order_service.errors[:notes]
+    assert_empty order_service.errors[:partner_assignee_name]
+    assert_empty order_service.errors[:google_sheet_link]
+  end
+
+  test 'allows blank partner_assignee_name and google_sheet_link' do
+    service = build_service
+
+    order_service = OrderService.new(
+      service:,
+      completed_at: 1.day.from_now.change(hour: 9, min: 0, sec: 0),
+      partner_assignee_name: '',
+      google_sheet_link: '',
+      customer_domain: 'optional-fields.example.com',
+      priority_status: :medium
+    )
+
+    assert order_service.valid?
   end
 
   test 'requires completed_at to be from now onward' do
@@ -51,6 +99,7 @@ class OrderServiceTest < ActiveSupport::TestCase
       service:,
       completed_at: 1.minute.ago.change(sec: 0),
       partner_assignee_name: 'Nguyen Van D',
+      customer_domain: 'future-only.example.com',
       priority_status: :low
     )
 
@@ -74,6 +123,7 @@ class OrderServiceTest < ActiveSupport::TestCase
       service:,
       completed_at: 1.day.from_now.change(hour: 9, min: 0, sec: 0),
       partner_assignee_name: 'Nguyen Van E',
+      customer_domain: 'create-order-tasks.example.com',
       priority_status: :medium
     )
 
@@ -91,6 +141,7 @@ class OrderServiceTest < ActiveSupport::TestCase
       service:,
       completed_at: deadline,
       partner_assignee_name: 'Nguyen Van G',
+      customer_domain: 'deadline-job.example.com',
       priority_status: :urgent
     )
 
@@ -110,6 +161,7 @@ class OrderServiceTest < ActiveSupport::TestCase
       service:,
       completed_at: 1.day.from_now.change(hour: 11, min: 45, sec: 0),
       partner_assignee_name: 'Nguyen Van H',
+      customer_domain: 'notify-admins.example.com',
       priority_status: :urgent
     )
 
@@ -132,6 +184,7 @@ class OrderServiceTest < ActiveSupport::TestCase
       service:,
       completed_at: 1.day.from_now.change(hour: 10, min: 0, sec: 0),
       partner_assignee_name: 'Nguyen Van F',
+      customer_domain: 'destroy-order-task.example.com',
       priority_status: :high
     )
 

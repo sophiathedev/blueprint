@@ -14,6 +14,7 @@ module HomeHelper
   def dashboard_deadline_filter_options
     [
       ['Tất cả deadline', ''],
+      ['Quá hạn', 'overdue'],
       ['Trong 4 giờ tới', 'hours_4'],
       ['Hôm nay', 'today'],
       ['Ngày mai', 'tomorrow'],
@@ -23,6 +24,17 @@ module HomeHelper
       ['Trong 30 ngày tới', 'next_30_days'],
       ['Trong số ngày tới', 'within_days'],
       ['Khoảng ngày chi tiết', 'custom_range']
+    ]
+  end
+
+  def dashboard_deadline_quick_filter_options
+    [
+      ['Tất cả', ''],
+      ['Quá hạn', 'overdue'],
+      ['Hôm nay', 'today'],
+      ['Ngày mai', 'tomorrow'],
+      ['3 ngày tới', 'next_3_days'],
+      ['7 ngày tới', 'next_7_days']
     ]
   end
 
@@ -38,7 +50,15 @@ module HomeHelper
     completed_at = order_service.completed_at
     now = Time.current.change(sec: 0)
 
-    if completed_at <= now + 4.hours
+    if completed_at < now
+      {
+        label: 'Quá hạn',
+        container_class: 'border-rose-200 bg-rose-50 text-rose-700',
+        dot_class: 'bg-rose-500',
+        icon: 'triangle-alert',
+        icon_container_class: 'bg-rose-100 text-rose-700 ring-1 ring-rose-200'
+      }
+    elsif completed_at <= now + 4.hours
       {
         label: 'Sắp đến hạn',
         container_class: 'border-rose-200 bg-rose-50 text-rose-700',
@@ -113,7 +133,9 @@ module HomeHelper
   def dashboard_order_due_text(order_service)
     completed_at = order_service.completed_at
 
-    if completed_at <= Time.current.change(sec: 0) + 4.hours
+    if completed_at < Time.current.change(sec: 0)
+      "Đã quá hạn từ #{dashboard_order_datetime(completed_at)}"
+    elsif completed_at <= Time.current.change(sec: 0) + 4.hours
       "Cần ưu tiên xử lý trước #{dashboard_order_time(completed_at)} hôm nay"
     elsif completed_at.to_date == Time.zone.today
       "Được hẹn trong hôm nay vào lúc #{dashboard_order_time(completed_at)}"
@@ -127,28 +149,32 @@ module HomeHelper
   def dashboard_order_remaining_time(order_service)
     completed_at = order_service.completed_at
     now = Time.current.change(sec: 0)
-    remaining_seconds = (completed_at - now).to_i
+    time_delta_seconds = (completed_at - now).to_i
 
-    return 'Đã đến hạn' if remaining_seconds <= 0
+    return 'Đến hạn ngay' if time_delta_seconds.zero?
+    return "Quá hạn #{dashboard_duration_text(time_delta_seconds.abs)}" if time_delta_seconds.negative?
 
-    total_minutes = (remaining_seconds / 60.0).ceil
-    days = total_minutes / (24 * 60)
-    hours = (total_minutes % (24 * 60)) / 60
-    minutes = total_minutes % 60
+    "Còn #{dashboard_duration_text(time_delta_seconds)}"
+  end
 
-    parts = []
-    parts << "#{days} ngày" if days.positive?
-    parts << "#{hours} giờ" if hours.positive?
-    parts << "#{minutes} phút" if minutes.positive? || parts.empty?
+  def dashboard_order_remaining_time_label(order_service)
+    return 'Đã quá hạn' if order_service.completed_at < Time.current.change(sec: 0)
 
-    "Còn #{parts.first(2).join(' ')}"
+    'Thời gian còn lại'
   end
 
   def dashboard_order_remaining_time_card(order_service)
     completed_at = order_service.completed_at
     now = Time.current.change(sec: 0)
 
-    if completed_at <= now + 4.hours
+    if completed_at < now
+      {
+        card_class: 'border-rose-200 bg-rose-50',
+        eyebrow_class: 'text-rose-500',
+        value_class: 'text-rose-700',
+        meta_class: 'text-rose-600/80'
+      }
+    elsif completed_at <= now + 4.hours
       {
         card_class: 'border-rose-200 bg-rose-50',
         eyebrow_class: 'text-rose-500',
@@ -199,5 +225,21 @@ module HomeHelper
     parts << "#{minutes} phút" if minutes.positive? || parts.empty?
 
     "Trễ hạn (#{parts.first(2).join(' ')})"
+  end
+
+  private
+
+  def dashboard_duration_text(total_seconds)
+    total_minutes = (total_seconds.to_f / 60).ceil
+    days = total_minutes / (24 * 60)
+    hours = (total_minutes % (24 * 60)) / 60
+    minutes = total_minutes % 60
+
+    parts = []
+    parts << "#{days} ngày" if days.positive?
+    parts << "#{hours} giờ" if hours.positive?
+    parts << "#{minutes} phút" if minutes.positive? || parts.empty?
+
+    parts.first(2).join(' ')
   end
 end
