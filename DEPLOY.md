@@ -163,6 +163,13 @@ Bạn cần điền:
 - mở cổng `22`, `80`, `443`
 - không public trực tiếp `5432`, `6379`, `9000`, `9001`
 
+Nếu bạn chỉ có VPS `1 vCPU / 1 GB RAM`, cần lưu ý:
+
+- cấu hình này rất dễ bị `OOM kill` nếu chạy cùng lúc `web`, `sidekiq`, `postgres`, `redis`, `minio`, `caddy`
+- nên hạ xuống `RAILS_MAX_THREADS=2`, `WEB_CONCURRENCY=1`, `SIDEKIQ_CONCURRENCY=2`
+- nếu không thật sự cần S3-compatible storage, nên cân nhắc `ACTIVE_STORAGE_SERVICE=local` để không phải chạy thêm `minio`
+- nếu vẫn giữ đủ toàn bộ stack trên máy `1-1`, độ ổn định sẽ thấp khi có upload, job nền hoặc traffic tăng đột ngột
+
 ## 5. Cài Docker trên server
 
 ```bash
