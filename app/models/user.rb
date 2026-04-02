@@ -62,6 +62,10 @@ class User < ApplicationParanoia
     telegram_chat_id.present?
   end
 
+  def telegram_connection_pending?
+    telegram_connection_token_digest.present?
+  end
+
   def telegram_connected_label
     return 'Chưa kết nối Telegram' unless telegram_connected?
     return 'Đã kết nối Telegram' if telegram_connected_at.blank?

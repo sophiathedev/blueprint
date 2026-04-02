@@ -5,6 +5,7 @@ module GoogleSheets
     GOOGLE_SHEETS_TIME_ZONE = 'Asia/Ho_Chi_Minh'
 
     ORDER_HEADERS = [
+      'Order',
       'Đối tác',
       'Dịch vụ',
       'Công việc',
@@ -27,8 +28,13 @@ module GoogleSheets
     end
 
     def order_rows
-      [ORDER_HEADERS] + order_tasks.map do |order_task|
+      [ ORDER_HEADERS ] + data_rows
+    end
+
+    def data_rows
+      order_tasks.map do |order_task|
         [
+          order_identifier(order_task.order_service),
           service.partner.name,
           service.name,
           order_task.task.name,
@@ -49,7 +55,7 @@ module GoogleSheets
     end
 
     def has_order_rows?
-      order_tasks.any?
+      data_rows.any?
     end
 
     private
@@ -66,6 +72,10 @@ module GoogleSheets
         )
         .order(:order_service_id, 'tasks.name ASC', :id)
         .to_a
+    end
+
+    def order_identifier(order_service)
+      order_service.service.name
     end
 
     def format_time(time)

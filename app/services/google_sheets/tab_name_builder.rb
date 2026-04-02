@@ -10,6 +10,11 @@ module GoogleSheets
         build_name(prefix:, kind: 'TPL', service:)
       end
 
+      def aggregate_order_tab_name(prefix:)
+        sanitized_prefix = sanitize_segment(prefix.presence || 'Blueprint')
+        sanitized_prefix.presence&.first(MAX_SHEET_NAME_LENGTH) || 'Blueprint'
+      end
+
       def order_tab_name(service, prefix:)
         build_order_name(service:)
       end
@@ -19,11 +24,11 @@ module GoogleSheets
       def build_name(prefix:, kind:, service:)
         partner_name = sanitize_segment(service.partner.name)
         service_name = sanitize_segment(service.name)
-        base_name = [prefix.presence, "#{kind} - #{partner_name} - #{service_name}", service.id].compact.join(' | ')
+        base_name = [ prefix.presence, "#{kind} - #{partner_name} - #{service_name}", service.id ].compact.join(' | ')
         return base_name if base_name.length <= MAX_SHEET_NAME_LENGTH
 
         suffix = " | #{service.id}"
-        trimmed_base = [prefix.presence, "#{kind} - #{partner_name} - #{service_name}"].compact.join(' | ')
+        trimmed_base = [ prefix.presence, "#{kind} - #{partner_name} - #{service_name}" ].compact.join(' | ')
         allowed_base_length = MAX_SHEET_NAME_LENGTH - suffix.length
 
         "#{trimmed_base.first(allowed_base_length).rstrip}#{suffix}"

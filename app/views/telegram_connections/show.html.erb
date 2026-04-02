@@ -1,7 +1,11 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Blueprint | Liên kết Telegram</title>
+    <% change_mode = @change_mode.present? %>
+    <% connect_button_label = change_mode ? 'Đổi sang Telegram khác' : 'Liên kết với Telegram' %>
+    <% confirm_button_label = change_mode ? 'Tôi đã đổi xong' : 'Tôi đã liên kết xong' %>
+    <% confirmation_path = change_mode ? change_telegram_connection_path(check_status: true) : telegram_connection_path(check_status: true) %>
+    <title>Blueprint | <%= change_mode ? 'Đổi tài khoản Telegram' : 'Liên kết Telegram' %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Blueprint">
@@ -43,7 +47,11 @@
           </div>
         </div>
 
-        <% if current_user.admin? %>
+        <% if change_mode %>
+          <%= link_to 'Quay lại',
+                      root_path,
+                      class: 'pointer-events-auto inline-flex min-h-10 items-center justify-center rounded-2xl border border-black/10 bg-white/70 px-4 py-2 text-sm font-semibold text-black/70 transition hover:border-black/20 hover:bg-white hover:text-black' %>
+        <% elsif current_user.admin? %>
           <%= link_to 'Bỏ qua',
                       root_path,
                       class: 'pointer-events-auto inline-flex min-h-10 items-center justify-center rounded-2xl border border-black/10 bg-white/70 px-4 py-2 text-sm font-semibold text-black/70 transition hover:border-black/20 hover:bg-white hover:text-black' %>
@@ -57,25 +65,41 @@
           <p class="text-sm font-semibold uppercase tracking-[0.22em] text-primary-600">Telegram</p>
 
           <h1 class="mt-3 text-3xl font-semibold tracking-tight text-black sm:text-5xl">
-            Liên kết Telegram
+            <%= change_mode ? 'Đổi tài khoản Telegram' : 'Liên kết Telegram' %>
           </h1>
 
           <p class="mt-4 text-sm leading-7 text-black/60 sm:text-lg">
-            Tài khoản <span class="font-semibold text-black"><%= current_user.display_name %></span> chưa được liên kết Telegram.
-            Bạn cần hoàn tất bước này để tiếp tục nhận thông báo công việc.
+            <% if change_mode %>
+              Tài khoản <span class="font-semibold text-black"><%= current_user.display_name %></span> đang nhận thông báo qua Telegram.
+              Nếu muốn chuyển sang tài khoản Telegram khác, bạn có thể thực hiện ngay tại đây.
+            <% else %>
+              Tài khoản <span class="font-semibold text-black"><%= current_user.display_name %></span> chưa được liên kết Telegram.
+              Bạn cần hoàn tất bước này để tiếp tục nhận thông báo công việc.
+            <% end %>
           </p>
 
+          <% if change_mode %>
+            <div class="mt-6 rounded-3xl border border-emerald-200 bg-emerald-50/80 px-5 py-4 text-sm leading-7 text-emerald-900">
+              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Trạng thái hiện tại</p>
+              <p class="mt-2 font-semibold"><%= current_user.telegram_connected_label %></p>
+              <p class="mt-1 text-emerald-900/80">
+                Sau khi tài khoản Telegram mới bấm <span class="font-semibold">Start</span>, thông báo sẽ được chuyển sang chat mới.
+              </p>
+            </div>
+          <% end %>
+
           <ol class="mt-8 space-y-4 border-l border-black/10 pl-5 text-sm leading-7 text-black/70 sm:text-base">
-            <li><span class="font-semibold text-black">1.</span> Bấm <span class="font-semibold">Liên kết với Telegram</span>.</li>
-            <li><span class="font-semibold text-black">2.</span> Telegram sẽ mở bot với link liên kết của bạn.</li>
+            <li><span class="font-semibold text-black">1.</span> Bấm <span class="font-semibold"><%= connect_button_label %></span>.</li>
+            <li><span class="font-semibold text-black">2.</span> Telegram sẽ mở bot với link liên kết dành cho bạn.</li>
             <li><span class="font-semibold text-black">3.</span> Bấm <span class="font-semibold">Start</span> trong chat.</li>
-            <li><span class="font-semibold text-black">4.</span> Quay lại đây và bấm <span class="font-semibold">Tôi đã liên kết xong</span>.</li>
+            <li><span class="font-semibold text-black">4.</span> Quay lại đây và bấm <span class="font-semibold"><%= confirm_button_label %></span>.</li>
           </ol>
         </div>
 
         <div class="flex flex-col justify-center gap-3 lg:items-stretch"
              data-controller="telegram-connection"
              data-telegram-connection-countdown-seconds-value="60"
+             data-telegram-connection-button-label-value="<%= connect_button_label %>"
              data-telegram-connection-storage-key-value="telegram-connection-countdown-user-<%= current_user.id %>"
              data-telegram-connection-status-url-value="<%= status_telegram_connection_path %>">
           <%= button_to telegram_subscription_path,
@@ -91,15 +115,15 @@
               <path d="M22 2 11 13"></path>
               <path d="M22 2 15 22l-4-9-9-4Z"></path>
             </svg>
-            <span data-telegram-connection-target="connectLabel">Liên kết với Telegram</span>
+            <span data-telegram-connection-target="connectLabel"><%= connect_button_label %></span>
           <% end %>
 
-          <%= link_to telegram_connection_path(check_status: true),
+          <%= link_to confirmation_path,
                       class: 'inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-2xl border border-black/10 bg-white/70 px-4 py-2.5 text-sm font-semibold text-black transition hover:border-black/20 hover:bg-white' do %>
             <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0">
               <path d="M20 6 9 17l-5-5"></path>
             </svg>
-            <span>Tôi đã liên kết xong</span>
+            <span><%= confirm_button_label %></span>
           <% end %>
         </div>
       </section>

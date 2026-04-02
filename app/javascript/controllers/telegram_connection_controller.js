@@ -6,6 +6,7 @@ export default class extends Controller {
   static targets = ["connectButton", "connectLabel"]
   static values = {
     countdownSeconds: { type: Number, default: DEFAULT_COUNTDOWN_SECONDS },
+    buttonLabel: { type: String, default: "Liên kết với Telegram" },
     storageKey: String,
     statusUrl: String
   }
@@ -68,13 +69,13 @@ export default class extends Controller {
   disableButton(remainingSeconds) {
     this.connectButtonTarget.disabled = true
     this.connectButtonTarget.classList.add("cursor-not-allowed", "opacity-70")
-    this.connectLabelTarget.textContent = `Liên kết với Telegram (${remainingSeconds}s)`
+    this.connectLabelTarget.textContent = `${this.buttonLabelValue} (${remainingSeconds}s)`
   }
 
   enableButton() {
     this.connectButtonTarget.disabled = false
     this.connectButtonTarget.classList.remove("cursor-not-allowed", "opacity-70")
-    this.connectLabelTarget.textContent = "Liên kết với Telegram"
+    this.connectLabelTarget.textContent = this.buttonLabelValue
   }
 
   async checkConnectionStatus() {

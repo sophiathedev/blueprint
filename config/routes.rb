@@ -54,6 +54,7 @@ Rails.application.routes.draw do
   resource :telegram_connection, only: :show do
     get :status, on: :collection
   end
+  get 'telegram/change', to: 'telegram_connections#change', as: :change_telegram_connection
   resource :telegram_subscription, only: :create
   post 'telegram/webhook', to: 'telegram_webhooks#create', as: :telegram_webhook
 

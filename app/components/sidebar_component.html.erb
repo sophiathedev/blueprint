@@ -68,27 +68,35 @@
   <div class="px-2 py-2">
     <% if helpers.user_signed_in? %>
       <div class="border-t border-black/10 pt-2">
-        <% dropdown_items = [
-          if helpers.current_user.telegram_connected?
-            {
-              label: 'Đã kết nối Telegram',
-              button: true,
-              disabled: true,
-              icon: 'badge-check',
-              tone: :success
-            }
-          else
-            {
-              label: 'Đăng ký nhận thông báo Telegram',
-              href: telegram_subscription_path,
-              method: :post,
-              icon: 'send',
-              form_data: { turbo: false },
-              form_options: { target: '_blank', rel: 'noopener noreferrer' }
-            }
-          end,
-          { label: 'Đăng xuất', href: logout_path, method: :delete, icon: 'log-out', tone: :danger }
-        ] %>
+        <% dropdown_items = if helpers.current_user.telegram_connected?
+                              [
+                                {
+                                  label: 'Đã kết nối Telegram',
+                                  button: true,
+                                  disabled: true,
+                                  icon: 'badge-check',
+                                  tone: :success
+                                },
+                                {
+                                  label: 'Đổi tài khoản Telegram',
+                                  href: change_telegram_connection_path,
+                                  icon: 'refresh-cw'
+                                },
+                                { label: 'Đăng xuất', href: logout_path, method: :delete, icon: 'log-out', tone: :danger }
+                              ]
+                            else
+                              [
+                                {
+                                  label: 'Đăng ký nhận thông báo Telegram',
+                                  href: telegram_subscription_path,
+                                  method: :post,
+                                  icon: 'send',
+                                  form_data: { turbo: false },
+                                  form_options: { target: '_blank', rel: 'noopener noreferrer' }
+                                },
+                                { label: 'Đăng xuất', href: logout_path, method: :delete, icon: 'log-out', tone: :danger }
+                              ]
+                            end %>
 
         <%= render DropdownComponent.new(
           items: dropdown_items,

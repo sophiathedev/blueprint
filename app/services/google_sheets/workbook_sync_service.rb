@@ -23,7 +23,7 @@ module GoogleSheets
       metadata = client.spreadsheet_metadata(spreadsheet_id)
       existing_sheets = metadata.fetch('sheets', []).to_h do |sheet|
         properties = sheet.fetch('properties', {})
-        [properties['title'], properties]
+        [ properties['title'], properties ]
       end
 
       desired_tabs = build_desired_tabs
@@ -45,7 +45,7 @@ module GoogleSheets
       end
 
       temporary_sheet = sheet_properties_for(spreadsheet_id, temporary_sheet_title)
-      delete_sheets!(spreadsheet_id, [temporary_sheet]) if temporary_sheet.present?
+      delete_sheets!(spreadsheet_id, [ temporary_sheet ]) if temporary_sheet.present?
     end
 
     private
@@ -53,12 +53,12 @@ module GoogleSheets
     attr_reader :setting, :client
 
     def build_desired_tabs
-      services.each_with_object({}) do |service, tabs|
-        snapshot = ServiceSnapshotBuilder.new(service)
-        next unless snapshot.has_order_rows?
-
-        tabs[TabNameBuilder.order_tab_name(service, prefix: setting.google_sheets_tab_prefix)] = snapshot.order_rows
+      rows = services.flat_map do |service|
+        ServiceSnapshotBuilder.new(service).data_rows
       end
+
+      values = rows.present? ? [ ServiceSnapshotBuilder::ORDER_HEADERS ] + rows : [ [ EMPTY_STATE_CELL_VALUE ] ]
+      { managed_tab_title => values }
     end
 
     def services
@@ -68,20 +68,16 @@ module GoogleSheets
     end
 
     def normalized_tabs_for_sync(desired_tabs)
-      return desired_tabs if desired_tabs.present?
-
-      { empty_state_tab_title => [[EMPTY_STATE_CELL_VALUE]] }
+      desired_tabs
     end
 
-    def empty_state_tab_title
-      [setting.google_sheets_tab_prefix.presence || 'Blueprint', 'Không có dữ liệu']
-        .join(' | ')
-        .first(TabNameBuilder::MAX_SHEET_NAME_LENGTH)
+    def managed_tab_title
+      TabNameBuilder.aggregate_order_tab_name(prefix: setting.google_sheets_tab_prefix)
     end
 
     def create_temporary_sheet!(spreadsheet_id)
       title = "__BLUEPRINT_SYNC_TMP__#{SecureRandom.hex(4)}"
-      create_sheets!(spreadsheet_id, { title => [[nil]] })
+      create_sheets!(spreadsheet_id, { title => [ [ nil ] ] })
       title
     end
 
@@ -150,8 +146,8 @@ module GoogleSheets
     end
 
     def grid_properties_for(values)
-      row_count = [values.size, 1].max
-      column_count = [values.map(&:size).max.to_i, 1].max
+      row_count = [ values.size, 1 ].max
+      column_count = [ values.map(&:size).max.to_i, 1 ].max
 
       {
         rowCount: row_count,

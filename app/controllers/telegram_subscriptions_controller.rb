@@ -10,8 +10,15 @@ class TelegramSubscriptionsController < ApplicationController
 
     redirect_to telegram_deep_link, allow_other_host: true
   rescue Telegram::Client::MissingConfigurationError
-    redirect_to telegram_connection_path, alert: 'Telegram bot chưa được cấu hình. Vui lòng liên hệ admin để bật tính năng này.'
+    redirect_to telegram_connection_redirect_path,
+                alert: 'Telegram bot chưa được cấu hình. Vui lòng liên hệ admin để bật tính năng này.'
   rescue Telegram::Client::Error => error
-    redirect_to telegram_connection_path, alert: "Không thể mở Telegram bot: #{error.message}"
+    redirect_to telegram_connection_redirect_path, alert: "Không thể mở Telegram bot: #{error.message}"
+  end
+
+  private
+
+  def telegram_connection_redirect_path
+    current_user.telegram_connected? ? change_telegram_connection_path : telegram_connection_path
   end
 end
