@@ -79,7 +79,7 @@ gem 'draper', '~> 4.0'
 gem 'dotenv', '~> 3.2'
 gem 'gretel', '~> 5.1'
 
-gem 'view_component', '~> 4.5'
+gem 'view_component', '~> 4.6'
 
 gem 'sidekiq', '~> 8.1'
 gem 'redis', '~> 5.4'
