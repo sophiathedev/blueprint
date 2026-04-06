@@ -85,4 +85,4 @@ gem 'sidekiq', '~> 8.1'
 gem 'redis', '~> 5.4'
 gem 'aws-sdk-s3', '~> 1.197'
 
-gem "telegram-bot-ruby", "~> 2.5"
+gem "telegram-bot-ruby", "~> 2.7"
