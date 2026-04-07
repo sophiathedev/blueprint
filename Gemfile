@@ -74,7 +74,7 @@ end
 gem 'tailwindcss-rails', '~> 4.4'
 
 gem 'paranoia', '~> 3.1'
-gem 'lucide-rails', '~> 0.7.3'
+gem 'lucide-rails', '~> 0.7.4'
 gem 'draper', '~> 4.0'
 gem 'dotenv', '~> 3.2'
 gem 'gretel', '~> 5.1'
